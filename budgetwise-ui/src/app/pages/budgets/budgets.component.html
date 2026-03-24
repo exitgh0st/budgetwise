@@ -1,0 +1,98 @@
+<div class="page-header">
+  <div class="month-nav">
+    <button mat-icon-button (click)="prevMonth()" aria-label="Previous month">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <h1>{{ monthLabel }}</h1>
+    <button mat-icon-button (click)="nextMonth()" aria-label="Next month">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+  @if (!isMobile) {
+    <button mat-flat-button color="primary" (click)="openSetBudgetDialog()"
+            [disabled]="unbudgetedCategories.length === 0">
+      <mat-icon>add</mat-icon> Set Budget
+    </button>
+  }
+</div>
+
+@if (loading) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (!loading && budgetStatuses.length === 0) {
+  <div class="empty-state">
+    <mat-icon class="empty-icon">savings</mat-icon>
+    <h2>No budgets set for {{ monthLabel }}</h2>
+    <p>Set spending limits per category to track where your money goes.</p>
+    <button mat-flat-button color="primary" (click)="openSetBudgetDialog()"
+            [disabled]="unbudgetedCategories.length === 0">
+      <mat-icon>add</mat-icon> Set Budget
+    </button>
+  </div>
+}
+
+@if (!loading && budgetStatuses.length > 0) {
+  <div class="budgets-grid">
+    @for (status of budgetStatuses; track status.budgetId) {
+      <mat-card>
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="category-icon">{{ status.categoryIcon || 'category' }}</mat-icon>
+          <mat-card-title>{{ status.categoryName }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="getProgressValue(status.percentUsed)"
+            [class]="'progress-' + getProgressColor(status.percentUsed)">
+          </mat-progress-bar>
+          <div class="budget-details">
+            <span class="spent-label">
+              {{ status.spent | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              / {{ status.budgetAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              <span class="percent">({{ status.percentUsed / 100 | percent:'1.0-0' }})</span>
+            </span>
+            @if (status.isOver) {
+              <span class="remaining over">
+                {{ (status.spent - status.budgetAmount) | currency:'PHP':'symbol-narrow':'1.2-2' }} over budget!
+              </span>
+            } @else {
+              <span class="remaining ok">
+                {{ status.remaining | currency:'PHP':'symbol-narrow':'1.2-2' }} remaining
+              </span>
+            }
+          </div>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-icon-button (click)="openEditDialog(status)" aria-label="Edit budget">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="confirmDelete(status)" aria-label="Delete budget">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}
+
+@if (!loading && unbudgetedCategories.length > 0) {
+  <div class="unbudgeted-section">
+    <h3>Categories without budgets</h3>
+    <div class="unbudgeted-chips">
+      @for (cat of unbudgetedCategories; track cat.id) {
+        <button mat-stroked-button (click)="openSetBudgetDialog(cat.id)">
+          <mat-icon>{{ cat.icon || 'category' }}</mat-icon>
+          {{ cat.name }}
+        </button>
+      }
+    </div>
+  </div>
+}
+
+@if (isMobile && !loading) {
+  <button mat-fab class="fab-add" color="primary" (click)="openSetBudgetDialog()"
+          [disabled]="unbudgetedCategories.length === 0" aria-label="Set budget">
+    <mat-icon>add</mat-icon>
+  </button>
+}
