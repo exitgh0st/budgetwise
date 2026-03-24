@@ -1,0 +1,59 @@
+<div class="page-header">
+  <h1>Accounts</h1>
+  @if (!isMobile) {
+    <button mat-flat-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon> Add Account
+    </button>
+  }
+</div>
+
+@if (loading) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (!loading && accounts.length === 0) {
+  <div class="empty-state">
+    <mat-icon class="empty-icon">account_balance_wallet</mat-icon>
+    <h2>No accounts yet</h2>
+    <p>Create your first account to start tracking your finances.</p>
+    <button mat-flat-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon> Add Account
+    </button>
+  </div>
+}
+
+@if (!loading && accounts.length > 0) {
+  <div class="accounts-grid">
+    @for (account of accounts; track account.id) {
+      <mat-card>
+        <mat-card-header>
+          <mat-icon mat-card-avatar class="type-icon">{{ getTypeIcon(account.type) }}</mat-icon>
+          <mat-card-title>{{ account.name }}</mat-card-title>
+          <mat-card-subtitle>{{ getTypeLabel(account.type) }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="balance">{{ account.balance | currency:'PHP':'symbol-narrow':'1.2-2' }}</p>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-icon-button (click)="openEditDialog(account)" aria-label="Edit account">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="confirmDelete(account)" aria-label="Delete account">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+
+  <div class="total-balance">
+    <span>Total Balance</span>
+    <span class="total-amount">{{ totalBalance | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+  </div>
+}
+
+@if (isMobile && !loading) {
+  <button mat-fab class="fab-add" color="primary" (click)="openAddDialog()" aria-label="Add account">
+    <mat-icon>add</mat-icon>
+  </button>
+}
