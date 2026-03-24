@@ -37,7 +37,11 @@
     @for (status of budgetStatuses; track status.budgetId) {
       <mat-card>
         <mat-card-header>
-          <mat-icon mat-card-avatar class="category-icon">{{ status.categoryIcon || 'category' }}</mat-icon>
+          @if (status.categoryIcon) {
+            <span mat-card-avatar class="category-icon emoji">{{ status.categoryIcon }}</span>
+          } @else {
+            <mat-icon mat-card-avatar class="category-icon">category</mat-icon>
+          }
           <mat-card-title>{{ status.categoryName }}</mat-card-title>
         </mat-card-header>
         <mat-card-content>
@@ -82,7 +86,11 @@
     <div class="unbudgeted-chips">
       @for (cat of unbudgetedCategories; track cat.id) {
         <button mat-stroked-button (click)="openSetBudgetDialog(cat.id)">
-          <mat-icon>{{ cat.icon || 'category' }}</mat-icon>
+          @if (cat.icon) {
+            <span class="emoji">{{ cat.icon }}</span>
+          } @else {
+            <mat-icon>category</mat-icon>
+          }
           {{ cat.name }}
         </button>
       }

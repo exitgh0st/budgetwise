@@ -36,3 +36,20 @@ mat-sidenav {
     display: none !important;
   }
 }
+
+// Ensure dialogs don't overflow on mobile
+.cdk-overlay-pane {
+  max-width: 95vw !important;
+}
+
+// Emoji icons used in place of Material Icons for categories
+.emoji {
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
