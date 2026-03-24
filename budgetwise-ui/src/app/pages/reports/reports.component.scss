@@ -1,0 +1,180 @@
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+
+  .month-selector {
+    width: 200px;
+  }
+}
+
+// Top section: doughnut + summary side by side
+.top-section {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+// Chart card
+.chart-card {
+  mat-card-content {
+    padding-top: 8px;
+  }
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+}
+
+.bar-chart-container {
+  min-height: 320px;
+}
+
+// Category breakdown list
+.category-list {
+  margin-top: 16px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  padding-top: 12px;
+}
+
+.category-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+
+  .category-name {
+    font-size: 14px;
+  }
+
+  .category-amount {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .category-percent {
+    color: var(--mat-sys-outline);
+    font-weight: 400;
+  }
+}
+
+// Summary cards
+.summary-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-card {
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px !important;
+  }
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary-label {
+    font-size: 13px;
+    color: var(--mat-sys-outline);
+  }
+
+  .summary-value {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  &.income {
+    mat-icon { color: #4CAF50; }
+    .summary-value { color: #4CAF50; }
+  }
+
+  &.expense {
+    mat-icon { color: #F44336; }
+    .summary-value { color: #F44336; }
+  }
+
+  &.positive {
+    mat-icon { color: #4CAF50; }
+    .summary-value { color: #4CAF50; }
+  }
+
+  &.negative {
+    mat-icon { color: #F44336; }
+    .summary-value { color: #F44336; }
+  }
+}
+
+// Trend card
+.trend-card {
+  mat-card-content {
+    padding-top: 8px;
+  }
+}
+
+// Empty chart state
+.empty-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--mat-sys-outline);
+    margin-bottom: 12px;
+  }
+
+  p {
+    color: var(--mat-sys-outline);
+    margin: 0;
+  }
+}
+
+@media (max-width: 599px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    .month-selector {
+      width: 100%;
+    }
+  }
+
+  .top-section {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container {
+    min-height: 250px;
+  }
+
+  .summary-card .summary-value {
+    font-size: 18px;
+  }
+}
