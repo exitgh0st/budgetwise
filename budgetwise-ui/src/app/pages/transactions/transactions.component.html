@@ -1,0 +1,196 @@
+<div class="page-header">
+  <h1>Transactions</h1>
+  @if (!isMobile) {
+    <button mat-flat-button color="primary" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon> Add Transaction
+    </button>
+  }
+</div>
+
+<!-- Desktop filters -->
+@if (!isMobile) {
+  <div class="filter-bar">
+    <mat-form-field appearance="outline">
+      <mat-label>Account</mat-label>
+      <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+        <mat-option value="">All</mat-option>
+        @for (account of accounts; track account.id) {
+          <mat-option [value]="account.id">{{ account.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Category</mat-label>
+      <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+        <mat-option value="">All</mat-option>
+        @for (category of categories; track category.id) {
+          <mat-option [value]="category.id">{{ category.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Type</mat-label>
+      <mat-select [(ngModel)]="filterType" (selectionChange)="onFilterChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option value="INCOME">Income</mat-option>
+        <mat-option value="EXPENSE">Expense</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Start date</mat-label>
+      <input matInput [matDatepicker]="startPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+      <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>End date</mat-label>
+      <input matInput [matDatepicker]="endPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+      <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+      <mat-datepicker #endPicker></mat-datepicker>
+    </mat-form-field>
+
+    @if (hasActiveFilters) {
+      <button mat-icon-button (click)="clearFilters()" aria-label="Clear filters">
+        <mat-icon>clear</mat-icon>
+      </button>
+    }
+  </div>
+}
+
+<!-- Mobile filters (expansion panel) -->
+@if (isMobile) {
+  <mat-accordion>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>filter_list</mat-icon>&nbsp;Filters
+          @if (hasActiveFilters) {
+            <span class="filter-badge">Active</span>
+          }
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <div class="mobile-filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Account</mat-label>
+          <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+            <mat-option value="">All</mat-option>
+            @for (account of accounts; track account.id) {
+              <mat-option [value]="account.id">{{ account.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+            <mat-option value="">All</mat-option>
+            @for (category of categories; track category.id) {
+              <mat-option [value]="category.id">{{ category.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Type</mat-label>
+          <mat-select [(ngModel)]="filterType" (selectionChange)="onFilterChange()">
+            <mat-option value="">All</mat-option>
+            <mat-option value="INCOME">Income</mat-option>
+            <mat-option value="EXPENSE">Expense</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Start date</mat-label>
+          <input matInput [matDatepicker]="startPickerM" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+          <mat-datepicker-toggle matIconSuffix [for]="startPickerM"></mat-datepicker-toggle>
+          <mat-datepicker #startPickerM></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>End date</mat-label>
+          <input matInput [matDatepicker]="endPickerM" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+          <mat-datepicker-toggle matIconSuffix [for]="endPickerM"></mat-datepicker-toggle>
+          <mat-datepicker #endPickerM></mat-datepicker>
+        </mat-form-field>
+
+        @if (hasActiveFilters) {
+          <button mat-stroked-button (click)="clearFilters()">Clear Filters</button>
+        }
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+}
+
+@if (loading) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (!loading && dateGroups.length === 0) {
+  <div class="empty-state">
+    <mat-icon class="empty-icon">receipt_long</mat-icon>
+    <h2>No transactions found</h2>
+    @if (hasActiveFilters) {
+      <p>Try adjusting your filters or clearing them.</p>
+      <button mat-flat-button color="primary" (click)="clearFilters()">Clear Filters</button>
+    } @else {
+      <p>Add your first transaction to start tracking your finances.</p>
+      <button mat-flat-button color="primary" (click)="openAddDialog()">
+        <mat-icon>add</mat-icon> Add Transaction
+      </button>
+    }
+  </div>
+}
+
+@if (!loading && dateGroups.length > 0) {
+  <div class="transaction-list">
+    @for (group of dateGroups; track group.date) {
+      <div class="date-group">
+        <div class="date-header">{{ group.label }}</div>
+        @for (t of group.transactions; track t.id) {
+          <div class="transaction-row">
+            <div class="transaction-info">
+              <mat-icon class="category-icon">{{ t.category?.icon || 'receipt' }}</mat-icon>
+              <div class="transaction-details">
+                <span class="description">{{ t.description || t.category?.name || 'Transaction' }}</span>
+                <span class="account-name">{{ t.account?.name }}</span>
+              </div>
+            </div>
+            <div class="transaction-actions">
+              <span class="amount" [class.income]="t.type === 'INCOME'" [class.expense]="t.type === 'EXPENSE'">
+                {{ t.type === 'INCOME' ? '+' : '-' }}{{ t.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              </span>
+              <div class="action-buttons">
+                <button mat-icon-button (click)="openEditDialog(t)" aria-label="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="confirmDelete(t)" aria-label="Delete">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <mat-paginator
+    [length]="total"
+    [pageSize]="pageSize"
+    [pageIndex]="pageIndex"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPageChange($event)"
+    showFirstLastButtons>
+  </mat-paginator>
+}
+
+@if (isMobile && !loading) {
+  <button mat-fab class="fab-add" color="primary" (click)="openAddDialog()" aria-label="Add transaction">
+    <mat-icon>add</mat-icon>
+  </button>
+}
