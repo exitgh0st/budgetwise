@@ -9,7 +9,6 @@ import { forkJoin } from 'rxjs';
 import { AccountsService } from '../../core/services/accounts.service';
 import { TransactionsService } from '../../core/services/transactions.service';
 import { ReportsService } from '../../core/services/reports.service';
-import { Account } from '../../core/models/account.model';
 import { Transaction } from '../../core/models/transaction.model';
 import { SummaryReport, BudgetStatus } from '../../core/models/report.model';
 
