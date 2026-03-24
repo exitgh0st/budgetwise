@@ -1,0 +1,114 @@
+<div class="page-header">
+  <h1>Reports</h1>
+  <mat-form-field appearance="outline" class="month-selector">
+    <mat-label>Month</mat-label>
+    <mat-select [(ngModel)]="selectedMonth" (selectionChange)="onMonthChange()">
+      @for (opt of monthOptions; track opt.label) {
+        <mat-option [value]="opt.month + '-' + opt.year">{{ opt.label }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+@if (loading) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (!loading) {
+  <!-- Top section: Doughnut + Summary side by side on desktop -->
+  <div class="top-section">
+    <!-- Spending by Category -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Spending by Category</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (categoryBreakdown.length > 0) {
+          <div class="chart-container">
+            <canvas baseChart #doughnutChart
+              type="doughnut"
+              [data]="doughnutData"
+              [options]="doughnutOptions">
+            </canvas>
+          </div>
+          <div class="category-list">
+            @for (cat of categoryBreakdown; track cat.categoryId) {
+              <div class="category-row">
+                <span class="category-name">{{ cat.categoryName }}</span>
+                <span class="category-amount">
+                  {{ cat.totalSpent | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  <span class="category-percent">({{ cat.percentage }}%)</span>
+                </span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-chart">
+            <mat-icon>pie_chart</mat-icon>
+            <p>No spending data for this month</p>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Income vs Expenses Summary -->
+    <div class="summary-cards">
+      <mat-card class="summary-card income">
+        <mat-card-content>
+          <mat-icon>trending_up</mat-icon>
+          <div>
+            <span class="summary-label">Income</span>
+            <span class="summary-value">{{ (summary?.totalIncome || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card expense">
+        <mat-card-content>
+          <mat-icon>trending_down</mat-icon>
+          <div>
+            <span class="summary-label">Expenses</span>
+            <span class="summary-value">{{ (summary?.totalExpenses || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="summary-card" [class.positive]="(summary?.netBalance || 0) >= 0" [class.negative]="(summary?.netBalance || 0) < 0">
+        <mat-card-content>
+          <mat-icon>account_balance</mat-icon>
+          <div>
+            <span class="summary-label">Net Balance</span>
+            <span class="summary-value">
+              {{ (summary?.netBalance || 0) >= 0 ? '+' : '' }}{{ (summary?.netBalance || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}
+            </span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Monthly Trend Bar Chart -->
+  <mat-card class="trend-card">
+    <mat-card-header>
+      <mat-card-title>Monthly Trend (Last 6 Months)</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (loadingTrend) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      } @else if (barData.labels && barData.labels.length > 0) {
+        <div class="chart-container bar-chart-container">
+          <canvas baseChart
+            type="bar"
+            [data]="barData"
+            [options]="barOptions">
+          </canvas>
+        </div>
+      } @else {
+        <div class="empty-chart">
+          <mat-icon>bar_chart</mat-icon>
+          <p>No trend data available</p>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+}
