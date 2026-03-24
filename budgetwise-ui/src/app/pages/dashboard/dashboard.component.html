@@ -1,0 +1,120 @@
+<h1 class="page-title">Dashboard</h1>
+
+@if (loading) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+@if (!loading) {
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <mat-card class="summary-card balance">
+      <mat-card-content>
+        <mat-icon>account_balance_wallet</mat-icon>
+        <div>
+          <span class="summary-label">Total Balance</span>
+          <span class="summary-value">{{ totalBalance | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card income">
+      <mat-card-content>
+        <mat-icon>trending_up</mat-icon>
+        <div>
+          <span class="summary-label">Income This Month</span>
+          <span class="summary-value">{{ (summary?.totalIncome || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card expense">
+      <mat-card-content>
+        <mat-icon>trending_down</mat-icon>
+        <div>
+          <span class="summary-label">Expenses This Month</span>
+          <span class="summary-value">{{ (summary?.totalExpenses || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-grid">
+    <!-- Budget Status -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Budget Status</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (budgetStatuses.length === 0) {
+          <div class="empty-section">
+            <mat-icon>savings</mat-icon>
+            <p>No budgets set for this month.</p>
+            <a mat-stroked-button routerLink="/budgets">Go to Budgets</a>
+          </div>
+        } @else {
+          <div class="budget-list">
+            @for (status of budgetStatuses; track status.budgetId) {
+              <div class="budget-item">
+                <div class="budget-header">
+                  <span class="budget-category">
+                    <mat-icon class="budget-icon">{{ status.categoryIcon || 'category' }}</mat-icon>
+                    {{ status.categoryName }}
+                  </span>
+                  <span class="budget-percent" [class]="'text-' + getProgressColor(status.percentUsed)">
+                    {{ status.percentUsed }}%
+                  </span>
+                </div>
+                <mat-progress-bar
+                  mode="determinate"
+                  [value]="getProgressValue(status.percentUsed)"
+                  [class]="'progress-' + getProgressColor(status.percentUsed)">
+                </mat-progress-bar>
+                <span class="budget-amounts">
+                  {{ status.spent | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  / {{ status.budgetAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Recent Transactions -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Recent Transactions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (recentTransactions.length === 0) {
+          <div class="empty-section">
+            <mat-icon>receipt_long</mat-icon>
+            <p>No transactions yet. Add your first one!</p>
+            <a mat-stroked-button routerLink="/transactions">Go to Transactions</a>
+          </div>
+        } @else {
+          <div class="transaction-list">
+            @for (t of recentTransactions; track t.id) {
+              <div class="transaction-item">
+                <div class="transaction-info">
+                  <mat-icon class="transaction-icon">{{ t.category?.icon || 'receipt' }}</mat-icon>
+                  <div class="transaction-details">
+                    <span class="transaction-desc">{{ t.description || t.category?.name || 'Transaction' }}</span>
+                    <span class="transaction-date">{{ formatRelativeDate(t.date) }}</span>
+                  </div>
+                </div>
+                <span class="transaction-amount" [class.income]="t.type === 'INCOME'" [class.expense]="t.type === 'EXPENSE'">
+                  {{ t.type === 'INCOME' ? '+' : '-' }}{{ t.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                </span>
+              </div>
+            }
+          </div>
+          <div class="view-all">
+            <a mat-button routerLink="/transactions" color="primary">View All Transactions</a>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+}
