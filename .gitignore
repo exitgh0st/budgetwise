@@ -1,2 +1,4 @@
 # MCP config (contains secrets)
 .mcp.json
+/node-modules
+budgetwise-api/node-modules
