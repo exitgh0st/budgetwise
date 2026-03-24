@@ -1,0 +1,38 @@
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$violet-palette,
+      tertiary: mat.$rose-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+mat-sidenav {
+  width: 240px;
+}
+
+@media (max-width: 599px) {
+  .content {
+    padding: 12px !important;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 600px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
