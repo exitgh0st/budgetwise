@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Logger,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
@@ -17,6 +18,8 @@ import { UpdateSessionDto } from './dto/update-session.dto';
 
 @Controller('chat')
 export class ChatController {
+  private readonly logger = new Logger(ChatController.name);
+
   constructor(private chatService: ChatService) {}
 
   // Send a message to the AI agent
@@ -26,7 +29,7 @@ export class ChatController {
       const reply = await this.chatService.chat(dto.message, dto.sessionId);
       return { reply, sessionId: dto.sessionId };
     } catch (error: any) {
-      console.error('Chat error:', error);
+      this.logger.error('Chat error:', error.message);
 
       if (error.status === 401) {
         throw new InternalServerErrorException(

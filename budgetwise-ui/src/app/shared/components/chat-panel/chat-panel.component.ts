@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, inject, ViewChild, ElementRef, AfterViewChecked, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Subscription } from 'rxjs';
 import { ChatService } from '../../../core/services/chat.service';
 import { ChatMessage, ChatSession } from '../../../core/models/chat.model';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
@@ -33,7 +34,7 @@ import { MarkdownPipe } from '../../pipes/markdown.pipe';
   templateUrl: './chat-panel.component.html',
   styleUrl: './chat-panel.component.scss',
 })
-export class ChatPanelComponent implements AfterViewChecked {
+export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   isPanelOpen = false;
   isMobile = false;
   isLoading = false;
@@ -52,12 +53,19 @@ export class ChatPanelComponent implements AfterViewChecked {
   private chatService = inject(ChatService);
   private snackBar = inject(MatSnackBar);
   private shouldScroll = false;
+  private subscriptions = new Subscription();
 
   constructor() {
     const breakpointObserver = inject(BreakpointObserver);
-    breakpointObserver.observe(['(max-width: 959px)']).subscribe(result => {
-      this.isMobile = result.matches;
-    });
+    this.subscriptions.add(
+      breakpointObserver.observe(['(max-width: 959px)']).subscribe(result => {
+        this.isMobile = result.matches;
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   togglePanel() {
@@ -82,7 +90,7 @@ export class ChatPanelComponent implements AfterViewChecked {
 
   sendMessage() {
     const text = this.userInput.trim();
-    if (!text || this.isLoading) return;
+    if (!text || this.isLoading || !this.activeSessionId) return;
 
     this.messages.push({ id: '', role: 'user', content: text, createdAt: new Date().toISOString() });
     this.userInput = '';
