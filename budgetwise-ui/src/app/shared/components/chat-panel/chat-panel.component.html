@@ -1,0 +1,127 @@
+<!-- FAB button — visible on all pages -->
+<button mat-fab class="chat-fab" (click)="togglePanel()" [class.hidden]="isPanelOpen">
+  <mat-icon>chat</mat-icon>
+</button>
+
+<!-- Backdrop dimming -->
+<div class="chat-backdrop" [class.visible]="isPanelOpen && !isMobile" (click)="togglePanel()"></div>
+
+<!-- Chat Panel -->
+<div class="chat-panel" [class.open]="isPanelOpen" [class.mobile]="isMobile">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <button mat-icon-button (click)="togglePanel()">
+      <mat-icon>{{ isMobile ? 'arrow_back' : 'close' }}</mat-icon>
+    </button>
+    <span class="chat-title">BudgetWise AI</span>
+    <button mat-icon-button [matMenuTriggerFor]="chatMenu">
+      <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #chatMenu="matMenu">
+      <button mat-menu-item (click)="startNewConversation()">
+        <mat-icon>add</mat-icon> New Conversation
+      </button>
+      <button mat-menu-item (click)="toggleSessionList()">
+        <mat-icon>history</mat-icon> Previous Conversations
+      </button>
+    </mat-menu>
+  </div>
+
+  <!-- Session List (toggleable) -->
+  @if (showSessionList) {
+    <div class="session-list">
+      <mat-nav-list>
+        @for (session of sessions; track session.id) {
+          <a mat-list-item
+             (click)="switchSession(session.id)"
+             [class.active]="session.id === activeSessionId">
+
+            @if (editingSessionId === session.id) {
+              <input matInput
+                     class="rename-input"
+                     [(ngModel)]="editingTitle"
+                     (click)="$event.stopPropagation()"
+                     (keydown.enter)="saveRename(session.id, $event)"
+                     (keydown.escape)="cancelRename($event)">
+              <button mat-icon-button (click)="saveRename(session.id, $event)">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button mat-icon-button (click)="cancelRename($event)">
+                <mat-icon>close</mat-icon>
+              </button>
+            } @else {
+              <span class="session-title">{{ session.title || 'Untitled' }}</span>
+              <span class="session-date">{{ session.updatedAt | date:'shortDate' }}</span>
+              <button mat-icon-button class="session-action" (click)="startRename(session, $event)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button class="session-action" (click)="deleteSession(session.id, $event)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
+          </a>
+        }
+        @empty {
+          <div class="empty-sessions">No conversations yet</div>
+        }
+      </mat-nav-list>
+    </div>
+  }
+
+  <!-- Messages -->
+  <div class="chat-messages" #messageContainer>
+    @for (msg of messages; track msg.id || $index) {
+      @if (msg.role === 'user') {
+        <div class="message user">
+          <div class="bubble user-bubble">{{ msg.content }}</div>
+        </div>
+      }
+      @if (msg.role === 'assistant' && msg.content) {
+        <div class="message assistant">
+          <div class="bubble assistant-bubble" [innerHTML]="msg.content | markdown"></div>
+        </div>
+      }
+    }
+
+    <!-- Typing indicator -->
+    @if (isLoading) {
+      <div class="message assistant">
+        <div class="bubble assistant-bubble typing-indicator">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (messages.length === 0 && !isLoading) {
+      <div class="empty-chat">
+        <mat-icon class="empty-icon">smart_toy</mat-icon>
+        <p>Hi! I'm your BudgetWise AI advisor.</p>
+        <p class="hint">Ask me about your finances, log expenses, or get budget insights.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Input area -->
+  <div class="chat-input">
+    <mat-form-field appearance="outline" class="message-input">
+      <textarea matInput
+                [(ngModel)]="userInput"
+                placeholder="Ask your financial advisor..."
+                (keydown.enter)="onEnter($any($event))"
+                rows="1"
+                cdkTextareaAutosize
+                cdkAutosizeMinRows="1"
+                cdkAutosizeMaxRows="4">
+      </textarea>
+    </mat-form-field>
+    <button mat-icon-button color="primary"
+            (click)="sendMessage()"
+            [disabled]="!userInput.trim() || isLoading">
+      <mat-icon>send</mat-icon>
+    </button>
+  </div>
+</div>
