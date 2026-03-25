@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/19-frontend-chat-panel.md`
-**Next ticket to implement:** `tickets/20-integration-testing.md`
-**Phase:** Phase 3 — AI Chat Agent
-**Total progress:** 19 / 20 tickets
+**Last completed ticket:** `tickets/20-integration-testing.md`
+**Next ticket to implement:** None — all tickets complete!
+**Phase:** Phase 3 — AI Chat Agent (COMPLETE)
+**Total progress:** 20 / 20 tickets
 
 ---
 
@@ -132,12 +132,18 @@
 - **Services/APIs available:** ChatService (frontend) with sendMessage, getActiveSession, getSessions, startNewSession, getHistory, updateSession, deleteSession
 - **User decisions:** Lightweight custom markdown pipe (no ngx-markdown dependency). Match theme colors for FAB. Backdrop dimming enabled. Session rename/delete actions added to session list UI.
 
+### Ticket 20 — Integration Testing & Polish
+- **What was built:** Code-level review and bug fixes. Fixed subscription memory leak in ChatPanelComponent (added OnDestroy + Subscription cleanup). Fixed ToolExecutor update bug where `id` was leaking into Prisma data payload for update_account/update_category/update_transaction/update_budget calls. Added race condition guard preventing message send before active session loads. Replaced console.error with NestJS Logger in ChatController.
+- **Files modified:** `src/chat/chat.controller.ts`, `src/chat/tools/tool-executor.ts`, `budgetwise-ui/src/app/shared/components/chat-panel/chat-panel.component.ts`
+- **Services/APIs available:** No new APIs — bug fixes only
+- **User decisions:** Code-level review only (no automated tests). Leave bundle size as-is. UI fine-tuning deferred to user.
+
 ---
 
 ## What Exists So Far
 
 ### Backend (budgetwise-api/)
-- **Status:** Complete (Phase 1 + 2A) + Chat API complete (Phase 3, Tickets 15-18)
+- **Status:** Complete — All phases done (Tickets 01-18, 20)
 - **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat (fully functional backend)
 - **All 5 service modules export their services** (imported by ChatModule)
 - **Database:** PostgreSQL with seed data (12 categories with emoji icons, 3 starter accounts) + ChatSession and ChatMessage tables
@@ -145,7 +151,7 @@
 - **Dependencies:** `openai` SDK installed for DeepSeek V3 API
 
 ### Frontend (budgetwise-ui/)
-- **Status:** Complete (Phase 2B + 2C + Chat Panel)
+- **Status:** Complete — All phases done (Tickets 08-14, 19-20)
 - **Pages:** Dashboard, Accounts, Transactions, Budgets, Reports (all lazy-loaded)
 - **Shared components:** ConfirmDialogComponent, ChatPanelComponent (persistent sidebar/fullscreen)
 - **Shared pipes:** MarkdownPipe (lightweight bold/italic/code/list rendering)
@@ -155,7 +161,7 @@
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
 
 ### Chat Agent
-- **Status:** Fully functional end-to-end (Tickets 15-19 done). Backend API + frontend chat panel complete. Only integration testing remains (Ticket 20).
+- **Status:** Complete — fully functional end-to-end (Tickets 15-20 done). Backend API + frontend chat panel + integration polish all complete.
 - **Prerequisites met:** All 5 backend services exported and imported by ChatModule, database seeded, DeepSeek API key configured
 
 ---
