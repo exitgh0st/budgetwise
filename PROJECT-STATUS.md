@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/16-tool-definitions-executor.md`
-**Next ticket to implement:** `tickets/17-chat-service-deepseek.md`
+**Last completed ticket:** `tickets/18-chat-controller-api.md`
+**Next ticket to implement:** `tickets/19-frontend-chat-panel.md`
 **Phase:** Phase 3 — AI Chat Agent
-**Total progress:** 16 / 20 tickets
+**Total progress:** 18 / 20 tickets
 
 ---
 
@@ -112,16 +112,29 @@
 - **Services/APIs available:** `ToolExecutor.execute(toolName, args)` — routes to AccountsService, CategoriesService, TransactionsService, BudgetsService, ReportsService
 - **User decisions:** None (default spec)
 
+### Ticket 17 — ChatService: DeepSeek API Integration + Tool Call Loop
+- **What was built:** Full ChatService with session management (create, list, get active, start new), message history building (converts DB records to OpenAI message array), core chat method with auto-generated session titles, and tool call loop (max 10 iterations) that executes tools via ToolExecutor and sends results back to DeepSeek. System prompt defines BudgetWise AI personality.
+- **Files modified:** `src/chat/chat.service.ts`
+- **Services/APIs available:** `ChatService.createSession()`, `ChatService.getSessions()`, `ChatService.getOrCreateActiveSession()`, `ChatService.startNewSession()`, `ChatService.getHistory(sessionId)`, `ChatService.chat(message, sessionId)`, `ChatService.testConnection()`
+- **User decisions:** None (default spec)
+
+### Ticket 18 — Chat Controller: REST API Endpoints
+- **What was built:** Full REST API for chat: send message with DeepSeek error handling (401/429/generic), session management (list, get active, create new, rename, delete), and message history retrieval. Removed temporary test endpoint from controller (kept `testConnection()` in service for debugging). Added `deleteSession` and `updateSession` methods to ChatService per user request.
+- **Files created:** `src/chat/dto/update-session.dto.ts`
+- **Files modified:** `src/chat/chat.controller.ts` (rewritten), `src/chat/chat.service.ts` (added 2 methods)
+- **Services/APIs available:** `POST /api/chat` (send message), `GET /api/chat/history/:sessionId`, `GET /api/chat/sessions`, `GET /api/chat/sessions/active`, `POST /api/chat/sessions/new`, `PATCH /api/chat/sessions/:id` (rename), `DELETE /api/chat/sessions/:id`
+- **User decisions:** Keep `testConnection()` in service (remove only the controller endpoint). Add PATCH and DELETE session endpoints (not in original spec).
+
 ---
 
 ## What Exists So Far
 
 ### Backend (budgetwise-api/)
-- **Status:** Complete (Phase 1 + 2A) + Chat module foundation (Phase 3 started)
-- **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat (skeleton)
+- **Status:** Complete (Phase 1 + 2A) + Chat API complete (Phase 3, Tickets 15-18)
+- **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat (fully functional backend)
 - **All 5 service modules export their services** (imported by ChatModule)
 - **Database:** PostgreSQL with seed data (12 categories with emoji icons, 3 starter accounts) + ChatSession and ChatMessage tables
-- **API endpoints:** 5 CRUD modules + reports aggregations + `GET /api/chat/test`, all prefixed with `/api`
+- **API endpoints:** 5 CRUD modules + reports aggregations + 7 chat endpoints, all prefixed with `/api`
 - **Dependencies:** `openai` SDK installed for DeepSeek V3 API
 
 ### Frontend (budgetwise-ui/)
@@ -134,7 +147,7 @@
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
 
 ### Chat Agent
-- **Status:** Tools ready (Tickets 15-16 complete). Schema, SDK, module skeleton, 24 tool definitions, and ToolExecutor all in place. ChatService logic, controller endpoints, and frontend panel remaining (Tickets 17-20).
+- **Status:** Backend complete (Tickets 15-18 done). Schema, SDK, 24 tool definitions, ToolExecutor, ChatService with DeepSeek integration + tool call loop, and full REST API all working. Frontend chat panel remaining (Tickets 19-20).
 - **Prerequisites met:** All 5 backend services exported and imported by ChatModule, database seeded, DeepSeek API key configured
 
 ---
@@ -152,4 +165,4 @@
 ## Known Issues / Follow-ups
 
 - **Bundle size warning:** Initial bundle is 547KB, slightly above the 500KB budget. Not blocking but could be optimized with lazy loading improvements.
-- **Test endpoint:** `GET /api/chat/test` is temporary — should be removed or replaced once Ticket 18 (Chat Controller API) is implemented.
+- **`testConnection()` kept in ChatService** for debugging — no controller endpoint exposes it anymore.
