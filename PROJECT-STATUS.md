@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/18-chat-controller-api.md`
-**Next ticket to implement:** `tickets/19-frontend-chat-panel.md`
+**Last completed ticket:** `tickets/19-frontend-chat-panel.md`
+**Next ticket to implement:** `tickets/20-integration-testing.md`
 **Phase:** Phase 3 — AI Chat Agent
-**Total progress:** 18 / 20 tickets
+**Total progress:** 19 / 20 tickets
 
 ---
 
@@ -125,6 +125,13 @@
 - **Services/APIs available:** `POST /api/chat` (send message), `GET /api/chat/history/:sessionId`, `GET /api/chat/sessions`, `GET /api/chat/sessions/active`, `POST /api/chat/sessions/new`, `PATCH /api/chat/sessions/:id` (rename), `DELETE /api/chat/sessions/:id`
 - **User decisions:** Keep `testConnection()` in service (remove only the controller endpoint). Add PATCH and DELETE session endpoints (not in original spec).
 
+### Ticket 19 — Frontend Chat Panel
+- **What was built:** Chat panel component with slide-in sidebar (400px desktop, fullscreen mobile), FAB toggle button, backdrop dimming, session management (list, switch, rename, delete), message bubbles (user blue, assistant gray), typing indicator (animated dots), auto-scroll, markdown rendering (custom lightweight pipe), empty state with welcome message. Integrated into app.component so it persists across all page navigations.
+- **Files created:** `src/app/core/models/chat.model.ts`, `src/app/core/services/chat.service.ts`, `src/app/shared/pipes/markdown.pipe.ts`, `src/app/shared/components/chat-panel/` (component, template, styles)
+- **Files modified:** `src/app/app.ts` (import ChatPanelComponent), `src/app/app.html` (add `<app-chat-panel>`)
+- **Services/APIs available:** ChatService (frontend) with sendMessage, getActiveSession, getSessions, startNewSession, getHistory, updateSession, deleteSession
+- **User decisions:** Lightweight custom markdown pipe (no ngx-markdown dependency). Match theme colors for FAB. Backdrop dimming enabled. Session rename/delete actions added to session list UI.
+
 ---
 
 ## What Exists So Far
@@ -138,16 +145,17 @@
 - **Dependencies:** `openai` SDK installed for DeepSeek V3 API
 
 ### Frontend (budgetwise-ui/)
-- **Status:** Complete (Phase 2B + 2C)
+- **Status:** Complete (Phase 2B + 2C + Chat Panel)
 - **Pages:** Dashboard, Accounts, Transactions, Budgets, Reports (all lazy-loaded)
-- **Shared components:** ConfirmDialogComponent (reusable delete confirmation)
+- **Shared components:** ConfirmDialogComponent, ChatPanelComponent (persistent sidebar/fullscreen)
+- **Shared pipes:** MarkdownPipe (lightweight bold/italic/code/list rendering)
 - **Page dialogs:** AccountDialog, TransactionDialog, BudgetDialog
 - **Charts:** Doughnut (spending by category), Bar (monthly trend) via ng2-charts/Chart.js
 - **Responsive:** BreakpointObserver + CSS Grid, mobile-first with FAB buttons
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
 
 ### Chat Agent
-- **Status:** Backend complete (Tickets 15-18 done). Schema, SDK, 24 tool definitions, ToolExecutor, ChatService with DeepSeek integration + tool call loop, and full REST API all working. Frontend chat panel remaining (Tickets 19-20).
+- **Status:** Fully functional end-to-end (Tickets 15-19 done). Backend API + frontend chat panel complete. Only integration testing remains (Ticket 20).
 - **Prerequisites met:** All 5 backend services exported and imported by ChatModule, database seeded, DeepSeek API key configured
 
 ---
@@ -159,10 +167,12 @@
 - **Emoji icon rendering:** `<span class="emoji">` for seed data emoji characters, `<mat-icon>` as fallback — not all categories have Material Icon ligature names (Ticket 14)
 - **ng2-charts requires `--legacy-peer-deps`** for npm install due to peer dependency conflicts
 - **Bundle size:** 547KB initial (above 500KB budget warning) — not a blocker
+- **Lightweight markdown pipe** over ngx-markdown for chat message rendering (Ticket 19)
+- **Session rename/delete** added to chat session list UI (Ticket 19)
 
 ---
 
 ## Known Issues / Follow-ups
 
-- **Bundle size warning:** Initial bundle is 547KB, slightly above the 500KB budget. Not blocking but could be optimized with lazy loading improvements.
+- **Bundle size warning:** Initial bundle is now 730KB (up from 547KB with chat panel in initial bundle). Not blocking but could be optimized.
 - **`testConnection()` kept in ChatService** for debugging — no controller endpoint exposes it anymore.
