@@ -1,0 +1,264 @@
+.chat-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  transition: opacity 0.2s;
+
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.chat-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+
+  &.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.chat-panel {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  background: var(--mat-app-background-color, #fff);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  transition: right 0.3s ease;
+
+  &.open {
+    right: 0;
+  }
+
+  &.mobile {
+    width: 100vw;
+    right: -100vw;
+
+    &.open {
+      right: 0;
+    }
+  }
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+
+  .chat-title {
+    flex: 1;
+    font-weight: 500;
+    font-size: 16px;
+    margin-left: 8px;
+  }
+}
+
+// Session list
+.session-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+  a.active {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .session-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .session-date {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.54);
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+
+  .session-action {
+    opacity: 0;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  a:hover .session-action {
+    opacity: 1;
+  }
+
+  .rename-input {
+    flex: 1;
+    border: 1px solid rgba(0, 0, 0, 0.24);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-color: var(--mat-sys-primary, #7c4dff);
+    }
+  }
+
+  .empty-sessions {
+    padding: 16px;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 14px;
+  }
+}
+
+// Messages area
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message {
+  display: flex;
+
+  &.user {
+    justify-content: flex-end;
+  }
+
+  &.assistant {
+    justify-content: flex-start;
+  }
+}
+
+.bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  font-size: 14px;
+}
+
+.user-bubble {
+  background: var(--mat-sys-primary, #7c4dff);
+  color: var(--mat-sys-on-primary, #fff);
+  border-bottom-right-radius: 4px;
+}
+
+.assistant-bubble {
+  background: var(--mat-sys-surface-variant, #f0f0f0);
+  color: var(--mat-sys-on-surface-variant, #212121);
+  border-bottom-left-radius: 4px;
+
+  // Markdown styles
+  :host ::ng-deep {
+    strong { font-weight: 600; }
+    code {
+      background: rgba(0, 0, 0, 0.06);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+    ul, ol {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+    li { margin: 2px 0; }
+  }
+}
+
+// Typing indicator
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px;
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.38);
+    animation: typing 1.4s infinite;
+
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+  }
+}
+
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+// Empty chat state
+.empty-chat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: rgba(0, 0, 0, 0.54);
+  text-align: center;
+  padding: 24px;
+
+  .empty-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 4px 0;
+    font-size: 16px;
+  }
+
+  .hint {
+    font-size: 13px;
+    opacity: 0.7;
+  }
+}
+
+// Input area
+.chat-input {
+  display: flex;
+  align-items: flex-end;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  gap: 4px;
+  flex-shrink: 0;
+
+  .message-input {
+    flex: 1;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+}

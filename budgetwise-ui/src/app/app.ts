@@ -6,6 +6,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { ChatPanelComponent } from './shared/components/chat-panel/chat-panel.component';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
     MatListModule,
     MatIconModule,
     MatButtonModule,
+    ChatPanelComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
