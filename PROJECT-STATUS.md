@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/14-integration-testing.md`
-**Next ticket to implement:** `tickets/15-chat-module-foundation.md`
+**Last completed ticket:** `tickets/15-chat-module-foundation.md`
+**Next ticket to implement:** `tickets/16-tool-definitions-executor.md`
 **Phase:** Phase 3 — AI Chat Agent
-**Total progress:** 14 / 20 tickets
+**Total progress:** 15 / 20 tickets
 
 ---
 
@@ -99,16 +99,24 @@
 - **Services/APIs available:** N/A (polish only)
 - **User decisions:** Reported icons not working — led to discovering missing font link and emoji rendering issue
 
+### Ticket 15 — Chat Module Foundation
+- **What was built:** Prisma schema updated (ChatSession + ChatMessage models replacing old ChatMessage), OpenAI SDK installed for DeepSeek V3 API, Chat module skeleton with service, controller, DTOs, and tool placeholders. Temporary test endpoint at `GET /api/chat/test` to verify DeepSeek connection.
+- **Files created:** `src/chat/` (chat.module.ts, chat.service.ts, chat.controller.ts, dto/send-message.dto.ts, dto/create-session.dto.ts, tools/tool-definitions.ts, tools/tool-executor.ts), migration `add-chat-sessions`
+- **Files modified:** `prisma/schema.prisma`, `src/app.module.ts`, `.env`, `package.json`
+- **Services/APIs available:** `GET /api/chat/test` (temporary). ChatService with `testConnection()`. ToolExecutor placeholder.
+- **User decisions:** Keep test endpoint in (not removed after testing)
+
 ---
 
 ## What Exists So Far
 
 ### Backend (budgetwise-api/)
-- **Status:** Complete (Phase 1 + 2A)
-- **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports
-- **All 5 service modules export their services** (ready for Phase 3 Chat Agent imports)
-- **Database:** PostgreSQL with seed data (12 categories with emoji icons, 3 starter accounts)
-- **API endpoints:** 5 CRUD modules + reports aggregations, all prefixed with `/api`
+- **Status:** Complete (Phase 1 + 2A) + Chat module foundation (Phase 3 started)
+- **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat (skeleton)
+- **All 5 service modules export their services** (imported by ChatModule)
+- **Database:** PostgreSQL with seed data (12 categories with emoji icons, 3 starter accounts) + ChatSession and ChatMessage tables
+- **API endpoints:** 5 CRUD modules + reports aggregations + `GET /api/chat/test`, all prefixed with `/api`
+- **Dependencies:** `openai` SDK installed for DeepSeek V3 API
 
 ### Frontend (budgetwise-ui/)
 - **Status:** Complete (Phase 2B + 2C)
@@ -120,8 +128,8 @@
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
 
 ### Chat Agent
-- **Status:** Not started (Phase 3, Tickets 15-20)
-- **Prerequisites met:** All 5 backend services exported, database seeded
+- **Status:** Foundation laid (Ticket 15 complete). Schema, SDK, module skeleton ready. Tool definitions, ChatService logic, controller endpoints, and frontend panel remaining (Tickets 16-20).
+- **Prerequisites met:** All 5 backend services exported and imported by ChatModule, database seeded, DeepSeek API key configured
 
 ---
 
@@ -138,4 +146,4 @@
 ## Known Issues / Follow-ups
 
 - **Bundle size warning:** Initial bundle is 547KB, slightly above the 500KB budget. Not blocking but could be optimized with lazy loading improvements.
-- **Phase 3 tickets (15-20):** Referenced in CLAUDE.md but ticket files not yet created in `tickets/` folder. Need to be added before starting Phase 3.
+- **Test endpoint:** `GET /api/chat/test` is temporary — should be removed or replaced once Ticket 18 (Chat Controller API) is implemented.
