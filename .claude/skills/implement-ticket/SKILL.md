@@ -1,6 +1,6 @@
 ---
 name: implement-ticket
-description: Implements a project ticket from the tickets/ folder. Reads the ticket, asks clarifying questions, then implements and commits.
+description: Implements a project ticket from the tickets/ folder. Reads the ticket, asks clarifying questions, implements, commits, updates PROJECT-STATUS.md, and compacts context.
 argument-hint: "[ticket filename]"
 user-invocable: true
 ---
@@ -9,48 +9,68 @@ user-invocable: true
 
 You are implementing a ticket for the BudgetWise project. Follow these steps strictly in order:
 
-## Step 1: Read the Ticket
-- Read the ticket file from `tickets/$ARGUMENTS` (e.g., `tickets/01-backend-scaffolding.md`)
-- Read `CLAUDE.md` for project-wide rules and context
-- Understand the objective, tasks, dependencies, and acceptance criteria
+## Step 1: Load Context
+- Read `PROJECT-STATUS.md` to understand what has been built so far
+- Read `CLAUDE.md` for project-wide rules
+- Read the ticket file from `tickets/$ARGUMENTS`
+- Do NOT read source files you don't need — rely on PROJECT-STATUS.md for context about what exists
 
 ## Step 2: Check Dependencies
-- Verify that all tickets this one depends on have been completed
-- Check that the required files/modules from dependency tickets exist
+- Using PROJECT-STATUS.md, verify that all dependency tickets are listed as completed
 - If dependencies are NOT met, stop and inform the user
 
 ## Step 3: Ask Clarifying Questions
-- BEFORE writing any code, ask the user if they have any preferences, modifications, or additional context for this ticket
-- List 2-5 specific questions based on the ticket's content, such as:
-  - Any naming preferences?
-  - Any deviations from the ticket spec?
-  - Any additional features to add or features to skip?
-  - Any specific libraries or patterns they prefer?
-  - Anything unclear that needs more context?
+- BEFORE writing any code, ask the user 2-5 questions about the ticket
 - WAIT for the user's response before proceeding
 
 ## Step 4: Implement
 - Follow the ticket's tasks step by step
-- Follow all rules in CLAUDE.md (responsive design, Angular Material, service exports, etc.)
-- Write clean, well-structured code
-- Run any build/lint commands to verify the code compiles
+- Follow all rules in CLAUDE.md
 
 ## Step 5: Verify
-- Go through each acceptance criteria checkbox in the ticket
-- Verify each one is met
-- If any are not met, fix them before proceeding
-- Run the development server to confirm no errors
+- Check each acceptance criterion in the ticket
+- Fix any that are not met
+- Run the dev server to confirm no errors
 
 ## Step 6: Commit and Push
-- Stage all changed files
-- Write a descriptive commit message following conventional commits format:
-  - `feat(accounts): add accounts CRUD module with service and controller`
-  - `feat(ui): add responsive dashboard page with budget status and charts`
-- Commit the changes
-- Push to the current branch on GitHub
+- `git add -A`
+- Commit with conventional commits format
+- `git push`
 
-## Step 7: Report
-- Summarize what was implemented
-- List which acceptance criteria were verified
-- Note any issues or follow-up items
-- Tell the user which ticket to implement next (based on CLAUDE.md order)
+## Step 7: Update PROJECT-STATUS.md
+This step is CRITICAL. Update `PROJECT-STATUS.md` with:
+
+1. **Current Progress section:**
+   - Set "Last completed ticket" to the ticket just finished
+   - Set "Next ticket to implement" to the next ticket in CLAUDE.md order
+   - Update the phase name
+   - Update the progress count (e.g., "3 / 20 tickets")
+
+2. **Completed Tickets section — add an entry:**
+   ```
+   ### Ticket XX — [Title]
+   - **What was built:** [1-2 sentences summarizing what was created]
+   - **Files created/modified:** [list key files, not every single one]
+   - **Services/APIs available:** [list endpoints or service methods now available]
+   - **User decisions:** [any deviations from the spec based on user's clarifying answers]
+   ```
+
+3. **What Exists So Far section — update the relevant subsection:**
+   - Add new modules, pages, components, or services to the list
+   - Update the status of each area (Backend, Frontend, Chat Agent)
+
+4. **Key Decisions Made — add any decisions** the user made during Step 3
+
+5. **Known Issues — add any issues** discovered during implementation
+
+## Step 8: Compact Context
+After updating PROJECT-STATUS.md, run:
+```
+/compact retain PROJECT-STATUS.md contents and the next ticket number
+```
+This frees up context for the next ticket while preserving essential state.
+
+## Step 9: Report
+- Summarize what was implemented (keep it brief — details are in PROJECT-STATUS.md)
+- Tell the user which ticket is next
+- Ask: "Ready for the next ticket, or do you want to take a break?"

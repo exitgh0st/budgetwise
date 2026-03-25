@@ -2,9 +2,12 @@
 
 ## What Is This Project?
 
-BudgetWise is a simple personal budgeting web app with an AI-powered financial advisor chat agent (Phase 3, not covered here). This document covers **Phase 1 (Foundation)** and **Phase 2 (Core Features)**.
+BudgetWise is a simple personal budgeting web app with an AI-powered financial advisor chat agent.
 
-**Tech stack:** Angular 18+ with Angular Material · NestJS · Prisma ORM · PostgreSQL · Chart.js (via ng2-charts)
+**Tech stack:**
+- **Frontend:** Angular 18+ with Angular Material · Chart.js (via ng2-charts)
+- **Backend:** NestJS · Prisma ORM · PostgreSQL
+- **AI Chat Agent:** DeepSeek V3 API (OpenAI-compatible) via `openai` Node.js SDK
 
 **Design requirements:**
 - The website must be **fully responsive** — equally usable on mobile (375px) and desktop (1440px)
@@ -16,9 +19,47 @@ BudgetWise is a simple personal budgeting web app with an AI-powered financial a
 
 ## How To Use This File
 
-This project is broken into **14 tickets** in the `tickets/` folder. Each ticket is a self-contained unit of work with clear objectives, implementation details, and acceptance criteria.
+This project is broken into **20 tickets** across 3 phases in the `tickets/` folder. Each ticket is a self-contained unit of work with clear objectives, implementation details, and acceptance criteria.
 
 **Read and implement ONE ticket at a time.** Do not read ahead or combine tickets. Complete each ticket fully (including its acceptance criteria) before moving to the next one.
+
+---
+
+## Context Management Strategy
+
+This project uses a **living state file** to manage context across sessions and keep Claude Code efficient on a Pro plan.
+
+### PROJECT-STATUS.md — The Living Memory
+
+`PROJECT-STATUS.md` at the project root is automatically updated after every ticket. It tracks:
+- Which ticket was last completed and which is next
+- A summary of everything built so far (modules, pages, services, APIs)
+- Key decisions the user made during implementation
+- Known issues or follow-ups
+
+**Rules for using PROJECT-STATUS.md:**
+
+1. **At the start of every session:** Read `PROJECT-STATUS.md` FIRST. It gives you full project context without needing to read source files. Use `/resume` to do this automatically.
+2. **After every ticket:** Update `PROJECT-STATUS.md` with what was built, then run `/compact`. This is handled automatically by the `/implement-ticket` skill.
+3. **Never read source files unnecessarily.** If you need to know what modules exist or what services are available, check `PROJECT-STATUS.md` first. Only read actual source files when you need to modify them.
+4. **When context gets tight:** Run `/compact retain PROJECT-STATUS.md contents and the current ticket number`. This preserves essential state while freeing context.
+
+### Available Skills for Context Management
+
+| Skill | When to use |
+|-------|------------|
+| `/implement-ticket [file]` | Main workflow — implements a ticket, commits, updates PROJECT-STATUS.md, and compacts context |
+| `/resume` | Start of a new session — reads PROJECT-STATUS.md and CLAUDE.md, briefs you on where things stand |
+| `/status` | Quick check — shows progress, current phase, next ticket, known issues |
+| `/commit` | Quick commit and push when needed outside the ticket workflow |
+| `/check-ticket [file]` | Verify acceptance criteria of a completed ticket |
+
+### Context-Saving Best Practices
+
+- **Run `/compact` between tickets.** The `/implement-ticket` skill does this automatically, but if you're doing manual work, compact before starting the next ticket.
+- **One ticket per focus block.** Don't try to do 5 tickets without compacting. The pattern is: implement → commit → update status → compact → next ticket.
+- **Use `/resume` when starting a new Claude Code session.** It reads PROJECT-STATUS.md and CLAUDE.md to restore full context in seconds.
+- **Keep PROJECT-STATUS.md accurate.** If you make manual changes outside of tickets, update PROJECT-STATUS.md yourself so the next session has correct context.
 
 ---
 
@@ -31,20 +72,21 @@ This project is broken into **14 tickets** in the `tickets/` folder. Each ticket
 The project has not been set up yet. You MUST follow the steps in `SETUP-GUIDE.md` **before doing any work with the tickets.** This means:
 
 1. Read `SETUP-GUIDE.md` in its entirety
-2. Walk the user through installing the required MCP servers (GitHub, PostgreSQL, Context7, Sequential Thinking)
-3. Create the custom skills (`/implement-ticket`, `/commit`, `/check-ticket`)
-4. Initialize the project and git repository
-5. Only after all setup steps are complete, proceed to the first ticket
+2. Walk the user through installing the required MCP server (Context7)
+3. Create the custom skills (`/implement-ticket`, `/commit`, `/check-ticket`, `/resume`, `/status`)
+4. Create `PROJECT-STATUS.md` from the template in SETUP-GUIDE.md
+5. Initialize the project and git repository
+6. Only after all setup steps are complete, proceed to the first ticket
 
-**Do NOT skip setup. Do NOT jump to tickets.** The MCP servers and skills are required for the ticket workflow to function correctly (especially auto-commits to GitHub).
+**Do NOT skip setup. Do NOT jump to tickets.**
 
 ### If there IS already a `.mcp.json` file in the project directory:
 
-The project has likely been set up before. **Proceed directly to the ticket workflow** — skip the setup guide and start implementing tickets in order.
+The project has likely been set up before. **Read `PROJECT-STATUS.md` first** to understand current progress, then proceed to the next ticket.
 
 **Exception:** If the user explicitly asks to implement or re-run the setup guide even though `.mcp.json` exists, do NOT re-run the entire guide blindly. Instead, ask the user specifically which parts of the setup guide they want to implement. For example:
 
-- "Which MCP servers do you want to add or reconfigure?"
+- "Do you want to add or reconfigure the MCP server?"
 - "Do you want to recreate/update the custom skills?"
 - "Do you want to reinitialize the git repository?"
 - "Is there a specific section of the setup guide you need?"
@@ -55,7 +97,7 @@ Wait for the user's answer and only execute the parts they specify.
 
 ## Critical Workflow Rules
 
-These rules MUST be followed for every ticket. They are non-negotiable.
+These rules MUST be followed for every ticket across ALL phases. They are non-negotiable.
 
 ### Rule 1: Ask Before You Build
 
@@ -79,6 +121,7 @@ After completing each ticket and verifying its acceptance criteria, you MUST:
      - `feat(backend): scaffold NestJS project with Prisma and PostgreSQL`
      - `feat(accounts): add accounts CRUD module with service and controller`
      - `feat(ui/dashboard): add responsive dashboard with budget status and charts`
+     - `feat(chat): add DeepSeek V3 integration with tool call loop`
      - `chore(seed): add default categories and starter accounts`
    - Use `feat` for new features, `fix` for bug fixes, `refactor` for restructuring, `chore` for tooling/config
 3. **Push to the remote branch:** `git push`
@@ -99,9 +142,7 @@ If verification fails, fix the issues before committing.
 
 ## Implementation Order
 
-Tickets are grouped into stages. Within each stage, tickets can be done in the listed order. Some tickets within the same stage are parallelizable (noted below), but if doing them sequentially, follow the numbering.
-
-### Stage 1: Backend Foundation
+### Phase 1 — Backend Foundation (Tickets 01–02)
 > Set up the project, database, and data layer.
 
 | Order | Ticket | File | Description |
@@ -109,11 +150,11 @@ Tickets are grouped into stages. Within each stage, tickets can be done in the l
 | 1     | 01     | `tickets/01-backend-scaffolding.md` | NestJS project + Prisma + PostgreSQL setup |
 | 2     | 02     | `tickets/02-seed-data.md` | Default categories and accounts |
 
-**After Stage 1:** The backend should start, connect to the database, and have seed data loaded. Verify with `npx prisma studio`.
+**After Phase 1:** The backend should start, connect to the database, and have seed data loaded. Verify with `npx prisma studio`.
 
 ---
 
-### Stage 2: Backend CRUD Modules
+### Phase 2A — Backend CRUD Modules (Tickets 03–07)
 > Build the core business logic. Each module follows the same pattern: DTO → Service → Controller.
 
 | Order | Ticket | File | Description |
@@ -124,61 +165,69 @@ Tickets are grouped into stages. Within each stage, tickets can be done in the l
 | 6     | 06     | `tickets/06-budgets-module.md` | Budgets CRUD |
 | 7     | 07     | `tickets/07-reports-module.md` | Reports (read-only aggregations) |
 
-**Important notes:**
-- Ticket 05 (Transactions) is the most complex. It requires Prisma `$transaction` for atomic balance updates. Pay extra attention to the update and delete logic.
-- Tickets 03 and 04 can be done in parallel since they don't depend on each other.
-- Ticket 05 depends on both 03 and 04.
-- Ticket 06 depends on 04.
-- Ticket 07 depends on 05 and 06.
+**Notes:**
+- Ticket 05 (Transactions) is the most complex — requires Prisma `$transaction` for atomic balance updates.
+- Tickets 03 and 04 can be done in parallel. Ticket 05 depends on both. Ticket 06 depends on 04. Ticket 07 depends on 05 and 06.
 
-**After Stage 2:** All API endpoints should work. Test each module's endpoints with a tool like Postman, curl, or the built-in Swagger docs before moving on.
+**After Phase 2A:** All API endpoints should work. Test with Postman, curl, or Swagger.
 
 ---
 
-### Stage 3: Frontend Foundation
-> Set up the Angular project, shared services, models, and the responsive app shell.
+### Phase 2B — Frontend (Tickets 08–13)
+> Angular app shell + all 5 pages.
 
 | Order | Ticket | File | Description |
 |-------|--------|------|-------------|
 | 8     | 08     | `tickets/08-angular-scaffolding.md` | Angular project + Material + layout + services + routing |
-
-**Note:** This ticket can be started as early as after Ticket 01 (it only needs the API contract, not a running backend). However, for sequential implementation, do it after Stage 2.
-
-**After Stage 3:** The Angular app should start, show a responsive sidenav with navigation, and render placeholder pages. All API services should be created (even if the backend isn't running, they should compile).
-
----
-
-### Stage 4: Frontend Pages
-> Build each page of the app. These can technically be done in any order, but the recommended order prioritizes the most important pages first.
-
-| Order | Ticket | File | Description |
-|-------|--------|------|-------------|
-| 9     | 10     | `tickets/10-frontend-accounts.md` | Accounts page (simplest, good warm-up) |
-| 10    | 11     | `tickets/11-frontend-transactions.md` | Transactions page (most used, most complex) |
+| 9     | 10     | `tickets/10-frontend-accounts.md` | Accounts page |
+| 10    | 11     | `tickets/11-frontend-transactions.md` | Transactions page |
 | 11    | 12     | `tickets/12-frontend-budgets.md` | Budgets page |
 | 12    | 13     | `tickets/13-frontend-reports.md` | Reports page (charts) |
-| 13    | 09     | `tickets/09-frontend-dashboard.md` | Dashboard (last — it pulls from all other data) |
+| 13    | 09     | `tickets/09-frontend-dashboard.md` | Dashboard (last — pulls from all data) |
 
-**Why Dashboard is last:** The Dashboard consumes data from accounts, transactions, budgets, and reports. Building it last ensures all the underlying services and pages are already working.
-
-**After Stage 4:** The full app should be functional — navigate between all pages, CRUD everything, see charts and reports.
+**After Phase 2B:** The full app should be functional through the UI.
 
 ---
 
-### Stage 5: Integration & Polish
-> Verify everything works together and fix any issues.
+### Phase 2C — Integration & Polish (Ticket 14)
 
 | Order | Ticket | File | Description |
 |-------|--------|------|-------------|
 | 14    | 14     | `tickets/14-integration-testing.md` | End-to-end testing + responsive check + polish |
 
-**After Stage 5:** The app is complete for Phase 1 and Phase 2. It should be fully usable, responsive, and bug-free. All NestJS services should be exported and ready for the Phase 3 Chat Agent integration.
+**After Phase 2C:** App is fully usable, responsive, and bug-free. All services exported and ready for Phase 3.
+
+---
+
+### Phase 3 — AI Chat Agent (Tickets 15–20)
+> Add the DeepSeek V3-powered financial advisor chat agent.
+
+**⚠️ PREREQUISITE:** Before starting Phase 3, verify:
+1. Backend starts without errors
+2. Angular app starts without errors
+3. All 5 service modules export their services (AccountsService, CategoriesService, TransactionsService, BudgetsService, ReportsService)
+4. Database has seed data
+5. User has a DeepSeek API key from https://platform.deepseek.com/
+
+| Order | Ticket | File | Description |
+|-------|--------|------|-------------|
+| 15    | 15     | `tickets/15-chat-module-foundation.md` | Prisma schema update + DeepSeek SDK + module skeleton |
+| 16    | 16     | `tickets/16-tool-definitions-executor.md` | 24 tool definitions + ToolExecutor routing |
+| 17    | 17     | `tickets/17-chat-service-deepseek.md` | ChatService with DeepSeek API + tool call loop |
+| 18    | 18     | `tickets/18-chat-controller-api.md` | REST API endpoints for chat |
+| 19    | 19     | `tickets/19-frontend-chat-panel.md` | Angular chat panel (sidebar on desktop, fullscreen on mobile) |
+| 20    | 20     | `tickets/20-integration-testing.md` | End-to-end testing + polish |
+
+**No parallelization in Phase 3.** Each ticket strictly depends on the previous one.
+
+**After Phase 3:** The chat agent can do EVERYTHING the UI can do through natural conversation.
 
 ---
 
 ## Quick Reference: Dependency Graph
 
 ```
+PHASE 1-2:
 Ticket 01 (Backend Scaffold)
   ├── Ticket 02 (Seed Data)
   ├── Ticket 03 (Accounts Module)
@@ -194,15 +243,22 @@ Ticket 01 (Backend Scaffold)
         ├── Ticket 12 (Budgets Page)
         ├── Ticket 13 (Reports Page)
         └── Ticket 09 (Dashboard Page)
-              │
               └── Ticket 14 (Integration & Polish)
+
+PHASE 3:
+Ticket 15 (Schema + SDK + Module Skeleton)
+  └── Ticket 16 (Tool Definitions + Executor)
+        └── Ticket 17 (ChatService + DeepSeek Integration)
+              └── Ticket 18 (Chat Controller API)
+                    └── Ticket 19 (Frontend Chat Panel)
+                          └── Ticket 20 (Integration Testing)
 ```
 
 ---
 
 ## Global Rules for Implementation
 
-These apply to EVERY ticket:
+These apply to EVERY ticket across ALL phases:
 
 ### Backend Rules
 - **Services are the source of truth.** Controllers should be thin — validate input, call the service, return the result. All business logic lives in services.
@@ -211,6 +267,14 @@ These apply to EVERY ticket:
 - **Handle errors properly.** Use NestJS built-in exceptions: `NotFoundException`, `ConflictException`, `BadRequestException`. Catch Prisma-specific error codes (P2002 for unique violation, P2003 for foreign key violation).
 - **All API routes are prefixed with `/api`** (set via `app.setGlobalPrefix('api')` in `main.ts`).
 - **Decimal handling:** Prisma returns `Decimal` objects. Convert to `Number()` when doing math or returning in reports.
+
+### Backend Rules — Phase 3 Specific
+- **DeepSeek V3 uses the OpenAI-compatible API format.** Use the `openai` Node.js SDK with `baseURL` set to `https://api.deepseek.com`.
+- **The model name is `deepseek-chat`** (configurable via env var `DEEPSEEK_MODEL`).
+- **Tool definitions use the OpenAI `ChatCompletionTool` type** — identical format to OpenAI function calling.
+- **Tool call loop safety:** Maximum 10 iterations to prevent infinite loops.
+- **Error handling in tool execution:** Never throw exceptions from the ToolExecutor. Return `{ error: message }` objects so the AI can handle errors gracefully.
+- **All services are shared.** The ChatModule imports existing service modules — it does NOT duplicate any business logic.
 
 ### Frontend Rules
 - **Responsive first.** Every component must work on mobile (375px) and desktop (1440px). Use Angular CDK `BreakpointObserver` and CSS Grid/Flexbox.
@@ -222,6 +286,19 @@ These apply to EVERY ticket:
 - **Currency formatting:** Display as `₱XX,XXX.XX` (Philippine Peso). Use Angular's `CurrencyPipe` with `'PHP'` locale or a custom pipe.
 - **Color conventions:** Income = green (#4CAF50), Expense = red (#F44336), Budget OK = green, Budget warning = amber (#FF9800), Budget over = red.
 
+### Frontend Rules — Phase 3 Specific
+- **Chat panel lives in `app.component.html`** so it persists across all page navigations.
+- **Responsive chat panel:** 400px sidebar on desktop (≥ 960px), full-screen on mobile (< 960px).
+- **Filter out `tool` role messages** — only show `user` and `assistant` messages in the UI.
+- **Typing indicator** while waiting for AI response.
+- **Markdown rendering** in assistant messages (bold, lists, currency).
+
+### Conversation Rules (Phase 3)
+- **Sessions are persistent by default.** Reopening the chat loads the active session's history.
+- **"New Conversation" creates a fresh session** and deactivates the old one.
+- **Session title auto-generated** from the first user message.
+- **System prompt is sent with every API call** (prepended to the message array).
+
 ### Code Quality
 - Use clear, descriptive names for variables, methods, and files
 - Keep files focused — one component/service per file
@@ -229,7 +306,22 @@ These apply to EVERY ticket:
 
 ---
 
-## Folder Structure (Final)
+## Environment Variables
+
+```env
+# Phase 1-2
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/budgetwise"
+PORT=3000
+
+# Phase 3 (add when starting Phase 3)
+DEEPSEEK_API_KEY="sk-..."
+DEEPSEEK_MODEL="deepseek-chat"
+DEEPSEEK_BASE_URL="https://api.deepseek.com"
+```
+
+---
+
+## Folder Structure (Final — After All Phases)
 
 ```
 budgetwise/
@@ -264,10 +356,18 @@ budgetwise/
 │   │   │   ├── budgets.service.ts
 │   │   │   ├── budgets.controller.ts
 │   │   │   └── dto/
-│   │   └── reports/
-│   │       ├── reports.module.ts
-│   │       ├── reports.service.ts
-│   │       └── reports.controller.ts
+│   │   ├── reports/
+│   │   │   ├── reports.module.ts
+│   │   │   ├── reports.service.ts
+│   │   │   └── reports.controller.ts
+│   │   └── chat/                      # Phase 3
+│   │       ├── chat.module.ts
+│   │       ├── chat.service.ts
+│   │       ├── chat.controller.ts
+│   │       ├── dto/
+│   │       └── tools/
+│   │           ├── tool-definitions.ts
+│   │           └── tool-executor.ts
 │   ├── .env
 │   └── package.json
 │
@@ -280,13 +380,15 @@ budgetwise/
 │   │   │   │   │   ├── category.model.ts
 │   │   │   │   │   ├── transaction.model.ts
 │   │   │   │   │   ├── budget.model.ts
-│   │   │   │   │   └── report.model.ts
+│   │   │   │   │   ├── report.model.ts
+│   │   │   │   │   └── chat.model.ts          # Phase 3
 │   │   │   │   └── services/
 │   │   │   │       ├── accounts.service.ts
 │   │   │   │       ├── categories.service.ts
 │   │   │   │       ├── transactions.service.ts
 │   │   │   │       ├── budgets.service.ts
-│   │   │   │       └── reports.service.ts
+│   │   │   │       ├── reports.service.ts
+│   │   │   │       └── chat.service.ts        # Phase 3
 │   │   │   ├── pages/
 │   │   │   │   ├── dashboard/
 │   │   │   │   ├── accounts/
@@ -295,6 +397,7 @@ budgetwise/
 │   │   │   │   └── reports/
 │   │   │   ├── shared/
 │   │   │   │   └── components/
+│   │   │   │       └── chat-panel/            # Phase 3
 │   │   │   ├── app.component.ts
 │   │   │   ├── app.component.html
 │   │   │   ├── app.component.scss
@@ -305,7 +408,8 @@ budgetwise/
 │   └── package.json
 │
 ├── CLAUDE.md                          # This file
-└── tickets/                           # Implementation tickets
+├── SETUP-GUIDE.md                     # Claude Code setup instructions
+└── tickets/                           # All implementation tickets
     ├── 01-backend-scaffolding.md
     ├── 02-seed-data.md
     ├── 03-accounts-module.md
@@ -319,16 +423,53 @@ budgetwise/
     ├── 11-frontend-transactions.md
     ├── 12-frontend-budgets.md
     ├── 13-frontend-reports.md
-    └── 14-integration-testing.md
+    ├── 14-integration-testing.md
+    ├── 15-chat-module-foundation.md
+    ├── 16-tool-definitions-executor.md
+    ├── 17-chat-service-deepseek.md
+    ├── 18-chat-controller-api.md
+    ├── 19-frontend-chat-panel.md
+    └── 20-integration-testing.md
 ```
 
 ---
 
-## What Comes After Phase 2?
+## Complete Tool Inventory — Phase 3 (24 tools)
 
-Phase 3 adds the AI Chat Agent. The entire backend is already prepared for this:
-- All services are exported and injectable
-- The service layer pattern means the agent calls the same code as the REST API
-- A separate set of tickets will be provided for Phase 3
+| Domain       | Tool Name                  | Operation |
+|-------------|---------------------------|-----------|
+| Accounts    | `create_account`           | Create    |
+| Accounts    | `list_accounts`            | Read      |
+| Accounts    | `get_account`              | Read      |
+| Accounts    | `update_account`           | Update    |
+| Accounts    | `delete_account`           | Delete    |
+| Categories  | `create_category`          | Create    |
+| Categories  | `list_categories`          | Read      |
+| Categories  | `get_category`             | Read      |
+| Categories  | `update_category`          | Update    |
+| Categories  | `delete_category`          | Delete    |
+| Transactions| `create_transaction`       | Create    |
+| Transactions| `list_transactions`        | Read      |
+| Transactions| `get_transaction`          | Read      |
+| Transactions| `update_transaction`       | Update    |
+| Transactions| `delete_transaction`       | Delete    |
+| Budgets     | `create_budget`            | Create    |
+| Budgets     | `list_budgets`             | Read      |
+| Budgets     | `get_budget`               | Read      |
+| Budgets     | `update_budget`            | Update    |
+| Budgets     | `delete_budget`            | Delete    |
+| Reports     | `get_summary`              | Read      |
+| Reports     | `get_spending_by_category` | Read      |
+| Reports     | `get_budget_status`        | Read      |
+| Reports     | `get_monthly_trend`        | Read      |
 
-**Do not start Phase 3 work during Phase 1 or 2.** The ChatModule, ChatService, and tool definitions will be covered in their own ticket set.
+---
+
+## What Comes After Phase 3?
+
+Future Phase 4 possibilities (out of scope for now):
+- n8n integration for external workflow orchestration
+- Telegram bot channel
+- Excel/Google Sheets export via n8n
+- Streaming responses (SSE) for real-time token display
+- Voice input
