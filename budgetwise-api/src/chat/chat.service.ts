@@ -112,6 +112,19 @@ export class ChatService {
     return this.createSession(title);
   }
 
+  async deleteSession(sessionId: string) {
+    return this.prisma.chatSession.delete({
+      where: { id: sessionId },
+    });
+  }
+
+  async updateSession(sessionId: string, title: string) {
+    return this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { title },
+    });
+  }
+
   // ============================================
   // MESSAGE HISTORY
   // ============================================
