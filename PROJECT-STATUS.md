@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/15-chat-module-foundation.md`
-**Next ticket to implement:** `tickets/16-tool-definitions-executor.md`
+**Last completed ticket:** `tickets/16-tool-definitions-executor.md`
+**Next ticket to implement:** `tickets/17-chat-service-deepseek.md`
 **Phase:** Phase 3 — AI Chat Agent
-**Total progress:** 15 / 20 tickets
+**Total progress:** 16 / 20 tickets
 
 ---
 
@@ -106,6 +106,12 @@
 - **Services/APIs available:** `GET /api/chat/test` (temporary). ChatService with `testConnection()`. ToolExecutor placeholder.
 - **User decisions:** Keep test endpoint in (not removed after testing)
 
+### Ticket 16 — Tool Definitions + Tool Executor
+- **What was built:** 24 OpenAI-compatible tool definitions (5 Accounts, 5 Categories, 5 Transactions, 5 Budgets, 4 Reports) and a ToolExecutor service that routes tool calls to existing NestJS services with error handling (returns error objects, never throws).
+- **Files modified:** `src/chat/tools/tool-definitions.ts`, `src/chat/tools/tool-executor.ts`
+- **Services/APIs available:** `ToolExecutor.execute(toolName, args)` — routes to AccountsService, CategoriesService, TransactionsService, BudgetsService, ReportsService
+- **User decisions:** None (default spec)
+
 ---
 
 ## What Exists So Far
@@ -128,7 +134,7 @@
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
 
 ### Chat Agent
-- **Status:** Foundation laid (Ticket 15 complete). Schema, SDK, module skeleton ready. Tool definitions, ChatService logic, controller endpoints, and frontend panel remaining (Tickets 16-20).
+- **Status:** Tools ready (Tickets 15-16 complete). Schema, SDK, module skeleton, 24 tool definitions, and ToolExecutor all in place. ChatService logic, controller endpoints, and frontend panel remaining (Tickets 17-20).
 - **Prerequisites met:** All 5 backend services exported and imported by ChatModule, database seeded, DeepSeek API key configured
 
 ---
