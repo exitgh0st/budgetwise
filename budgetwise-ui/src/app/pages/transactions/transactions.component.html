@@ -154,14 +154,14 @@
         @for (t of group.transactions; track t.id) {
           <div class="transaction-row">
             <div class="transaction-info">
-              @if (t.category?.icon) {
+              @if (t.category.icon) {
                 <span class="category-icon emoji">{{ t.category.icon }}</span>
               } @else {
                 <mat-icon class="category-icon">receipt</mat-icon>
               }
               <div class="transaction-details">
-                <span class="description">{{ t.description || t.category?.name || 'Transaction' }}</span>
-                <span class="account-name">{{ t.account?.name }}</span>
+                <span class="description">{{ t.description || t.category.name || 'Transaction' }}</span>
+                <span class="account-name">{{ t.account.name }}</span>
               </div>
             </div>
             <div class="transaction-actions">

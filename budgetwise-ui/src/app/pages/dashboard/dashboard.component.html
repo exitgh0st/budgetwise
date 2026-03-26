@@ -102,13 +102,13 @@
             @for (t of recentTransactions; track t.id) {
               <div class="transaction-item">
                 <div class="transaction-info">
-                  @if (t.category?.icon) {
+                  @if (t.category.icon) {
                   <span class="transaction-icon emoji">{{ t.category.icon }}</span>
                 } @else {
                   <mat-icon class="transaction-icon">receipt</mat-icon>
                 }
                   <div class="transaction-details">
-                    <span class="transaction-desc">{{ t.description || t.category?.name || 'Transaction' }}</span>
+                    <span class="transaction-desc">{{ t.description || t.category.name || 'Transaction' }}</span>
                     <span class="transaction-date">{{ formatRelativeDate(t.date) }}</span>
                   </div>
                 </div>
