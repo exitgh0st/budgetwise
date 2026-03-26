@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/21-frontend-categories.md`
+**Last completed ticket:** `tickets/22-chat-history-pagination.md`
 **Next ticket to implement:** None — all core + post-phase tickets complete
-**Phase:** Post-Phase 3 (Frontend additions)
-**Total progress:** 21 / 21 tickets
+**Phase:** Post-Phase 3 (Chat improvements)
+**Total progress:** 22 / 22 tickets
 
 ---
 
@@ -138,6 +138,12 @@
 - **Services/APIs available:** No new APIs — bug fixes only
 - **User decisions:** Code-level review only (no automated tests). Leave bundle size as-is. UI fine-tuning deferred to user.
 
+### Ticket 22 — Chat History Pagination
+- **What was built:** Cursor-based paginated `getHistory()` that filters out `tool` role and intermediate assistant `toolCalls` messages. Backend returns `{ messages, hasMore }` instead of a plain array. Frontend auto-loads older messages when scrolling near the top, prepends them while preserving scroll position, and shows a spinner during load.
+- **Files modified:** `budgetwise-api/src/chat/chat.service.ts` (new getHistory), `budgetwise-api/src/chat/chat.controller.ts` (before param + hasMore in active session), `budgetwise-ui/src/app/core/services/chat.service.ts` (updated signatures), `chat-panel.component.ts/html/scss` (scroll handler, loadMoreMessages, spinner)
+- **Services/APIs available:** `GET /api/chat/history/:sessionId?limit=50[&before=<id>]` returns `{ messages, hasMore }`. `GET /api/chat/sessions/active` now returns `{ sessionId, messages, hasMore }`.
+- **User decisions:** Default limit 50, auto-load on scroll (not a button), internal AI context query (`buildMessageArray`) unchanged.
+
 ### Ticket 21 — Categories Page
 - **What was built:** Dedicated Categories management page with sortable Material table (desktop), mobile list view with emoji icons, add/edit dialog (name + emoji icon fields), delete with FK violation protection (409/400 → specific snackbar message), empty state, loading spinner, sidenav navigation link.
 - **Files created:** `src/app/pages/categories/` (categories.component.ts/html/scss, category-dialog.component.ts)
@@ -168,8 +174,24 @@
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
 
 ### Chat Agent
-- **Status:** Complete — fully functional end-to-end (Tickets 15-20 done). Backend API + frontend chat panel + integration polish all complete.
+- **Status:** Complete — fully functional end-to-end (Tickets 15-20, 22 done). Backend API + frontend chat panel + integration polish + history pagination all complete.
 - **Prerequisites met:** All 5 backend services exported and imported by ChatModule, database seeded, DeepSeek API key configured
+
+---
+
+## Upcoming / In Progress Tickets
+
+### Ticket 23 — Recurring Transactions
+**Status:** Pending
+**Description:** Adds a `RecurringTransaction` model and backend endpoints (CRUD + generate-occurrence) plus a second "Recurring" tab on the Transactions page, allowing users to define weekly/monthly/yearly transaction templates and post each occurrence on demand with automatic account balance sync.
+
+### Ticket 24 — CSV Export for Transactions
+**Status:** Pending
+**Description:** Adds an "Export CSV" button to the Transactions page that downloads all transactions matching the current active filters as a CSV file, generated client-side with no new backend endpoints.
+
+### Ticket 25 — Dark Mode
+**Status:** Pending
+**Description:** Adds a dark/light theme toggle to the toolbar that switches the entire app between M3 light and dark themes, persisting the user's preference to localStorage and defaulting to the OS color-scheme setting.
 
 ---
 
@@ -190,3 +212,4 @@
 
 - **Bundle size warning:** Initial bundle is now 730KB (up from 547KB with chat panel in initial bundle). Not blocking but could be optimized.
 - **`testConnection()` kept in ChatService** for debugging — no controller endpoint exposes it anymore.
+- **Chat history pagination:** Messages added during the current session via `sendMessage()` are appended directly to the local array (no ID assigned on send, uses `''`). This means the `oldestMessageId` cursor only tracks the initial load, not messages added in the current session. Not a bug — the cursor only matters for loading *older* pages.
