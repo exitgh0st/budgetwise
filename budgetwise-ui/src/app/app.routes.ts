@@ -27,4 +27,9 @@ export const routes: Routes = [
     title: 'Reports | BudgetWise',
     loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent),
   },
+  {
+    path: 'categories',
+    title: 'Categories | BudgetWise',
+    loadComponent: () => import('./pages/categories/categories.component').then(m => m.CategoriesComponent),
+  },
 ];
