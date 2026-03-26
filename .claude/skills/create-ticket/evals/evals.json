@@ -1,0 +1,50 @@
+{
+  "skill_name": "create-ticket",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "create a ticket for adding dark mode to the BudgetWise UI. It should toggle between light and dark themes and remember the user's preference.",
+      "expected_output": "A complete ticket markdown file saved to d:\\repositories\\budgetwise\\tickets\\23-dark-mode.md (or similar number) with: metadata block (Phase, Priority, Depends on, Blocks), Objective section, Frontend Changes with Angular Material theming code, Implementation Notes, Files to Create/Modify, and at least 5 specific Acceptance Criteria. PROJECT-STATUS.md should be updated with the new ticket entry.",
+      "files": [],
+      "expectations": [
+        "Ticket file is written to d:\\repositories\\budgetwise\\tickets\\ with a filename starting with 23 or higher",
+        "Ticket contains a metadata block with Phase, Priority, Depends on, and Blocks fields",
+        "Ticket contains an Objective section describing the dark mode feature",
+        "Ticket contains Angular/TypeScript code snippets showing how to implement theming",
+        "Ticket contains at least 5 Acceptance Criteria formatted as - [ ] checkboxes",
+        "Ticket mentions localStorage or similar for persisting the theme preference",
+        "PROJECT-STATUS.md is updated with a reference to the new ticket"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to add CSV export for transactions. Users should be able to click a button on the Transactions page to download all their transactions as a CSV file. Create a ticket for this.",
+      "expected_output": "A complete ticket markdown file for CSV export functionality. Should include: metadata, objective, frontend changes (button + download logic), and acceptance criteria. Since this is frontend-only (CSV generation can happen client-side), should NOT require backend changes. Should reference the existing TransactionsService at budgetwise-ui/src/app/core/services/transactions.service.ts.",
+      "files": [],
+      "expectations": [
+        "Ticket file is written to d:\\repositories\\budgetwise\\tickets\\ with correct sequential numbering",
+        "Ticket contains a metadata block with Phase, Priority, Depends on, and Blocks fields",
+        "Ticket references the existing TransactionsService rather than creating a new one",
+        "Ticket includes TypeScript code showing how to generate and download a CSV file",
+        "Ticket specifies what columns should appear in the CSV output",
+        "Ticket contains Acceptance Criteria with at least one criterion about the downloaded file format",
+        "Ticket correctly identifies this as frontend-only work (or justifies backend involvement if chosen)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "create a ticket for recurring transactions — users should be able to mark a transaction as recurring (weekly, monthly, yearly) and have it automatically repeat. This needs both backend and frontend work.",
+      "expected_output": "A complete ticket for recurring transactions. This is complex full-stack work requiring: Prisma schema changes (new fields on Transaction or a new RecurringTransaction model), a backend service/job to create recurring instances, and frontend UI changes to the transaction form. Should include detailed implementation guidance since this touches the most critical service (TransactionsService with balance sync).",
+      "files": [],
+      "expectations": [
+        "Ticket file is written to d:\\repositories\\budgetwise\\tickets\\ with correct sequential numbering",
+        "Ticket contains both Backend Changes and Frontend Changes sections",
+        "Ticket references the Prisma schema and proposes specific schema changes (new fields or model)",
+        "Ticket includes TypeScript/Prisma code snippets for the new schema or service methods",
+        "Ticket mentions the critical balance sync concern (Prisma $transaction pattern)",
+        "Ticket includes an Implementation Notes section with warnings about the complexity",
+        "Ticket contains at least 6 Acceptance Criteria covering both backend API behavior and frontend UI"
+      ]
+    }
+  ]
+}
