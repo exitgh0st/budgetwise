@@ -13,8 +13,8 @@ export class ChatService {
     return this.http.post<{ reply: string; sessionId: string }>(this.url, { message, sessionId });
   }
 
-  getActiveSession(): Observable<{ sessionId: string; messages: ChatMessage[] }> {
-    return this.http.get<{ sessionId: string; messages: ChatMessage[] }>(`${this.url}/sessions/active`);
+  getActiveSession(): Observable<{ sessionId: string; messages: ChatMessage[]; hasMore: boolean }> {
+    return this.http.get<{ sessionId: string; messages: ChatMessage[]; hasMore: boolean }>(`${this.url}/sessions/active`);
   }
 
   getSessions(): Observable<ChatSession[]> {
@@ -25,8 +25,9 @@ export class ChatService {
     return this.http.post<ChatSession>(`${this.url}/sessions/new`, { title });
   }
 
-  getHistory(sessionId: string, limit = 50): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.url}/history/${sessionId}?limit=${limit}`);
+  getHistory(sessionId: string, limit = 50, before?: string): Observable<{ messages: ChatMessage[]; hasMore: boolean }> {
+    const params = before ? `?limit=${limit}&before=${before}` : `?limit=${limit}`;
+    return this.http.get<{ messages: ChatMessage[]; hasMore: boolean }>(`${this.url}/history/${sessionId}${params}`);
   }
 
   updateSession(id: string, title: string): Observable<ChatSession> {

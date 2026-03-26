@@ -129,12 +129,22 @@ export class ChatService {
   // MESSAGE HISTORY
   // ============================================
 
-  async getHistory(sessionId: string, limit = 50) {
-    return this.prisma.chatMessage.findMany({
-      where: { sessionId },
-      orderBy: { createdAt: 'asc' },
-      take: limit,
+  async getHistory(sessionId: string, limit = 50, before?: string): Promise<{ messages: any[]; hasMore: boolean }> {
+    const where: any = { sessionId, role: { not: 'tool' }, toolCalls: null };
+
+    if (before) {
+      const cursor = await this.prisma.chatMessage.findUnique({ where: { id: before } });
+      if (cursor) where.createdAt = { lt: cursor.createdAt };
+    }
+
+    const raw = await this.prisma.chatMessage.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
     });
+
+    const hasMore = raw.length > limit;
+    return { messages: raw.slice(0, limit).reverse(), hasMore };
   }
 
   private async buildMessageArray(

@@ -70,7 +70,12 @@
   }
 
   <!-- Messages -->
-  <div class="chat-messages" #messageContainer>
+  <div class="chat-messages" #messageContainer (scroll)="onScroll($event)">
+    @if (isLoadingMore) {
+      <div class="load-more-indicator">
+        <mat-spinner diameter="24"></mat-spinner>
+      </div>
+    }
     @for (msg of messages; track msg.id || $index) {
       @if (msg.role === 'user') {
         <div class="message user">
