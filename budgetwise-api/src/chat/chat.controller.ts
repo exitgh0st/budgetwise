@@ -52,10 +52,12 @@ export class ChatController {
   async getHistory(
     @Param('sessionId') sessionId: string,
     @Query('limit') limit?: string,
+    @Query('before') before?: string,
   ) {
     return this.chatService.getHistory(
       sessionId,
       limit ? Number(limit) : 50,
+      before,
     );
   }
 
@@ -69,8 +71,8 @@ export class ChatController {
   @Get('sessions/active')
   async getActiveSession() {
     const sessionId = await this.chatService.getOrCreateActiveSession();
-    const messages = await this.chatService.getHistory(sessionId);
-    return { sessionId, messages };
+    const { messages, hasMore } = await this.chatService.getHistory(sessionId);
+    return { sessionId, messages, hasMore };
   }
 
   // Start a new conversation session

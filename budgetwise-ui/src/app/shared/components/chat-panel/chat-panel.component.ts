@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subscription } from 'rxjs';
 import { ChatService } from '../../../core/services/chat.service';
 import { ChatMessage, ChatSession } from '../../../core/models/chat.model';
@@ -29,6 +30,7 @@ import { MarkdownPipe } from '../../pipes/markdown.pipe';
     MatMenuModule,
     MatListModule,
     MatSnackBarModule,
+    MatProgressSpinnerModule,
     MarkdownPipe,
   ],
   templateUrl: './chat-panel.component.html',
@@ -38,12 +40,15 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   isPanelOpen = false;
   isMobile = false;
   isLoading = false;
+  isLoadingMore = false;
+  hasMoreMessages = false;
   showSessionList = false;
 
   userInput = '';
   messages: ChatMessage[] = [];
   sessions: ChatSession[] = [];
   activeSessionId = '';
+  private oldestMessageId: string | null = null;
 
   editingSessionId: string | null = null;
   editingTitle = '';
@@ -77,9 +82,11 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
 
   private loadActiveSession() {
     this.chatService.getActiveSession().subscribe({
-      next: ({ sessionId, messages }) => {
+      next: ({ sessionId, messages, hasMore }) => {
         this.activeSessionId = sessionId;
         this.messages = messages.filter(m => m.role !== 'tool');
+        this.hasMoreMessages = hasMore;
+        this.oldestMessageId = messages.length > 0 ? messages[0].id : null;
         this.shouldScroll = true;
       },
       error: () => {
@@ -127,6 +134,8 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
       next: (session) => {
         this.activeSessionId = session.id;
         this.messages = [];
+        this.hasMoreMessages = false;
+        this.oldestMessageId = null;
         this.showSessionList = false;
       },
       error: () => {
@@ -147,10 +156,40 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   switchSession(sessionId: string) {
     this.activeSessionId = sessionId;
     this.editingSessionId = null;
-    this.chatService.getHistory(sessionId).subscribe(messages => {
+    this.hasMoreMessages = false;
+    this.oldestMessageId = null;
+    this.chatService.getHistory(sessionId).subscribe(({ messages, hasMore }) => {
       this.messages = messages.filter(m => m.role !== 'tool');
+      this.hasMoreMessages = hasMore;
+      this.oldestMessageId = messages.length > 0 ? messages[0].id : null;
       this.showSessionList = false;
       this.shouldScroll = true;
+    });
+  }
+
+  onScroll(event: Event) {
+    const el = event.target as HTMLElement;
+    if (el.scrollTop < 100 && this.hasMoreMessages && !this.isLoadingMore) {
+      this.loadMoreMessages();
+    }
+  }
+
+  loadMoreMessages() {
+    if (!this.hasMoreMessages || this.isLoadingMore || !this.oldestMessageId) return;
+    this.isLoadingMore = true;
+    const el = this.messageContainer.nativeElement as HTMLElement;
+    const previousScrollHeight = el.scrollHeight;
+
+    this.chatService.getHistory(this.activeSessionId, 50, this.oldestMessageId).subscribe({
+      next: ({ messages, hasMore }) => {
+        const filtered = messages.filter(m => m.role !== 'tool');
+        this.messages = [...filtered, ...this.messages];
+        this.hasMoreMessages = hasMore;
+        this.oldestMessageId = filtered.length > 0 ? filtered[0].id : this.oldestMessageId;
+        this.isLoadingMore = false;
+        setTimeout(() => { el.scrollTop = el.scrollHeight - previousScrollHeight; }, 0);
+      },
+      error: () => { this.isLoadingMore = false; }
     });
   }
 
