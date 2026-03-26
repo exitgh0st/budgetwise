@@ -7,7 +7,7 @@ import { FilterTransactionsDto } from './dto/filter-transactions.dto';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(dto: CreateTransactionDto): Promise<Transaction> {
     return this.prisma.$transaction(async (tx) => {
@@ -17,24 +17,29 @@ export class TransactionsService {
       const category = await tx.category.findUnique({ where: { id: dto.categoryId } });
       if (!category) throw new NotFoundException(`Category ${dto.categoryId} not found`);
 
+      const date = dto.date ? new Date(dto.date) : new Date();
+      const isSettled = date <= new Date();
+
       const transaction = await tx.transaction.create({
         data: {
           type: dto.type,
           amount: dto.amount,
           description: dto.description,
-          date: dto.date ? new Date(dto.date) : new Date(),
+          date,
+          isSettled,
           accountId: dto.accountId,
           categoryId: dto.categoryId,
         },
         include: { account: true, category: true },
       });
 
-      // INCOME adds to balance, EXPENSE subtracts
-      const balanceChange = dto.type === 'EXPENSE' ? -dto.amount : dto.amount;
-      await tx.account.update({
-        where: { id: dto.accountId },
-        data: { balance: { increment: balanceChange } },
-      });
+      if (isSettled) {
+        const balanceChange = dto.type === 'EXPENSE' ? -dto.amount : dto.amount;
+        await tx.account.update({
+          where: { id: dto.accountId },
+          data: { balance: { increment: balanceChange } },
+        });
+      }
 
       return transaction;
     });
@@ -80,38 +85,48 @@ export class TransactionsService {
       const existing = await tx.transaction.findUnique({ where: { id } });
       if (!existing) throw new NotFoundException(`Transaction ${id} not found`);
 
-      // Step 1: Reverse old transaction's effect on the OLD account
-      const oldBalanceReverse = existing.type === 'EXPENSE'
-        ? Number(existing.amount)   // add back the expense
-        : -Number(existing.amount); // remove the income
-      await tx.account.update({
-        where: { id: existing.accountId },
-        data: { balance: { increment: oldBalanceReverse } },
-      });
+      const newDate = dto.date ? new Date(dto.date) : existing.date;
+      const newType = dto.type ?? existing.type;
+      const newAmount = dto.amount ?? Number(existing.amount);
+      const newAccountId = dto.accountId ?? existing.accountId;
+      const newIsSettled = newDate <= new Date();
+
+      // Step 1: Reverse old effect ONLY if the old transaction was already settled
+      if (existing.isSettled) {
+        const oldBalanceReverse = existing.type === 'EXPENSE'
+          ? Number(existing.amount)
+          : -Number(existing.amount);
+
+        await tx.account.update({
+          where: { id: existing.accountId },
+          data: { balance: { increment: oldBalanceReverse } },
+        });
+      }
 
       // Step 2: Apply the update
       const updated = await tx.transaction.update({
         where: { id },
         data: {
-          type: dto.type ?? existing.type,
-          amount: dto.amount ?? existing.amount,
+          type: newType,
+          amount: newAmount,
           description: dto.description ?? existing.description,
-          date: dto.date ? new Date(dto.date) : existing.date,
-          accountId: dto.accountId ?? existing.accountId,
+          date: newDate,
+          isSettled: newIsSettled,
+          accountId: newAccountId,
           categoryId: dto.categoryId ?? existing.categoryId,
         },
         include: { account: true, category: true },
       });
 
-      // Step 3: Apply new transaction's effect on the NEW account
-      const newType = dto.type ?? existing.type;
-      const newAmount = dto.amount ?? Number(existing.amount);
-      const newAccountId = dto.accountId ?? existing.accountId;
-      const newBalanceChange = newType === 'EXPENSE' ? -newAmount : newAmount;
-      await tx.account.update({
-        where: { id: newAccountId },
-        data: { balance: { increment: newBalanceChange } },
-      });
+      // Step 3: Apply new effect ONLY if the new date is current or past
+      if (newIsSettled) {
+        const newBalanceChange = newType === 'EXPENSE' ? -newAmount : newAmount;
+
+        await tx.account.update({
+          where: { id: newAccountId },
+          data: { balance: { increment: newBalanceChange } },
+        });
+      }
 
       return updated;
     });
@@ -122,14 +137,16 @@ export class TransactionsService {
       const transaction = await tx.transaction.findUnique({ where: { id } });
       if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
 
-      // Reverse the balance effect
-      const balanceReverse = transaction.type === 'EXPENSE'
-        ? Number(transaction.amount)
-        : -Number(transaction.amount);
-      await tx.account.update({
-        where: { id: transaction.accountId },
-        data: { balance: { increment: balanceReverse } },
-      });
+      // Reverse the balance effect ONLY if it was settled
+      if (transaction.isSettled) {
+        const balanceReverse = transaction.type === 'EXPENSE'
+          ? Number(transaction.amount)
+          : -Number(transaction.amount);
+        await tx.account.update({
+          where: { id: transaction.accountId },
+          data: { balance: { increment: balanceReverse } },
+        });
+      }
 
       return tx.transaction.delete({ where: { id } });
     });
