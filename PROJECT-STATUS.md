@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/20-integration-testing.md`
-**Next ticket to implement:** None — all tickets complete!
-**Phase:** Phase 3 — AI Chat Agent (COMPLETE)
-**Total progress:** 20 / 20 tickets
+**Last completed ticket:** `tickets/21-frontend-categories.md`
+**Next ticket to implement:** None — all core + post-phase tickets complete
+**Phase:** Post-Phase 3 (Frontend additions)
+**Total progress:** 21 / 21 tickets
 
 ---
 
@@ -138,6 +138,13 @@
 - **Services/APIs available:** No new APIs — bug fixes only
 - **User decisions:** Code-level review only (no automated tests). Leave bundle size as-is. UI fine-tuning deferred to user.
 
+### Ticket 21 — Categories Page
+- **What was built:** Dedicated Categories management page with sortable Material table (desktop), mobile list view with emoji icons, add/edit dialog (name + emoji icon fields), delete with FK violation protection (409/400 → specific snackbar message), empty state, loading spinner, sidenav navigation link.
+- **Files created:** `src/app/pages/categories/` (categories.component.ts/html/scss, category-dialog.component.ts)
+- **Files modified:** `src/app/app.routes.ts` (added `/categories` route), `src/app/app.html` (added Categories sidenav link after Reports)
+- **Services/APIs available:** N/A (frontend only — uses existing CategoriesService)
+- **User decisions:** Sortable table columns (user requested). Delete button uses `color="warn"` (red). Paste-emoji input for icon field.
+
 ---
 
 ## What Exists So Far
@@ -151,11 +158,11 @@
 - **Dependencies:** `openai` SDK installed for DeepSeek V3 API
 
 ### Frontend (budgetwise-ui/)
-- **Status:** Complete — All phases done (Tickets 08-14, 19-20)
-- **Pages:** Dashboard, Accounts, Transactions, Budgets, Reports (all lazy-loaded)
+- **Status:** Complete — All phases done (Tickets 08-14, 19-21)
+- **Pages:** Dashboard, Accounts, Transactions, Budgets, Reports, Categories (all lazy-loaded)
 - **Shared components:** ConfirmDialogComponent, ChatPanelComponent (persistent sidebar/fullscreen)
 - **Shared pipes:** MarkdownPipe (lightweight bold/italic/code/list rendering)
-- **Page dialogs:** AccountDialog, TransactionDialog, BudgetDialog
+- **Page dialogs:** AccountDialog, TransactionDialog, BudgetDialog, CategoryDialog
 - **Charts:** Doughnut (spending by category), Bar (monthly trend) via ng2-charts/Chart.js
 - **Responsive:** BreakpointObserver + CSS Grid, mobile-first with FAB buttons
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
@@ -175,6 +182,7 @@
 - **Bundle size:** 547KB initial (above 500KB budget warning) — not a blocker
 - **Lightweight markdown pipe** over ngx-markdown for chat message rendering (Ticket 19)
 - **Session rename/delete** added to chat session list UI (Ticket 19)
+- **Sortable categories table** — user requested sortable column headers on desktop (Ticket 21)
 
 ---
 
