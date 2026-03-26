@@ -24,6 +24,10 @@
         <mat-icon matListItemIcon>bar_chart</mat-icon>
         <span matListItemTitle>Reports</span>
       </a>
+      <a mat-list-item routerLink="/categories" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+        <mat-icon matListItemIcon>category</mat-icon>
+        <span matListItemTitle>Categories</span>
+      </a>
     </mat-nav-list>
   </mat-sidenav>
 

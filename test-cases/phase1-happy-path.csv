@@ -1,0 +1,67 @@
+Test Case ID,Module,Test Scenario,Preconditions,Test Steps,Expected Result,Status
+TC-P1-001,Backend Scaffolding,NestJS server starts successfully on port 3000,"PostgreSQL is running on localhost:5432; database 'budgetwise' exists; .env file contains DATABASE_URL and PORT=3000","1. Open a terminal in the budgetwise-api/ directory
+2. Run 'npm run start:dev'
+3. Wait for the console output to stabilize","Server starts without errors. Console shows 'Nest application successfully started' or equivalent. No unhandled exceptions are logged. The process remains running and listening on port 3000.",
+TC-P1-002,Backend Scaffolding,API responds under /api prefix,Server is running (TC-P1-001 passed),"1. Open Postman or use curl
+2. Send GET http://localhost:3000/
+3. Send GET http://localhost:3000/api","GET / returns 404 (no route mapped at root). GET /api returns either 404 or an empty response confirming the /api prefix is active. Neither request causes a server crash.",
+TC-P1-003,Backend Scaffolding,Swagger documentation is accessible at /api/docs,Server is running (TC-P1-001 passed),"1. Open a browser
+2. Navigate to http://localhost:3000/api/docs","Swagger UI loads successfully. The page title shows 'BudgetWise API'. API endpoint groups are visible in the documentation.",
+TC-P1-004,Backend Scaffolding,CORS allows requests from Angular dev server origin,Server is running (TC-P1-001 passed),"1. Using curl or Postman send an OPTIONS preflight request to http://localhost:3000/api with the header 'Origin: http://localhost:4200'
+2. Inspect the response headers","Response includes 'Access-Control-Allow-Origin: http://localhost:4200'. 'Access-Control-Allow-Methods' includes GET POST PATCH DELETE. 'Access-Control-Allow-Credentials' is 'true'.",
+TC-P1-005,Backend Scaffolding,ValidationPipe strips unknown properties (whitelist),"Server is running (TC-P1-001 passed); CRUD endpoints available (Ticket 03+)","1. Send a POST request to http://localhost:3000/api/accounts with JSON body: {""name"": ""Test"", ""type"": ""CASH"", ""unknownField"": ""should be stripped""}
+2. Observe the created record in the response or Prisma Studio","The record is created successfully. The 'unknownField' property is silently stripped and does not appear in the response or the database. No error is thrown for the extra property.",
+TC-P1-006,Backend Scaffolding,ValidationPipe transforms payload types (transform),"Server is running (TC-P1-001 passed); CRUD endpoints available (Ticket 03+)","1. Send a POST request to an endpoint that accepts typed fields (e.g. POST /api/budgets with month as a string '3' instead of number 3)
+2. Observe the created record","The value is automatically transformed to the correct type (e.g. string '3' becomes number 3 in the DTO). The request succeeds without a type mismatch error.",
+TC-P1-007,Backend Scaffolding,PostgreSQL database exists with all expected tables,"PostgreSQL is running; migrations have been applied (npx prisma migrate dev)","1. Open a terminal in the budgetwise-api/ directory
+2. Connect to PostgreSQL using psql or pgAdmin
+3. List all tables in the 'budgetwise' database","The database 'budgetwise' exists. Tables present include: Account Category Transaction Budget (plus Prisma migration tracking table _prisma_migrations). All tables match the schema models.",
+TC-P1-008,Backend Scaffolding,Account model schema is correct,Database exists with tables (TC-P1-007 passed),"1. Open Prisma Studio (npx prisma studio) or inspect the Account table schema via psql/pgAdmin
+2. Verify each column's name and type","Account table has columns: id (UUID primary key auto-generated) name (String not null) type (AccountType enum: CASH/BANK/EWALLET) balance (Decimal(12 2) default 0) createdAt (DateTime default now()) updatedAt (DateTime auto-updated). A relation to Transaction exists (one-to-many).",
+TC-P1-009,Backend Scaffolding,Category model schema is correct,Database exists with tables (TC-P1-007 passed),"1. Open Prisma Studio or inspect the Category table schema
+2. Verify each column's name and type
+3. Verify the unique constraint on 'name'","Category table has columns: id (UUID primary key) name (String unique not null) icon (String nullable) createdAt (DateTime default now()). Relations exist to Transaction (one-to-many) and Budget (one-to-many). The name column has a unique index.",
+TC-P1-010,Backend Scaffolding,Transaction model schema is correct,Database exists with tables (TC-P1-007 passed),"1. Open Prisma Studio or inspect the Transaction table schema
+2. Verify each column's name and type
+3. Verify foreign key relationships and their delete behaviors","Transaction table has columns: id (UUID primary key) type (TransactionType enum: INCOME/EXPENSE) amount (Decimal(12 2) not null) description (String nullable) date (DateTime default now()) accountId (FK to Account onDelete Cascade) categoryId (FK to Category onDelete Restrict) createdAt (DateTime) updatedAt (DateTime auto-updated).",
+TC-P1-011,Backend Scaffolding,Budget model schema is correct,Database exists with tables (TC-P1-007 passed),"1. Open Prisma Studio or inspect the Budget table schema
+2. Verify each column's name and type
+3. Verify the composite unique constraint on [categoryId month year]","Budget table has columns: id (UUID primary key) amount (Decimal(12 2) not null) month (Int not null) year (Int not null) categoryId (FK to Category onDelete Cascade) createdAt (DateTime) updatedAt (DateTime auto-updated). A composite unique constraint exists on (categoryId month year).",
+TC-P1-012,Backend Scaffolding,Prisma Studio opens and shows empty tables,"Database exists with migrations applied (TC-P1-007 passed); no seed data has been run yet","1. Open a terminal in the budgetwise-api/ directory
+2. Run 'npx prisma studio'
+3. Wait for the browser to open
+4. Click through each model: Account Category Transaction Budget","Prisma Studio opens in the browser (typically at http://localhost:5555). All models are listed in the sidebar. Clicking each model shows an empty table with the correct column headers. No records exist yet.",
+TC-P1-013,Backend Scaffolding,.env file is excluded from version control,"Git repository is initialized; .gitignore exists in budgetwise-api/","1. Open budgetwise-api/.gitignore in a text editor
+2. Verify '.env' is listed
+3. Run 'git status' in the budgetwise-api/ directory","The .gitignore file contains a '.env' entry. Running 'git status' does not show .env as a tracked or untracked file. The .env file exists locally but is excluded from the repository.",
+TC-P1-014,Backend Scaffolding,PrismaModule is globally available (@Global decorator),Server is running (TC-P1-001 passed),"1. Open src/prisma/prisma.module.ts and verify the @Global() decorator is present
+2. Open src/app.module.ts and verify PrismaModule is in the imports array
+3. Confirm the server starts without dependency injection errors","prisma.module.ts has the @Global() decorator on the module class. PrismaModule is imported in app.module.ts. The server starts without 'Nest could not find PrismaService' injection errors confirming PrismaService is available globally.",
+TC-P1-015,Backend Scaffolding,AccountType enum has correct values,Database exists with tables (TC-P1-007 passed),"1. Inspect the schema.prisma file or query the PostgreSQL enum type
+2. Verify the AccountType enum values","AccountType enum contains exactly three values: CASH BANK EWALLET. No other values exist.",
+TC-P1-016,Backend Scaffolding,TransactionType enum has correct values,Database exists with tables (TC-P1-007 passed),"1. Inspect the schema.prisma file or query the PostgreSQL enum type
+2. Verify the TransactionType enum values","TransactionType enum contains exactly two values: INCOME EXPENSE. No other values exist.",
+TC-P1-017,Seed Data,Seed command executes without errors,"Ticket 01 is complete; database exists with empty tables","1. Open a terminal in the budgetwise-api/ directory
+2. Run 'npx prisma db seed'
+3. Observe the console output","The command completes without errors. Console output includes 'Seed data loaded successfully.' No exceptions or warnings are printed.",
+TC-P1-018,Seed Data,11 categories are created with correct names,Seed has been run (TC-P1-017 passed),"1. Open Prisma Studio (npx prisma studio)
+2. Click on the Category model
+3. Count the total number of records
+4. Verify each category name","Exactly 11 categories exist. Names are: Food & Dining / Transport / Bills & Utilities / Shopping / Entertainment / Health / Education / Savings / Salary / Freelance / Other. All names match exactly including ampersands and spacing.",
+TC-P1-019,Seed Data,All categories have correct emoji icons,Seed has been run (TC-P1-017 passed),"1. In Prisma Studio view the Category model
+2. Check the 'icon' column for each category","Each category has the correct emoji: Food & Dining = hamburger / Transport = car / Bills & Utilities = lightbulb / Shopping = shopping bags / Entertainment = game controller / Health = pill / Education = books / Savings = money bag / Salary = briefcase / Freelance = laptop / Other = pushpin. No icon field is null.",
+TC-P1-020,Seed Data,All categories have UUID primary keys,Seed has been run (TC-P1-017 passed),"1. In Prisma Studio view the Category model
+2. Inspect the 'id' column for each record","Every category record has a valid UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) as its id. All 11 ids are unique.",
+TC-P1-021,Seed Data,3 default accounts are created with correct names and types,Seed has been run (TC-P1-017 passed),"1. In Prisma Studio click on the Account model
+2. Count the total number of records
+3. Verify each account's name and type","Exactly 3 accounts exist. Cash with type CASH / Bank Account with type BANK / E-Wallet with type EWALLET.",
+TC-P1-022,Seed Data,All default accounts have balance of 0,Seed has been run (TC-P1-017 passed),"1. In Prisma Studio view the Account model
+2. Check the 'balance' column for each account","All 3 accounts have a balance of 0.00. No account has a non-zero starting balance.",
+TC-P1-023,Seed Data,All accounts have UUID primary keys and timestamps,Seed has been run (TC-P1-017 passed),"1. In Prisma Studio view the Account model
+2. Inspect the 'id' and 'createdAt' and 'updatedAt' columns","Each account has a valid UUID as id. createdAt and updatedAt are both populated with valid datetime values. All 3 ids are unique.",
+TC-P1-024,Seed Data,Seed is idempotent — running twice does not create duplicates,Seed has been run once (TC-P1-017 passed),"1. Run 'npx prisma db seed' a second time
+2. Observe the console output
+3. Open Prisma Studio and count records in Category and Account models","The command completes without errors. Console shows 'Seed data loaded successfully.' Category count is still exactly 11. Account count is still exactly 3. No duplicate records were created.",
+TC-P1-025,Seed Data,Transaction and Budget tables remain empty after seeding,Seed has been run (TC-P1-017 passed),"1. In Prisma Studio click on the Transaction model
+2. Click on the Budget model
+3. Verify record counts","Transaction table has 0 records. Budget table has 0 records. The seed script only creates categories and accounts.",
