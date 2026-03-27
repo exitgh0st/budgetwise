@@ -36,6 +36,7 @@ export class DashboardComponent implements OnInit {
   summary: SummaryReport | null = null;
   budgetStatuses: BudgetStatus[] = [];
   recentTransactions: Transaction[] = [];
+  upcomingTransactions: Transaction[] = [];
 
   ngOnInit() {
     const now = new Date();
@@ -52,7 +53,10 @@ export class DashboardComponent implements OnInit {
         this.totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
         this.summary = summary;
         this.budgetStatuses = budgets;
-        this.recentTransactions = transactions.data;
+        console.log(transactions.data);
+        this.recentTransactions = transactions.data.filter((t: Transaction) => t.isSettled);
+        this.upcomingTransactions = transactions.data.filter((t: Transaction) => !t.isSettled);
+
         this.loading = false;
       },
       error: () => {
