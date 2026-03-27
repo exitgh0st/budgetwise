@@ -125,5 +125,45 @@
         }
       </mat-card-content>
     </mat-card>
+
+    <!-- Upcoming Transactions -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Upcoming Transactions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (upcomingTransactions.length === 0) {
+          <div class="empty-section">
+            <mat-icon>receipt_long</mat-icon>
+            <p>No upcoming transactions</p>
+            <a mat-stroked-button routerLink="/transactions">Go to Transactions</a>
+          </div>
+        } @else {
+          <div class="transaction-list">
+            @for (t of upcomingTransactions; track t.id) {
+              <div class="transaction-item">
+                <div class="transaction-info">
+                  @if (t.category.icon) {
+                  <span class="transaction-icon emoji">{{ t.category.icon }}</span>
+                } @else {
+                  <mat-icon class="transaction-icon">receipt</mat-icon>
+                }
+                  <div class="transaction-details">
+                    <span class="transaction-desc">{{ t.description || t.category.name || 'Transaction' }}</span>
+                    <span class="transaction-date">{{ formatRelativeDate(t.date) }}</span>
+                  </div>
+                </div>
+                <span class="transaction-amount" [class.income]="t.type === 'INCOME'" [class.expense]="t.type === 'EXPENSE'">
+                  {{ t.type === 'INCOME' ? '+' : '-' }}{{ t.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                </span>
+              </div>
+            }
+          </div>
+          <div class="view-all">
+            <a mat-button routerLink="/transactions" color="primary">View Upcoming Transactions</a>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
   </div>
 }
