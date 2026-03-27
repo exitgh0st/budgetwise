@@ -204,6 +204,11 @@ export const toolDefinitions: ChatCompletionTool[] = [
             type: 'string',
             description: 'ISO date string. Defaults to now if not specified.',
           },
+          isSettled: {
+            type: 'boolean',
+            description:
+              'Whether the transaction has been settled. Defaults to false if not specified.',
+          },
         },
         required: ['type', 'amount', 'accountId', 'categoryId'],
       },
@@ -238,6 +243,10 @@ export const toolDefinitions: ChatCompletionTool[] = [
           endDate: {
             type: 'string',
             description: 'End of date range (ISO format)',
+          },
+          isSettled: {
+            type: 'boolean',
+            description: 'Filter by settlement status',
           },
           limit: {
             type: 'number',
@@ -281,6 +290,10 @@ export const toolDefinitions: ChatCompletionTool[] = [
           accountId: { type: 'string' },
           categoryId: { type: 'string' },
           date: { type: 'string' },
+          isSettled: {
+            type: 'boolean',
+            description: 'Whether the transaction has been settled',
+          },
         },
         required: ['id'],
       },
