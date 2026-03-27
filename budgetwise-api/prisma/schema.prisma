@@ -7,22 +7,24 @@ datasource db {
 }
 
 model Account {
-  id           String        @id @default(uuid())
-  name         String
-  type         AccountType
-  balance      Decimal       @default(0) @db.Decimal(12, 2)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transactions Transaction[]
+  id                    String                 @id @default(uuid())
+  name                  String
+  type                  AccountType
+  balance               Decimal                @default(0) @db.Decimal(12, 2)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  transactions          Transaction[]
+  recurringTransactions RecurringTransaction[]
 }
 
 model Category {
-  id           String        @id @default(uuid())
-  name         String        @unique
-  icon         String?
-  createdAt    DateTime      @default(now())
-  transactions Transaction[]
-  budgets      Budget[]
+  id                    String                 @id @default(uuid())
+  name                  String                 @unique
+  icon                  String?
+  createdAt             DateTime               @default(now())
+  transactions          Transaction[]
+  budgets               Budget[]
+  recurringTransactions RecurringTransaction[]
 }
 
 model Transaction {
@@ -74,6 +76,21 @@ model ChatMessage {
   createdAt  DateTime    @default(now())
 }
 
+model RecurringTransaction {
+  id          String             @id @default(uuid())
+  type        TransactionType
+  amount      Decimal            @db.Decimal(12, 2)
+  description String?
+  frequency   RecurringFrequency
+  nextDueDate DateTime
+  accountId   String
+  account     Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
 enum AccountType {
   CASH
   BANK
@@ -83,4 +100,10 @@ enum AccountType {
 enum TransactionType {
   INCOME
   EXPENSE
+}
+
+enum RecurringFrequency {
+  WEEKLY
+  MONTHLY
+  YEARLY
 }

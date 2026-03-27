@@ -2,13 +2,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 
   h1 {
     margin: 0;
     font-size: 24px;
     font-weight: 500;
   }
+}
+
+.tab-content {
+  padding-top: 16px;
+}
+
+.tab-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
 // Desktop filter bar
@@ -182,6 +193,124 @@ mat-accordion {
 // Paginator
 mat-paginator {
   margin-top: 16px;
+}
+
+// ═══════════════════════════ Recurring table (desktop)
+
+.recurring-table {
+  width: 100%;
+  margin-top: 8px;
+
+  .mat-mdc-header-cell,
+  .mat-mdc-cell {
+    padding: 0 8px;
+  }
+}
+
+.recurring-icon {
+  margin-right: 6px;
+}
+
+.type-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+
+  &.income-badge {
+    background: rgba(76, 175, 80, 0.15);
+    color: #2e7d32;
+  }
+
+  &.expense-badge {
+    background: rgba(244, 67, 54, 0.15);
+    color: #c62828;
+  }
+}
+
+.recurring-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  button[mat-flat-button] {
+    min-width: 90px;
+    font-size: 13px;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 12px;
+  }
+
+  button[mat-icon-button] {
+    width: 36px;
+    height: 36px;
+
+    mat-icon {
+      font-size: 18px;
+    }
+  }
+}
+
+// ═══════════════════════════ Recurring cards (mobile)
+
+.recurring-card {
+  margin-bottom: 12px;
+}
+
+.recurring-card-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.recurring-card-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.recurring-card-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .description {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .account-name {
+    font-size: 12px;
+    color: var(--mat-sys-outline);
+  }
+}
+
+.recurring-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+
+  .next-due {
+    font-size: 13px;
+    color: var(--mat-sys-outline);
+  }
+}
+
+.recurring-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  padding-top: 8px;
+  margin-top: 4px;
 }
 
 @media (max-width: 599px) {
