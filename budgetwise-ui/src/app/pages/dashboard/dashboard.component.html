@@ -11,8 +11,19 @@
       <mat-card-content>
         <mat-icon>account_balance_wallet</mat-icon>
         <div>
-          <span class="summary-label">Total Balance</span>
+          <span class="summary-label">Remaining Balance</span>
           <span class="summary-value">{{ totalBalance | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+
+    <mat-card class="summary-card expense">
+      <mat-card-content>
+        <mat-icon>trending_down</mat-icon>
+        <div>
+          <span class="summary-label">Expenses This Month</span>
+          <span class="summary-value">{{ (summary?.totalExpenses || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
         </div>
       </mat-card-content>
     </mat-card>
@@ -23,16 +34,6 @@
         <div>
           <span class="summary-label">Income This Month</span>
           <span class="summary-value">{{ (summary?.totalIncome || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card expense">
-      <mat-card-content>
-        <mat-icon>trending_down</mat-icon>
-        <div>
-          <span class="summary-label">Expenses This Month</span>
-          <span class="summary-value">{{ (summary?.totalExpenses || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
         </div>
       </mat-card-content>
     </mat-card>
