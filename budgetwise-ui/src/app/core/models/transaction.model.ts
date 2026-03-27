@@ -15,6 +15,7 @@ export interface Transaction {
   category: Category;
   createdAt: string;
   updatedAt: string;
+  isSettled: boolean;
 }
 
 export interface PaginatedTransactions {
