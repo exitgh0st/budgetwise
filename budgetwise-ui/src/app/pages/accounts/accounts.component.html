@@ -22,6 +22,11 @@
   </div>
 }
 
+<div class="total-balance">
+    <span>Total Balance</span>
+    <span class="total-amount">{{ totalBalance | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+  </div>
+
 @if (!loading && accounts.length > 0) {
   <div class="accounts-grid">
     @for (account of accounts; track account.id) {
@@ -46,10 +51,7 @@
     }
   </div>
 
-  <div class="total-balance">
-    <span>Total Balance</span>
-    <span class="total-amount">{{ totalBalance | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
-  </div>
+  
 }
 
 @if (isMobile && !loading) {
