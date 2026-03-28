@@ -235,7 +235,7 @@ export class ChatService {
   private async processWithToolLoop(
     messages: ChatCompletionMessageParam[],
     sessionId: string,
-    maxIterations = 10,
+    maxIterations = 50,
   ): Promise<string> {
     let iteration = 0;
 
