@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/22-chat-history-pagination.md`
-**Next ticket to implement:** None — all core + post-phase tickets complete
-**Phase:** Post-Phase 3 (Chat improvements)
-**Total progress:** 22 / 22 tickets
+**Last completed ticket:** `tickets/24-recurring-transactions.md`
+**Next ticket to implement:** `tickets/23-csv-export.md`
+**Phase:** Post-Phase 3 (Enhancements)
+**Total progress:** 23 / 23 tickets (2 enhancement tickets remaining)
 
 ---
 
@@ -144,6 +144,13 @@
 - **Services/APIs available:** `GET /api/chat/history/:sessionId?limit=50[&before=<id>]` returns `{ messages, hasMore }`. `GET /api/chat/sessions/active` now returns `{ sessionId, messages, hasMore }`.
 - **User decisions:** Default limit 50, auto-load on scroll (not a button), internal AI context query (`buildMessageArray`) unchanged.
 
+### Ticket 24 — Recurring Transactions
+- **What was built:** `RecurringTransaction` Prisma model with `WEEKLY/MONTHLY/YEARLY` frequency enum, full backend CRUD + `POST :id/generate` endpoint that creates a real `Transaction` (with balance sync via `TransactionsService.create`) and advances `nextDueDate` using last-valid-day clamping (e.g. Jan 31 + 1 month = Feb 28). Frontend adds a "Recurring" tab to the Transactions page with a `mat-table` on desktop and card list on mobile; tab switch auto-refreshes the list; Generate button disabled per-row while in-flight via a `Set<string>`.
+- **Files created:** `budgetwise-api/src/recurring-transactions/` (module, service, controller, 2 DTOs), `budgetwise-ui/src/app/core/models/recurring-transaction.model.ts`, `budgetwise-ui/src/app/core/services/recurring-transactions.service.ts`, `budgetwise-ui/src/app/pages/transactions/recurring-transaction-dialog/recurring-transaction-dialog.component.ts`
+- **Files modified:** `prisma/schema.prisma` (new model + enum + back-relations), `src/app.module.ts`, `transactions.component.ts/html/scss` (added tab strip, recurring state, generate method)
+- **Services/APIs available:** `GET/POST /api/recurring-transactions`, `GET/PATCH/DELETE /api/recurring-transactions/:id`, `POST /api/recurring-transactions/:id/generate`
+- **User decisions:** Last-valid-day clamping for MONTHLY/YEARLY advances (not JS overflow). Tab switch triggers `loadRecurring()` auto-refresh. `isSettled` on Transaction model pre-existed in schema; generated transactions default to `false`.
+
 ### Ticket 21 — Categories Page
 - **What was built:** Dedicated Categories management page with sortable Material table (desktop), mobile list view with emoji icons, add/edit dialog (name + emoji icon fields), delete with FK violation protection (409/400 → specific snackbar message), empty state, loading spinner, sidenav navigation link.
 - **Files created:** `src/app/pages/categories/` (categories.component.ts/html/scss, category-dialog.component.ts)
@@ -153,25 +160,68 @@
 
 ---
 
+## Post-Ticket Changes
+
+These changes were made manually outside of the ticket workflow.
+
+### isSettled Transaction Feature
+- **What was changed:** Added `isSettled` boolean to the `Transaction` Prisma model (migration `20260326122630_add_is_settled_to_transaction`). Transactions are auto-marked `isSettled = true` if their date is ≤ today, `false` if future-dated. Balance sync in create/update/delete now only applies to settled transactions — future-dated transactions do not affect account balances until they are settled.
+- **Files modified:** `prisma/schema.prisma`, `prisma/migrations/20260326122630_add_is_settled_to_transaction/migration.sql`, `src/transactions/transactions.service.ts` (create/update/remove all gated on `isSettled`), `budgetwise-ui/src/app/core/models/transaction.model.ts` (`isSettled: boolean` added), `src/chat/tools/tool-definitions.ts` (`isSettled` added to transaction tool definitions)
+
+### Dashboard: Upcoming Transactions + Card Reorder
+- **What was changed:** Dashboard now splits the transaction list into two sections: "Recent Transactions" (settled only) and "Upcoming Transactions" (future-dated / unsettled). Summary cards were also reordered.
+- **Files modified:** `budgetwise-ui/src/app/pages/dashboard/dashboard.component.ts` (added `upcomingTransactions` array, filter logic), `dashboard.component.html` (new Upcoming Transactions card, card reorder)
+
+### Accounts Page Polish
+- **What was changed:** Total balance summary moved to the top of the Accounts page (above the card grid); margin-bottom added to the balance div for spacing.
+- **Files modified:** `budgetwise-ui/src/app/pages/accounts/accounts.component.html`, `accounts.component.scss`
+
+### App-Wide UI Polish
+- **What was changed:** Sidenav sidebar width set to 240px. Max-width constraint removed from the main content class to allow full-width layouts.
+- **Files modified:** `budgetwise-ui/src/app/app.scss`
+
+### Bug Fix: Transaction Dialog Datepicker
+- **What was changed:** Fixed a datepicker bug on the Add Transaction dialog by updating `app.config.ts` (likely adding `provideNativeDateAdapter()` or equivalent provider).
+- **Files modified:** `budgetwise-ui/src/app/app.config.ts`
+
+### Chat Agent: Tool Call Loop Limit Increased
+- **What was changed:** `maxIterations` in `ChatService` increased from 10 to 50, allowing the AI to chain more tool calls before stopping.
+- **Files modified:** `budgetwise-api/src/chat/chat.service.ts`
+
+### Backend: CORS ORIGIN Environment Variable
+- **What was changed:** CORS `origin` in `main.ts` now reads from an `ORIGIN` environment variable instead of being hardcoded, enabling configurable allowed origins per environment.
+- **Files modified:** `budgetwise-api/src/main.ts`
+
+### Production Deployment Setup
+- **What was changed:** `environment.prod.ts` created pointing `apiUrl` to the production Render deployment (`https://budgetwise-api-k9z9.onrender.com/api`). Angular build configured to swap environment files for production builds via `fileReplacements` in `angular.json`.
+- **Files created:** `budgetwise-ui/src/environments/environment.prod.ts`
+- **Files modified:** `budgetwise-ui/angular.json`
+
+---
+
 ## What Exists So Far
 
 ### Backend (budgetwise-api/)
-- **Status:** Complete — All phases done (Tickets 01-18, 20)
-- **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat (fully functional backend)
+- **Status:** Complete — All phases done (Tickets 01-18, 20, 24) + post-ticket changes
+- **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat, RecurringTransactions
 - **All 5 service modules export their services** (imported by ChatModule)
-- **Database:** PostgreSQL with seed data (12 categories with emoji icons, 3 starter accounts) + ChatSession and ChatMessage tables
-- **API endpoints:** 5 CRUD modules + reports aggregations + 7 chat endpoints, all prefixed with `/api`
+- **Database:** PostgreSQL with seed data (12 categories with emoji icons, 3 starter accounts) + ChatSession and ChatMessage tables + `isSettled` column on Transaction
+- **API endpoints:** 5 CRUD modules + recurring transactions (6 endpoints) + reports aggregations + 7 chat endpoints, all prefixed with `/api`
 - **Dependencies:** `openai` SDK installed for DeepSeek V3 API
+- **isSettled behavior:** Transactions with a future date are unsettled and do not affect account balances; balance sync is gated on `isSettled`
+- **CORS:** Reads allowed origin from `ORIGIN` env variable
+- **Chat loop:** maxIterations = 50
 
 ### Frontend (budgetwise-ui/)
-- **Status:** Complete — All phases done (Tickets 08-14, 19-21)
-- **Pages:** Dashboard, Accounts, Transactions, Budgets, Reports, Categories (all lazy-loaded)
+- **Status:** Complete — All phases done (Tickets 08-14, 19-21, 24) + post-ticket changes
+- **Pages:** Dashboard (recent + upcoming transactions), Accounts, Transactions (with Recurring tab), Budgets, Reports, Categories (all lazy-loaded)
 - **Shared components:** ConfirmDialogComponent, ChatPanelComponent (persistent sidebar/fullscreen)
 - **Shared pipes:** MarkdownPipe (lightweight bold/italic/code/list rendering)
 - **Page dialogs:** AccountDialog, TransactionDialog, BudgetDialog, CategoryDialog
 - **Charts:** Doughnut (spending by category), Bar (monthly trend) via ng2-charts/Chart.js
 - **Responsive:** BreakpointObserver + CSS Grid, mobile-first with FAB buttons
 - **Material Icons:** Loaded via Google Fonts CDN; emoji icons use `<span class="emoji">` pattern
+- **Production build:** `environment.prod.ts` swaps API URL to `https://budgetwise-api-k9z9.onrender.com/api` via Angular file replacement
 
 ### Chat Agent
 - **Status:** Complete — fully functional end-to-end (Tickets 15-20, 22 done). Backend API + frontend chat panel + integration polish + history pagination all complete.
@@ -181,11 +231,7 @@
 
 ## Upcoming / In Progress Tickets
 
-### Ticket 23 — Recurring Transactions
-**Status:** Pending
-**Description:** Adds a `RecurringTransaction` model and backend endpoints (CRUD + generate-occurrence) plus a second "Recurring" tab on the Transactions page, allowing users to define weekly/monthly/yearly transaction templates and post each occurrence on demand with automatic account balance sync.
-
-### Ticket 24 — CSV Export for Transactions
+### Ticket 23 — CSV Export for Transactions
 **Status:** Pending
 **Description:** Adds an "Export CSV" button to the Transactions page that downloads all transactions matching the current active filters as a CSV file, generated client-side with no new backend endpoints.
 
@@ -205,11 +251,15 @@
 - **Lightweight markdown pipe** over ngx-markdown for chat message rendering (Ticket 19)
 - **Session rename/delete** added to chat session list UI (Ticket 19)
 - **Sortable categories table** — user requested sortable column headers on desktop (Ticket 21)
+- **Recurring `advanceDate` uses last-valid-day clamping** — Jan 31 + 1 month = Feb 28, not Mar 3 (user preference over JS overflow behavior)
+- **`isSettled` auto-derived from date** — transactions created/updated with a future date are automatically unsettled and skip balance sync; no manual override needed
+- **Production API on Render** — `https://budgetwise-api-k9z9.onrender.com/api` is the live backend; `ORIGIN` env var controls CORS on the server
+- **Chat loop limit = 50** — raised from 10 to allow deeper multi-tool chains without hitting the iteration guard
 
 ---
 
 ## Known Issues / Follow-ups
 
-- **Bundle size warning:** Initial bundle is now 730KB (up from 547KB with chat panel in initial bundle). Not blocking but could be optimized.
+- **Bundle size warning:** Initial bundle is now 764KB (grew slightly with MatTabsModule, MatTableModule, MatChipsModule added to Transactions). Not blocking but could be optimized.
 - **`testConnection()` kept in ChatService** for debugging — no controller endpoint exposes it anymore.
 - **Chat history pagination:** Messages added during the current session via `sendMessage()` are appended directly to the local array (no ID assigned on send, uses `''`). This means the `oldestMessageId` cursor only tracks the initial load, not messages added in the current session. Not a bug — the cursor only matters for loading *older* pages.
