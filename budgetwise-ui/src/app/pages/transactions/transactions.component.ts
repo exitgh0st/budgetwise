@@ -105,7 +105,7 @@ export class TransactionsComponent implements OnInit {
 
   loadDropdowns() {
     this.accountsService.getAll().subscribe(a => this.accounts = a);
-    this.categoriesService.getAll().subscribe(c => this.categories = c);
+    this.categoriesService.getAll().subscribe(c => this.categories = c.filter(cat => !cat.isSystem));
   }
 
   loadTransactions() {

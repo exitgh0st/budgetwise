@@ -239,6 +239,10 @@ These changes were made manually outside of the ticket workflow.
 **Status:** Pending
 **Description:** Adds a dark/light theme toggle to the toolbar that switches the entire app between M3 light and dark themes, persisting the user's preference to localStorage and defaulting to the OS color-scheme setting.
 
+### Ticket 26 — Account Balance Adjustment
+**Status:** Pending
+**Description:** Adds a balance field to the account edit dialog. Behind the scenes, balance changes create an adjustment transaction (INCOME/EXPENSE for the diff) using a new system-level "Adjustment" category protected by an `isSystem` flag. Includes new `POST /api/accounts/:id/adjust-balance` endpoint and chat agent tool.
+
 ---
 
 ## Key Decisions Made

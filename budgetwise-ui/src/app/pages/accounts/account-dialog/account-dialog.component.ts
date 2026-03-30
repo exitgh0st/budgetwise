@@ -40,13 +40,11 @@ export interface AccountDialogData {
           </mat-select>
         </mat-form-field>
 
-        @if (!data.account) {
-          <mat-form-field appearance="outline">
-            <mat-label>Initial Balance</mat-label>
-            <input matInput type="number" formControlName="balance" placeholder="0.00" />
-            <span matTextPrefix>₱&nbsp;</span>
-          </mat-form-field>
-        }
+        <mat-form-field appearance="outline">
+          <mat-label>{{ data.account ? 'Balance' : 'Initial Balance' }}</mat-label>
+          <input matInput type="number" formControlName="balance" placeholder="0.00" />
+          <span matTextPrefix>₱&nbsp;</span>
+        </mat-form-field>
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -85,18 +83,12 @@ export class AccountDialogComponent implements OnInit {
     this.form = this.fb.group({
       name: [account?.name || '', Validators.required],
       type: [account?.type || 'CASH', Validators.required],
-      balance: [account ? undefined : 0],
+      balance: [account ? Number(account.balance) : 0],
     });
   }
 
   save() {
     if (this.form.invalid) return;
-
-    const value = { ...this.form.value };
-    // Remove balance field for edits
-    if (this.data.account) {
-      delete value.balance;
-    }
-    this.dialogRef.close(value);
+    this.dialogRef.close({ ...this.form.value });
   }
 }

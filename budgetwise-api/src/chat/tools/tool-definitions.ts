@@ -57,7 +57,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
     function: {
       name: 'update_account',
       description:
-        'Update an account name or type. Cannot update balance directly — balance changes through transactions.',
+        'Update an account name or type. To change the balance, use the adjust_balance tool instead.',
       parameters: {
         type: 'object',
         properties: {
@@ -85,6 +85,29 @@ export const toolDefinitions: ChatCompletionTool[] = [
           id: { type: 'string', description: 'The account ID to delete' },
         },
         required: ['id'],
+      },
+    },
+  },
+
+  {
+    type: 'function',
+    function: {
+      name: 'adjust_balance',
+      description:
+        'Adjust an account balance to a specific amount. Creates an adjustment transaction for the difference between the current and new balance. Use when the user wants to set, correct, or adjust an account balance.',
+      parameters: {
+        type: 'object',
+        properties: {
+          accountId: {
+            type: 'string',
+            description: 'The account ID to adjust',
+          },
+          newBalance: {
+            type: 'number',
+            description: 'The desired new balance amount in PHP',
+          },
+        },
+        required: ['accountId', 'newBalance'],
       },
     },
   },

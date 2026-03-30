@@ -34,6 +34,7 @@ export class ToolExecutor {
       get_account: () => this.accounts.findOne(id),
       update_account: () => this.accounts.update(id, data),
       delete_account: () => this.accounts.remove(id),
+      adjust_balance: () => this.accounts.adjustBalance(args.accountId, args.newBalance),
 
       // Categories
       create_category: () => this.categories.create(args),

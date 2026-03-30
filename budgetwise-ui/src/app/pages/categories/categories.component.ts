@@ -54,8 +54,8 @@ export class CategoriesComponent implements OnInit {
     this.loading = true;
     this.categoriesService.getAll().subscribe({
       next: (categories) => {
-        this.categories = categories;
-        this.dataSource.data = categories;
+        this.categories = categories.filter(c => !c.isSystem);
+        this.dataSource.data = this.categories;
         this.loading = false;
       },
       error: () => {

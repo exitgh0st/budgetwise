@@ -37,7 +37,10 @@ export class CategoriesService {
   }
 
   async update(id: string, dto: UpdateCategoryDto): Promise<Category> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+    if (existing.isSystem) {
+      throw new BadRequestException('System categories cannot be modified');
+    }
     try {
       return await this.prisma.category.update({ where: { id }, data: dto });
     } catch (error: any) {
@@ -49,7 +52,10 @@ export class CategoriesService {
   }
 
   async remove(id: string): Promise<Category> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
+    if (existing.isSystem) {
+      throw new BadRequestException('System categories cannot be deleted');
+    }
     try {
       return await this.prisma.category.delete({ where: { id } });
     } catch (error: any) {

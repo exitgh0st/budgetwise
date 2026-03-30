@@ -28,6 +28,13 @@ async function main() {
     });
   }
 
+  // Ensure the system Adjustment category always exists with isSystem: true
+  await prisma.category.upsert({
+    where: { name: 'Adjustment' },
+    update: { isSystem: true },
+    create: { name: 'Adjustment', icon: '⚖️', isSystem: true },
+  });
+
   const accounts = [
     { name: 'Cash', type: AccountType.CASH },
     { name: 'Bank Account', type: AccountType.BANK },
