@@ -74,6 +74,8 @@ export class AccountDialogComponent implements OnInit {
     { value: 'CASH', label: 'Cash' },
     { value: 'BANK', label: 'Bank' },
     { value: 'EWALLET', label: 'E-Wallet' },
+    { value: 'CREDIT_CARD', label: 'Credit Card' },
+    { value: 'LOAN', label: 'Loan' },
   ];
 
   form!: FormGroup;
