@@ -7,12 +7,14 @@ import { CategoriesModule } from '../categories/categories.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { BudgetsModule } from '../budgets/budgets.module';
 import { ReportsModule } from '../reports/reports.module';
+import { RecurringTransactionsModule } from 'src/recurring-transactions/recurring-transactions.module';
 
 @Module({
   imports: [
     AccountsModule,
     CategoriesModule,
     TransactionsModule,
+    RecurringTransactionsModule,
     BudgetsModule,
     ReportsModule,
   ],
