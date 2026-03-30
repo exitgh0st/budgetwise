@@ -28,4 +28,8 @@ export class AccountsService {
   delete(id: string): Observable<Account> {
     return this.http.delete<Account>(`${this.url}/${id}`);
   }
+
+  adjustBalance(id: string, newBalance: number): Observable<Account> {
+    return this.http.post<Account>(`${this.url}/${id}/adjust-balance`, { newBalance });
+  }
 }

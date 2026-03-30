@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { AdjustBalanceDto } from './dto/adjust-balance.dto';
 
 @ApiTags('Accounts')
 @Controller('accounts')
@@ -37,5 +38,11 @@ export class AccountsController {
   @ApiOperation({ summary: 'Delete an account' })
   remove(@Param('id') id: string) {
     return this.accountsService.remove(id);
+  }
+
+  @Post(':id/adjust-balance')
+  @ApiOperation({ summary: 'Adjust account balance via adjustment transaction' })
+  adjustBalance(@Param('id') id: string, @Body() dto: AdjustBalanceDto) {
+    return this.accountsService.adjustBalance(id, dto.newBalance);
   }
 }

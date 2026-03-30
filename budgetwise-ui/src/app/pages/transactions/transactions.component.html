@@ -170,7 +170,12 @@
                       <mat-icon class="category-icon">receipt</mat-icon>
                     }
                     <div class="transaction-details">
-                      <span class="description">{{ t.description || t.category.name || 'Transaction' }}</span>
+                      <span class="description">
+                        {{ t.description || t.category.name || 'Transaction' }}
+                        @if (t.category.isSystem) {
+                          <span class="system-badge">adjustment</span>
+                        }
+                      </span>
                       <span class="account-name">{{ t.account.name }}</span>
                     </div>
                   </div>

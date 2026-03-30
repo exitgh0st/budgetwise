@@ -21,6 +21,7 @@ model Category {
   id                    String                 @id @default(uuid())
   name                  String                 @unique
   icon                  String?
+  isSystem              Boolean                @default(false)
   createdAt             DateTime               @default(now())
   transactions          Transaction[]
   budgets               Budget[]

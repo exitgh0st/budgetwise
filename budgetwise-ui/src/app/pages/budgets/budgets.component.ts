@@ -75,7 +75,7 @@ export class BudgetsComponent implements OnInit {
     }).subscribe({
       next: ({ statuses, categories }) => {
         this.budgetStatuses = statuses;
-        this.allCategories = categories;
+        this.allCategories = categories.filter(c => !c.isSystem);
         const budgetedIds = new Set(statuses.map(s => s.categoryId));
         this.unbudgetedCategories = categories.filter(c => !budgetedIds.has(c.id));
         this.loading = false;

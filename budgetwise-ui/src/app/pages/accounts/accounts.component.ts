@@ -109,16 +109,43 @@ export class AccountsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.accountsService.update(account.id, result).subscribe({
+      if (!result) return;
+
+      const { balance, ...updateData } = result;
+      const newBalance = Number(balance);
+      const balanceChanged = !isNaN(newBalance) && newBalance !== Number(account.balance);
+      const propsChanged = updateData.name !== account.name || updateData.type !== account.type;
+
+      if (!balanceChanged && !propsChanged) return;
+
+      const onError = (err: any) => {
+        this.snackBar.open(err.error?.message || 'Failed to update account', 'Dismiss', { duration: 3000 });
+        this.loadAccounts();
+      };
+
+      const doPropsUpdate = () => {
+        if (!propsChanged) {
+          this.snackBar.open('Account updated', 'Dismiss', { duration: 3000 });
+          this.loadAccounts();
+          return;
+        }
+        this.accountsService.update(account.id, updateData).subscribe({
           next: () => {
             this.snackBar.open('Account updated', 'Dismiss', { duration: 3000 });
             this.loadAccounts();
           },
-          error: (err) => {
-            this.snackBar.open(err.error?.message || 'Failed to update account', 'Dismiss', { duration: 3000 });
-          },
+          error: onError,
         });
+      };
+
+      // Sequential: balance first (rollback-friendly — if this fails, props won't update)
+      if (balanceChanged) {
+        this.accountsService.adjustBalance(account.id, newBalance).subscribe({
+          next: () => doPropsUpdate(),
+          error: onError,
+        });
+      } else {
+        doPropsUpdate();
       }
     });
   }
