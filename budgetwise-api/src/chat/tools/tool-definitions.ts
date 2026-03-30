@@ -13,8 +13,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
         properties: {
           name: {
             type: 'string',
-            description:
-              'Account name, e.g. "BDO Savings", "GCash", "Cash"',
+            description: 'Account name, e.g. "BDO Savings", "GCash", "Cash"',
           },
           type: {
             type: 'string',
@@ -223,14 +222,8 @@ export const toolDefinitions: ChatCompletionTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          accountId: {
-            type: 'string',
-            description: 'Filter by account ID',
-          },
-          categoryId: {
-            type: 'string',
-            description: 'Filter by category ID',
-          },
+          accountId: { type: 'string', description: 'Filter by account ID' },
+          categoryId: { type: 'string', description: 'Filter by category ID' },
           type: {
             type: 'string',
             enum: ['INCOME', 'EXPENSE'],
@@ -248,14 +241,8 @@ export const toolDefinitions: ChatCompletionTool[] = [
             type: 'boolean',
             description: 'Filter by settlement status',
           },
-          limit: {
-            type: 'number',
-            description: 'Max results. Default 20.',
-          },
-          offset: {
-            type: 'number',
-            description: 'Pagination offset. Default 0.',
-          },
+          limit: { type: 'number', description: 'Max results. Default 20.' },
+          offset: { type: 'number', description: 'Pagination offset. Default 0.' },
         },
       },
     },
@@ -278,8 +265,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'update_transaction',
-      description:
-        'Update a transaction. Adjusts account balances accordingly.',
+      description: 'Update a transaction. Adjusts account balances accordingly.',
       parameters: {
         type: 'object',
         properties: {
@@ -350,8 +336,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'list_budgets',
-      description:
-        'List all budgets, optionally filtered by month and year.',
+      description: 'List all budgets, optionally filtered by month and year.',
       parameters: {
         type: 'object',
         properties: {
@@ -384,10 +369,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
         type: 'object',
         properties: {
           id: { type: 'string', description: 'The budget ID to update' },
-          amount: {
-            type: 'number',
-            description: 'New budget amount in PHP',
-          },
+          amount: { type: 'number', description: 'New budget amount in PHP' },
         },
         required: ['id', 'amount'],
       },
@@ -486,6 +468,130 @@ export const toolDefinitions: ChatCompletionTool[] = [
             description: 'Number of months to look back. Default 6.',
           },
         },
+      },
+    },
+  },
+
+  // ============ RECURRING TRANSACTIONS ============
+  {
+    type: 'function',
+    function: {
+      name: 'create_recurring_transaction',
+      description:
+        'Set up a recurring transaction template (e.g. monthly rent, weekly allowance, yearly subscription). Use when the user wants to schedule a repeating income or expense. Does NOT immediately create a transaction — call generate_recurring_transaction to post the actual entry.',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['INCOME', 'EXPENSE'],
+            description: 'Whether this is a recurring income or expense',
+          },
+          amount: {
+            type: 'number',
+            description: 'Amount in PHP (always positive)',
+          },
+          description: {
+            type: 'string',
+            description: 'Brief label, e.g. "Monthly rent", "Netflix subscription"',
+          },
+          frequency: {
+            type: 'string',
+            enum: ['WEEKLY', 'MONTHLY', 'YEARLY'],
+            description: 'How often this recurs',
+          },
+          nextDueDate: {
+            type: 'string',
+            description: 'ISO date string for the first (or next) occurrence',
+          },
+          accountId: {
+            type: 'string',
+            description: 'The account ID to debit/credit when generated',
+          },
+          categoryId: {
+            type: 'string',
+            description: 'The category ID. Match to closest existing category, or create one first.',
+          },
+        },
+        required: ['type', 'amount', 'frequency', 'nextDueDate', 'accountId', 'categoryId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_recurring_transactions',
+      description:
+        'List all recurring transaction templates, sorted by next due date. Use to show upcoming recurring bills or income, or to find a recurring transaction ID.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_recurring_transaction',
+      description: 'Get details of a specific recurring transaction template by ID.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'The recurring transaction ID' },
+        },
+        required: ['id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_recurring_transaction',
+      description:
+        'Update a recurring transaction template (amount, frequency, next due date, etc.). Does not affect already-generated transactions.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'The recurring transaction ID to update' },
+          type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
+          amount: { type: 'number' },
+          description: { type: 'string' },
+          frequency: { type: 'string', enum: ['WEEKLY', 'MONTHLY', 'YEARLY'] },
+          nextDueDate: { type: 'string', description: 'ISO date string' },
+          accountId: { type: 'string' },
+          categoryId: { type: 'string' },
+        },
+        required: ['id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_recurring_transaction',
+      description:
+        'Delete a recurring transaction template. Does not delete already-generated transactions. Confirm with user first.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'The recurring transaction ID to delete' },
+        },
+        required: ['id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_recurring_transaction',
+      description:
+        'Post a real transaction from a recurring template for its current due date, then automatically advance the next due date by one frequency period. Use when the user says a recurring bill or income has come in, or when manually triggering a scheduled entry. Returns the newly created transaction.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            description: 'The recurring transaction ID to generate from',
+          },
+        },
+        required: ['id'],
       },
     },
   },

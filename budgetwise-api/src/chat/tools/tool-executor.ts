@@ -4,6 +4,7 @@ import { CategoriesService } from '../../categories/categories.service';
 import { TransactionsService } from '../../transactions/transactions.service';
 import { BudgetsService } from '../../budgets/budgets.service';
 import { ReportsService } from '../../reports/reports.service';
+import { RecurringTransactionsService } from '../../recurring-transactions/recurring-transactions.service';
 
 @Injectable()
 export class ToolExecutor {
@@ -15,6 +16,7 @@ export class ToolExecutor {
     private transactions: TransactionsService,
     private budgets: BudgetsService,
     private reports: ReportsService,
+    private recurringTransactions: RecurringTransactionsService,
   ) {}
 
   async execute(toolName: string, args: any): Promise<any> {
@@ -61,6 +63,20 @@ export class ToolExecutor {
       get_budget_status: () =>
         this.reports.getBudgetStatus(args.month, args.year),
       get_monthly_trend: () => this.reports.getMonthlyTrend(args.months),
+
+      // Recurring Transactions
+      create_recurring_transaction: () =>
+        this.recurringTransactions.create(args),
+      list_recurring_transactions: () =>
+        this.recurringTransactions.findAll(),
+      get_recurring_transaction: () =>
+        this.recurringTransactions.findOne(id),
+      update_recurring_transaction: () =>
+        this.recurringTransactions.update(id, data),
+      delete_recurring_transaction: () =>
+        this.recurringTransactions.remove(id),
+      generate_recurring_transaction: () =>
+        this.recurringTransactions.generate(id),
     };
 
     const handler = handlers[toolName];
