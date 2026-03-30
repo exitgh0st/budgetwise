@@ -95,6 +95,8 @@ enum AccountType {
   CASH
   BANK
   EWALLET
+  CREDIT_CARD
+  LOAN
 }
 
 enum TransactionType {
