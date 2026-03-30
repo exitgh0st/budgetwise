@@ -66,6 +66,8 @@ export class AccountsComponent implements OnInit {
       case 'CASH': return 'payments';
       case 'BANK': return 'account_balance';
       case 'EWALLET': return 'phone_android';
+      case 'CREDIT_CARD': return 'credit_card';
+      case 'LOAN': return 'account_balance_wallet';
     }
   }
 
@@ -74,6 +76,8 @@ export class AccountsComponent implements OnInit {
       case 'CASH': return 'Cash';
       case 'BANK': return 'Bank';
       case 'EWALLET': return 'E-Wallet';
+      case 'CREDIT_CARD': return 'Credit Card';
+      case 'LOAN': return 'Loan';
     }
   }
 
