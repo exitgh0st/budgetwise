@@ -6,7 +6,10 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { ChatPanelComponent } from './shared/components/chat-panel/chat-panel.component';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +22,8 @@ import { ChatPanelComponent } from './shared/components/chat-panel/chat-panel.co
     MatListModule,
     MatIconModule,
     MatButtonModule,
+    MatMenuModule,
+    MatDividerModule,
     ChatPanelComponent,
   ],
   templateUrl: './app.html',
@@ -26,6 +31,7 @@ import { ChatPanelComponent } from './shared/components/chat-panel/chat-panel.co
 })
 export class App {
   isMobile = false;
+  auth = inject(AuthService);
 
   private breakpointObserver = inject(BreakpointObserver);
 
@@ -33,5 +39,9 @@ export class App {
     this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
       this.isMobile = result.matches;
     });
+  }
+
+  async logout() {
+    await this.auth.signOut();
   }
 }

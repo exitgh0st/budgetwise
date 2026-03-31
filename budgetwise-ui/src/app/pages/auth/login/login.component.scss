@@ -1,0 +1,161 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6750a4 0%, #b5179e 100%);
+  padding: 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25) !important;
+}
+
+.auth-header {
+  padding: 32px 24px 8px;
+
+  .logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 4px;
+  }
+
+  .logo-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    color: #6750a4;
+    margin-bottom: 8px;
+  }
+
+  .app-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1c1b1f;
+    letter-spacing: -0.5px;
+  }
+
+  .app-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+  }
+}
+
+mat-card-content {
+  padding: 24px !important;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.submit-btn {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+  }
+
+  .divider-text {
+    font-size: 13px;
+    color: #9ca3af;
+  }
+}
+
+.google-btn {
+  height: 48px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-color: #dadce0 !important;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.auth-footer {
+  padding: 8px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  .forgot-link {
+    color: #6750a4;
+    text-decoration: none;
+    font-size: 14px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .register-link {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+
+    a {
+      color: #6750a4;
+      text-decoration: none;
+      font-weight: 600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
