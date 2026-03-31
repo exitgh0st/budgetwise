@@ -9,12 +9,14 @@ import { FilterTransactionsDto } from './dto/filter-transactions.dto';
 export class TransactionsService {
   constructor(private prisma: PrismaService) { }
 
-  async create(dto: CreateTransactionDto): Promise<Transaction> {
+  async create(dto: CreateTransactionDto, userId: string): Promise<Transaction> {
     return this.prisma.$transaction(async (tx) => {
-      const account = await tx.account.findUnique({ where: { id: dto.accountId } });
+      const account = await tx.account.findFirst({ where: { id: dto.accountId, userId } });
       if (!account) throw new NotFoundException(`Account ${dto.accountId} not found`);
 
-      const category = await tx.category.findUnique({ where: { id: dto.categoryId } });
+      const category = await tx.category.findFirst({
+        where: { id: dto.categoryId, OR: [{ userId }, { isSystem: true }] },
+      });
       if (!category) throw new NotFoundException(`Category ${dto.categoryId} not found`);
 
       const date = dto.date ? new Date(dto.date) : new Date();
@@ -29,6 +31,7 @@ export class TransactionsService {
           isSettled,
           accountId: dto.accountId,
           categoryId: dto.categoryId,
+          userId,
         },
         include: { account: true, category: true },
       });
@@ -45,8 +48,8 @@ export class TransactionsService {
     });
   }
 
-  async findAll(filters: FilterTransactionsDto) {
-    const where: any = {};
+  async findAll(filters: FilterTransactionsDto, userId: string) {
+    const where: any = { userId };
 
     if (filters.accountId) where.accountId = filters.accountId;
     if (filters.categoryId) where.categoryId = filters.categoryId;
@@ -71,18 +74,18 @@ export class TransactionsService {
     return { data, total, limit: filters.limit, offset: filters.offset };
   }
 
-  async findOne(id: string): Promise<Transaction> {
-    const transaction = await this.prisma.transaction.findUnique({
-      where: { id },
+  async findOne(id: string, userId: string): Promise<Transaction> {
+    const transaction = await this.prisma.transaction.findFirst({
+      where: { id, userId },
       include: { account: true, category: true },
     });
     if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
     return transaction;
   }
 
-  async update(id: string, dto: UpdateTransactionDto): Promise<Transaction> {
+  async update(id: string, dto: UpdateTransactionDto, userId: string): Promise<Transaction> {
     return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.transaction.findUnique({ where: { id } });
+      const existing = await tx.transaction.findFirst({ where: { id, userId } });
       if (!existing) throw new NotFoundException(`Transaction ${id} not found`);
 
       const newDate = dto.date ? new Date(dto.date) : existing.date;
@@ -90,6 +93,12 @@ export class TransactionsService {
       const newAmount = dto.amount ?? Number(existing.amount);
       const newAccountId = dto.accountId ?? existing.accountId;
       const newIsSettled = newDate <= new Date();
+
+      // Verify new account ownership if it changed
+      if (dto.accountId && dto.accountId !== existing.accountId) {
+        const newAccount = await tx.account.findFirst({ where: { id: dto.accountId, userId } });
+        if (!newAccount) throw new NotFoundException(`Account ${dto.accountId} not found`);
+      }
 
       // Step 1: Reverse old effect ONLY if the old transaction was already settled
       if (existing.isSettled) {
@@ -132,9 +141,9 @@ export class TransactionsService {
     });
   }
 
-  async remove(id: string): Promise<Transaction> {
+  async remove(id: string, userId: string): Promise<Transaction> {
     return this.prisma.$transaction(async (tx) => {
-      const transaction = await tx.transaction.findUnique({ where: { id } });
+      const transaction = await tx.transaction.findFirst({ where: { id, userId } });
       if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
 
       // Reverse the balance effect ONLY if it was settled

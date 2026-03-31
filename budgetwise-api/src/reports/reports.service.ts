@@ -11,7 +11,7 @@ import {
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
-  async getSummary(month?: number, year?: number): Promise<SummaryReport> {
+  async getSummary(month?: number, year?: number, userId?: string): Promise<SummaryReport> {
     const now = new Date();
     const m = month ?? now.getMonth() + 1;
     const y = year ?? now.getFullYear();
@@ -19,11 +19,12 @@ export class ReportsService {
     const startDate = new Date(y, m - 1, 1);
     const endDate = new Date(y, m, 0, 23, 59, 59);
 
+    const where: any = { date: { gte: startDate, lte: endDate } };
+    if (userId) where.userId = userId;
+
     const result = await this.prisma.transaction.groupBy({
       by: ['type'],
-      where: {
-        date: { gte: startDate, lte: endDate },
-      },
+      where,
       _sum: { amount: true },
     });
 
@@ -39,7 +40,7 @@ export class ReportsService {
     };
   }
 
-  async getSpendingByCategory(month?: number, year?: number): Promise<CategoryBreakdown[]> {
+  async getSpendingByCategory(month?: number, year?: number, userId?: string): Promise<CategoryBreakdown[]> {
     const now = new Date();
     const m = month ?? now.getMonth() + 1;
     const y = year ?? now.getFullYear();
@@ -47,12 +48,15 @@ export class ReportsService {
     const startDate = new Date(y, m - 1, 1);
     const endDate = new Date(y, m, 0, 23, 59, 59);
 
+    const where: any = {
+      type: 'EXPENSE',
+      date: { gte: startDate, lte: endDate },
+    };
+    if (userId) where.userId = userId;
+
     const results = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
-      where: {
-        type: 'EXPENSE',
-        date: { gte: startDate, lte: endDate },
-      },
+      where,
       _sum: { amount: true },
       _count: true,
     });
@@ -81,7 +85,7 @@ export class ReportsService {
       .sort((a, b) => b.totalSpent - a.totalSpent);
   }
 
-  async getBudgetStatus(month?: number, year?: number): Promise<BudgetStatus[]> {
+  async getBudgetStatus(month?: number, year?: number, userId?: string): Promise<BudgetStatus[]> {
     const now = new Date();
     const m = month ?? now.getMonth() + 1;
     const y = year ?? now.getFullYear();
@@ -89,17 +93,23 @@ export class ReportsService {
     const startDate = new Date(y, m - 1, 1);
     const endDate = new Date(y, m, 0, 23, 59, 59);
 
+    const budgetWhere: any = { month: m, year: y };
+    if (userId) budgetWhere.userId = userId;
+
     const budgets = await this.prisma.budget.findMany({
-      where: { month: m, year: y },
+      where: budgetWhere,
       include: { category: true },
     });
 
+    const txWhere: any = {
+      type: 'EXPENSE',
+      date: { gte: startDate, lte: endDate },
+    };
+    if (userId) txWhere.userId = userId;
+
     const spending = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
-      where: {
-        type: 'EXPENSE',
-        date: { gte: startDate, lte: endDate },
-      },
+      where: txWhere,
       _sum: { amount: true },
     });
     const spendingMap = new Map(spending.map(s => [s.categoryId, Number(s._sum.amount ?? 0)]));
@@ -122,7 +132,7 @@ export class ReportsService {
     });
   }
 
-  async getMonthlyTrend(months?: number): Promise<MonthlyTrend[]> {
+  async getMonthlyTrend(months?: number, userId?: string): Promise<MonthlyTrend[]> {
     const n = months ?? 6;
     const now = new Date();
     const results: MonthlyTrend[] = [];
@@ -139,9 +149,12 @@ export class ReportsService {
       const startDate = new Date(y, m - 1, 1);
       const endDate = new Date(y, m, 0, 23, 59, 59);
 
+      const where: any = { date: { gte: startDate, lte: endDate } };
+      if (userId) where.userId = userId;
+
       const grouped = await this.prisma.transaction.groupBy({
         by: ['type'],
-        where: { date: { gte: startDate, lte: endDate } },
+        where,
         _sum: { amount: true },
       });
 

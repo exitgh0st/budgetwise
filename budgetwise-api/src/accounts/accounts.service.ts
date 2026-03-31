@@ -8,44 +8,48 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 export class AccountsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateAccountDto): Promise<Account> {
+  async create(dto: CreateAccountDto, userId: string): Promise<Account> {
     return this.prisma.account.create({
       data: {
         name: dto.name,
         type: dto.type,
         balance: dto.balance ?? 0,
+        userId,
       },
     });
   }
 
-  async findAll(): Promise<Account[]> {
+  async findAll(userId: string): Promise<Account[]> {
     return this.prisma.account.findMany({
+      where: { userId },
       orderBy: { createdAt: 'asc' },
     });
   }
 
-  async findOne(id: string): Promise<Account> {
-    const account = await this.prisma.account.findUnique({ where: { id } });
+  async findOne(id: string, userId: string): Promise<Account> {
+    const account = await this.prisma.account.findFirst({
+      where: { id, userId },
+    });
     if (!account) throw new NotFoundException(`Account ${id} not found`);
     return account;
   }
 
-  async update(id: string, dto: UpdateAccountDto): Promise<Account> {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateAccountDto, userId: string): Promise<Account> {
+    await this.findOne(id, userId);
     return this.prisma.account.update({
       where: { id },
       data: dto,
     });
   }
 
-  async remove(id: string): Promise<Account> {
-    await this.findOne(id);
+  async remove(id: string, userId: string): Promise<Account> {
+    await this.findOne(id, userId);
     return this.prisma.account.delete({ where: { id } });
   }
 
-  async adjustBalance(id: string, newBalance: number): Promise<Account> {
+  async adjustBalance(id: string, newBalance: number, userId: string): Promise<Account> {
     return this.prisma.$transaction(async (tx) => {
-      const account = await tx.account.findUnique({ where: { id } });
+      const account = await tx.account.findFirst({ where: { id, userId } });
       if (!account) throw new NotFoundException(`Account ${id} not found`);
 
       const currentBalance = Number(account.balance);
@@ -74,6 +78,7 @@ export class AccountsService {
           isSettled: true,
           accountId: id,
           categoryId: adjustmentCategory.id,
+          userId,
         },
       });
 

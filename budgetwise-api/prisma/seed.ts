@@ -1,11 +1,12 @@
 import 'dotenv/config';
-import { PrismaClient, AccountType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // These are template categories (userId=null) cloned to each new user by the onboard endpoint
   const categories = [
     { name: 'Food & Dining', icon: '🍔' },
     { name: 'Transport', icon: '🚗' },
@@ -21,33 +22,27 @@ async function main() {
   ];
 
   for (const cat of categories) {
-    await prisma.category.upsert({
-      where: { name: cat.name },
-      update: {},
-      create: cat,
+    const existing = await prisma.category.findFirst({
+      where: { name: cat.name, userId: null },
     });
+    if (!existing) {
+      await prisma.category.create({ data: { ...cat, userId: null } });
+    }
   }
 
-  // Ensure the system Adjustment category always exists with isSystem: true
-  await prisma.category.upsert({
-    where: { name: 'Adjustment' },
-    update: { isSystem: true },
-    create: { name: 'Adjustment', icon: '⚖️', isSystem: true },
+  // System Adjustment category — global, visible to all users
+  const adjustment = await prisma.category.findFirst({
+    where: { name: 'Adjustment', userId: null },
   });
-
-  const accounts = [
-    { name: 'Cash', type: AccountType.CASH },
-    { name: 'Bank Account', type: AccountType.BANK },
-    { name: 'E-Wallet', type: AccountType.EWALLET },
-    { name: 'Credit Card', type: AccountType.CREDIT_CARD },
-    { name: 'Loan', type: AccountType.LOAN }
-  ];
-
-  for (const acc of accounts) {
-    const existing = await prisma.account.findFirst({ where: { name: acc.name } });
-    if (!existing) {
-      await prisma.account.create({ data: acc });
-    }
+  if (adjustment) {
+    await prisma.category.update({
+      where: { id: adjustment.id },
+      data: { isSystem: true },
+    });
+  } else {
+    await prisma.category.create({
+      data: { name: 'Adjustment', icon: '⚖️', isSystem: true, userId: null },
+    });
   }
 
   console.log('Seed data loaded successfully.');
