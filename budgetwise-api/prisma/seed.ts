@@ -39,6 +39,8 @@ async function main() {
     { name: 'Cash', type: AccountType.CASH },
     { name: 'Bank Account', type: AccountType.BANK },
     { name: 'E-Wallet', type: AccountType.EWALLET },
+    { name: 'Credit Card', type: AccountType.CREDIT_CARD },
+    { name: 'Loan', type: AccountType.LOAN }
   ];
 
   for (const acc of accounts) {
