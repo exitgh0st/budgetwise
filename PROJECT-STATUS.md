@@ -6,7 +6,7 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/24-recurring-transactions.md`
+**Last completed ticket:** `tickets/26-account-balance-adjustment.md`
 **Next ticket to implement:** `tickets/23-csv-export.md`
 **Phase:** Post-Phase 3 (Enhancements)
 **Total progress:** 23 / 23 tickets (2 enhancement tickets remaining)
@@ -151,6 +151,13 @@
 - **Services/APIs available:** `GET/POST /api/recurring-transactions`, `GET/PATCH/DELETE /api/recurring-transactions/:id`, `POST /api/recurring-transactions/:id/generate`
 - **User decisions:** Last-valid-day clamping for MONTHLY/YEARLY advances (not JS overflow). Tab switch triggers `loadRecurring()` auto-refresh. `isSettled` on Transaction model pre-existed in schema; generated transactions default to `false`.
 
+### Ticket 26 — Account Balance Adjustment
+- **What was built:** `POST /api/accounts/:id/adjust-balance` endpoint that atomically creates an INCOME/EXPENSE adjustment transaction and sets the account balance directly. `isSystem` flag added to Category model; "Adjustment" category seeded with `isSystem: true`. CategoriesService guards `update()` and `remove()` against system categories (400). Frontend account edit dialog now shows the current balance in an editable field; saves sequentially (balance first, then name/type) for rollback-friendliness. System categories filtered from all dropdowns (transactions, budgets, recurring, categories page). Adjustment transactions show an "adjustment" badge in the transaction list. Chat agent gains `adjust_balance` tool (25th total).
+- **Files created:** `budgetwise-api/src/accounts/dto/adjust-balance.dto.ts`, migration `20260330121127_add_is_system_to_category`
+- **Files modified:** `prisma/schema.prisma`, `prisma/seed.ts`, `categories.service.ts`, `accounts.service.ts`, `accounts.controller.ts`, `chat/tools/tool-definitions.ts`, `chat/tools/tool-executor.ts`, `category.model.ts`, `accounts.service.ts` (frontend), `account-dialog.component.ts`, `accounts.component.ts`, `transactions.component.ts/html/scss`, `budgets.component.ts`, `categories.component.ts`
+- **Services/APIs available:** `POST /api/accounts/:id/adjust-balance` with `{ newBalance: number }` → updated Account
+- **User decisions:** Rollback-friendly sequential save (balance first, then props). Adjustment badge (not just category label). Frontend skips API call if balance unchanged (diff = 0 safeguard on both sides).
+
 ### Ticket 21 — Categories Page
 - **What was built:** Dedicated Categories management page with sortable Material table (desktop), mobile list view with emoji icons, add/edit dialog (name + emoji icon fields), delete with FK violation protection (409/400 → specific snackbar message), empty state, loading spinner, sidenav navigation link.
 - **Files created:** `src/app/pages/categories/` (categories.component.ts/html/scss, category-dialog.component.ts)
@@ -202,7 +209,7 @@ These changes were made manually outside of the ticket workflow.
 ## What Exists So Far
 
 ### Backend (budgetwise-api/)
-- **Status:** Complete — All phases done (Tickets 01-18, 20, 24) + post-ticket changes
+- **Status:** Complete — All phases done (Tickets 01-18, 20, 24, 26) + post-ticket changes
 - **Modules:** Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat, RecurringTransactions
 - **All 5 service modules export their services** (imported by ChatModule)
 - **Database:** PostgreSQL with seed data (12 categories with emoji icons, 3 starter accounts) + ChatSession and ChatMessage tables + `isSettled` column on Transaction
@@ -211,9 +218,10 @@ These changes were made manually outside of the ticket workflow.
 - **isSettled behavior:** Transactions with a future date are unsettled and do not affect account balances; balance sync is gated on `isSettled`
 - **CORS:** Reads allowed origin from `ORIGIN` env variable
 - **Chat loop:** maxIterations = 50
+- **isSystem category:** `Adjustment` category seeded with `isSystem: true`; guarded from update/delete; filtered from all frontend dropdowns
 
 ### Frontend (budgetwise-ui/)
-- **Status:** Complete — All phases done (Tickets 08-14, 19-21, 24) + post-ticket changes
+- **Status:** Complete — All phases done (Tickets 08-14, 19-21, 24, 26) + post-ticket changes
 - **Pages:** Dashboard (recent + upcoming transactions), Accounts, Transactions (with Recurring tab), Budgets, Reports, Categories (all lazy-loaded)
 - **Shared components:** ConfirmDialogComponent, ChatPanelComponent (persistent sidebar/fullscreen)
 - **Shared pipes:** MarkdownPipe (lightweight bold/italic/code/list rendering)
@@ -224,7 +232,7 @@ These changes were made manually outside of the ticket workflow.
 - **Production build:** `environment.prod.ts` swaps API URL to `https://budgetwise-api-k9z9.onrender.com/api` via Angular file replacement
 
 ### Chat Agent
-- **Status:** Complete — fully functional end-to-end (Tickets 15-20, 22 done). Backend API + frontend chat panel + integration polish + history pagination all complete.
+- **Status:** Complete — fully functional end-to-end (Tickets 15-20, 22, 26 done). Backend API + frontend chat panel + integration polish + history pagination + adjust_balance tool all complete.
 - **Prerequisites met:** All 5 backend services exported and imported by ChatModule, database seeded, DeepSeek API key configured
 
 ---
@@ -238,10 +246,6 @@ These changes were made manually outside of the ticket workflow.
 ### Ticket 25 — Dark Mode
 **Status:** Pending
 **Description:** Adds a dark/light theme toggle to the toolbar that switches the entire app between M3 light and dark themes, persisting the user's preference to localStorage and defaulting to the OS color-scheme setting.
-
-### Ticket 26 — Account Balance Adjustment
-**Status:** Pending
-**Description:** Adds a balance field to the account edit dialog. Behind the scenes, balance changes create an adjustment transaction (INCOME/EXPENSE for the diff) using a new system-level "Adjustment" category protected by an `isSystem` flag. Includes new `POST /api/accounts/:id/adjust-balance` endpoint and chat agent tool.
 
 ---
 
@@ -259,6 +263,8 @@ These changes were made manually outside of the ticket workflow.
 - **`isSettled` auto-derived from date** — transactions created/updated with a future date are automatically unsettled and skip balance sync; no manual override needed
 - **Production API on Render** — `https://budgetwise-api-k9z9.onrender.com/api` is the live backend; `ORIGIN` env var controls CORS on the server
 - **Chat loop limit = 50** — raised from 10 to allow deeper multi-tool chains without hitting the iteration guard
+- **Balance adjustment is sequential, not parallel** — balance call fires first; if it fails, name/type update is skipped (rollback-friendly). Frontend also skips the API call entirely when balance hasn't changed.
+- **Adjustment badge instead of just category label** — user requested a visual badge (`adjustment` pill) on transaction rows from the system Adjustment category
 
 ---
 
