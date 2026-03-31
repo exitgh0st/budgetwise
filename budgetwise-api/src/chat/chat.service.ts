@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ToolExecutor } from './tools/tool-executor';
 import { toolDefinitions } from './tools/tool-definitions';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import { GuardrailsService } from './guardrails.service';
+import { PendingConfirmationService } from './pending-confirmation.service';
 
 const SYSTEM_PROMPT = `You are BudgetWise AI, a friendly and proactive personal financial advisor.
 You have full access to the user's budgeting app through tool calls. You can
@@ -28,7 +30,11 @@ BEHAVIOR:
 IMPORTANT:
 - Always use tools to get real data. Never hallucinate numbers.
 - For any financial advice, base it on the user's actual spending patterns.
-- You can call multiple tools in sequence to fulfill a request.`;
+- You can call multiple tools in sequence to fulfill a request.
+- NEVER directly execute delete_account, delete_transaction, delete_category,
+  delete_budget, bulk_delete_transactions, reset_budget, or clear_all_data.
+  Instead, describe what you are about to delete and tell the user you need
+  their confirmation. The system will handle the confirmation flow for you.`;
 
 @Injectable()
 export class ChatService {
@@ -39,6 +45,8 @@ export class ChatService {
   constructor(
     private prisma: PrismaService,
     private toolExecutor: ToolExecutor,
+    private guardrails: GuardrailsService,
+    private pendingConfirmation: PendingConfirmationService,
   ) {
     this.client = new OpenAI({
       apiKey: process.env.DEEPSEEK_API_KEY,
@@ -136,18 +144,30 @@ export class ChatService {
   // MESSAGE HISTORY
   // ============================================
 
-  async getHistory(sessionId: string, limit = 50, before?: string, userId?: string): Promise<{ messages: any[]; hasMore: boolean }> {
+  async getHistory(
+    sessionId: string,
+    limit = 50,
+    before?: string,
+    userId?: string,
+  ): Promise<{ messages: any[]; hasMore: boolean }> {
     if (userId) {
       const session = await this.prisma.chatSession.findFirst({
         where: { id: sessionId, userId },
       });
-      if (!session) throw new NotFoundException(`Session ${sessionId} not found`);
+      if (!session)
+        throw new NotFoundException(`Session ${sessionId} not found`);
     }
 
-    const where: any = { sessionId, role: { not: 'tool' }, toolCalls: null };
+    const where: any = {
+      sessionId,
+      role: { not: 'tool' },
+      toolCalls: null,
+    };
 
     if (before) {
-      const cursor = await this.prisma.chatMessage.findUnique({ where: { id: before } });
+      const cursor = await this.prisma.chatMessage.findUnique({
+        where: { id: before },
+      });
       if (cursor) where.createdAt = { lt: cursor.createdAt };
     }
 
@@ -202,20 +222,50 @@ export class ChatService {
   // MAIN CHAT METHOD
   // ============================================
 
-  async chat(userMessage: string, sessionId: string, userId: string): Promise<string> {
+  async chat(
+    userMessage: string,
+    sessionId: string,
+    userId: string,
+  ): Promise<string> {
     // Verify session ownership
     const session = await this.prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
     });
-    if (!session) throw new NotFoundException(`Session ${sessionId} not found`);
+    if (!session)
+      throw new NotFoundException(`Session ${sessionId} not found`);
+
+    // ──────────────────────────────────────────────────────────────────────
+    // GUARDRAIL: Handle pending destructive action confirmation
+    // Check this BEFORE the input guardrails so that "yes/no" replies
+    // to a confirmation prompt are not scope-blocked.
+    // ──────────────────────────────────────────────────────────────────────
+    if (this.pendingConfirmation.hasPending(userId)) {
+      const resolved = await this.handlePendingConfirmation(
+        userMessage,
+        sessionId,
+        userId,
+      );
+      if (resolved !== null) return resolved;
+      // resolved === null means intent was ambiguous; fall through to normal chat
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // GUARDRAIL: Input guardrails (injection + scope)
+    // ──────────────────────────────────────────────────────────────────────
+    const inputCheck = await this.guardrails.checkInput(userMessage);
+    if (!inputCheck.allowed) {
+      // Save the user message and a blocked assistant reply for history
+      await this.saveBlockedExchange(
+        userMessage,
+        inputCheck.blockedReason!,
+        sessionId,
+      );
+      return inputCheck.blockedReason!;
+    }
 
     // 1. Save the user message
     await this.prisma.chatMessage.create({
-      data: {
-        role: 'user',
-        content: userMessage,
-        sessionId,
-      },
+      data: { role: 'user', content: userMessage, sessionId },
     });
 
     // Auto-generate session title from first message
@@ -234,7 +284,24 @@ export class ChatService {
     const messages = await this.buildMessageArray(sessionId);
 
     // 3. Call DeepSeek and process tool calls in a loop
-    const finalResponse = await this.processWithToolLoop(messages, sessionId, userId);
+    const rawResponse = await this.processWithToolLoop(
+      messages,
+      sessionId,
+      userId,
+    );
+
+    // ──────────────────────────────────────────────────────────────────────
+    // GUARDRAIL: Output scanner
+    // ──────────────────────────────────────────────────────────────────────
+    const outputCheck = await this.guardrails.checkOutput(rawResponse);
+    if (!outputCheck.allowed) {
+      // Replace the saved assistant message with the safe fallback
+      await this.replaceLastAssistantMessage(
+        sessionId,
+        outputCheck.blockedReason!,
+      );
+      return outputCheck.blockedReason!;
+    }
 
     // 4. Update session timestamp
     await this.prisma.chatSession.update({
@@ -242,7 +309,60 @@ export class ChatService {
       data: { updatedAt: new Date() },
     });
 
-    return finalResponse;
+    return rawResponse;
+  }
+
+  // ============================================
+  // DESTRUCTIVE ACTION CONFIRMATION FLOW
+  // ============================================
+
+  /**
+   * Called when a pending destructive action exists.
+   * Returns the response string if the flow is resolved, or null if ambiguous
+   * (meaning the message should be processed normally).
+   */
+  private async handlePendingConfirmation(
+    userMessage: string,
+    sessionId: string,
+    userId: string,
+  ): Promise<string | null> {
+    const pending = this.pendingConfirmation.get(userId)!;
+    const intent = this.pendingConfirmation.detectIntent(userMessage);
+
+    if (intent === 'cancel') {
+      this.pendingConfirmation.clear(userId);
+      const reply = `Got it — I've cancelled the deletion of **${pending.description}**. Nothing was changed.`;
+      await this.saveBlockedExchange(userMessage, reply, sessionId);
+      return reply;
+    }
+
+    if (intent === 'confirm') {
+      this.pendingConfirmation.clear(userId);
+
+      // Execute the destructive tool now
+      try {
+        const result = await this.toolExecutor.execute(
+          pending.toolName,
+          pending.toolArgs,
+          userId,
+        );
+        const reply = `✅ Done — **${pending.description}** has been permanently deleted.\n\nResult: ${JSON.stringify(result)}`;
+        await this.saveBlockedExchange(userMessage, reply, sessionId);
+        return reply;
+      } catch (err: any) {
+        const reply = `❌ Something went wrong while trying to delete **${pending.description}**: ${err?.message ?? 'Unknown error'}`;
+        await this.saveBlockedExchange(userMessage, reply, sessionId);
+        return reply;
+      }
+    }
+
+    // Ambiguous — clear the pending action and let the message flow normally
+    // so the agent can re-interpret in context
+    this.logger.log(
+      `Ambiguous confirmation reply from user ${userId}, clearing pending action`,
+    );
+    this.pendingConfirmation.clear(userId);
+    return null;
   }
 
   // ============================================
@@ -270,7 +390,6 @@ export class ChatService {
       const choice = response.choices[0];
       const assistantMessage = choice.message;
 
-      // Check if there are tool calls
       if (
         assistantMessage.tool_calls &&
         assistantMessage.tool_calls.length > 0
@@ -285,36 +404,76 @@ export class ChatService {
           },
         });
 
-        // Add assistant message to the array
         messages.push({
           role: 'assistant',
           content: assistantMessage.content || null,
           tool_calls: assistantMessage.tool_calls,
         } as any);
 
-        // Execute each tool call and collect results
+        // Execute each tool call, intercepting destructive ones
         for (const toolCall of assistantMessage.tool_calls) {
           if (toolCall.type !== 'function') continue;
+
           const toolName = toolCall.function.name;
           const toolArgs = JSON.parse(toolCall.function.arguments);
 
-          this.logger.log(`Executing tool: ${toolName}`);
-          const result = await this.toolExecutor.execute(toolName, toolArgs, userId);
+          // ──────────────────────────────────────────────────────────────
+          // GUARDRAIL: Intercept destructive tools — require confirmation
+          // ──────────────────────────────────────────────────────────────
+          if (this.guardrails.isDestructiveTool(toolName)) {
+            this.logger.log(
+              `Destructive tool intercepted: ${toolName} — awaiting confirmation`,
+            );
 
+            const description = this.buildActionDescription(toolName, toolArgs);
+
+            this.pendingConfirmation.set(userId, {
+              toolName,
+              toolArgs,
+              toolCallId: toolCall.id,
+              description,
+            });
+
+            const confirmationMsg =
+              this.pendingConfirmation.buildConfirmationMessage({
+                toolName,
+                toolArgs,
+                toolCallId: toolCall.id,
+                description,
+                expiresAt: new Date(), // placeholder, not used here
+              });
+
+            // Save the confirmation prompt as the assistant reply
+            await this.prisma.chatMessage.create({
+              data: {
+                role: 'assistant',
+                content: confirmationMsg,
+                sessionId,
+              },
+            });
+
+            return confirmationMsg;
+          }
+
+          // Normal (non-destructive) tool execution
+          this.logger.log(`Executing tool: ${toolName}`);
+          const result = await this.toolExecutor.execute(
+            toolName,
+            toolArgs,
+            userId,
+          );
           const toolResultContent = JSON.stringify(result);
 
-          // Save tool result to DB
           await this.prisma.chatMessage.create({
             data: {
               role: 'tool',
               content: toolResultContent,
               toolCallId: toolCall.id,
-              toolName: toolName,
+              toolName,
               sessionId,
             },
           });
 
-          // Add tool result to the message array
           messages.push({
             role: 'tool',
             tool_call_id: toolCall.id,
@@ -322,27 +481,95 @@ export class ChatService {
           } as any);
         }
 
-        // Continue the loop — DeepSeek may need to make more tool calls
         continue;
       }
 
-      // No tool calls — this is the final text response
+      // No tool calls — final text response
       const finalContent = assistantMessage.content || '';
 
-      // Save the final assistant message
       await this.prisma.chatMessage.create({
-        data: {
-          role: 'assistant',
-          content: finalContent,
-          sessionId,
-        },
+        data: { role: 'assistant', content: finalContent, sessionId },
       });
 
       return finalContent;
     }
 
-    // Safety: if we hit max iterations, return what we have
     this.logger.warn(`Tool loop hit max iterations (${maxIterations})`);
     return 'I had trouble processing that request. Could you try rephrasing?';
+  }
+
+  // ============================================
+  // HELPERS
+  // ============================================
+
+  /**
+   * Saves a user message + blocked/fallback assistant reply to history
+   * without going through the full agent pipeline.
+   */
+  private async saveBlockedExchange(
+    userMessage: string,
+    assistantReply: string,
+    sessionId: string,
+  ): Promise<void> {
+    await this.prisma.chatMessage.createMany({
+      data: [
+        { role: 'user', content: userMessage, sessionId },
+        { role: 'assistant', content: assistantReply, sessionId },
+      ],
+    });
+
+    await this.prisma.chatSession.update({
+      where: { id: sessionId },
+      data: { updatedAt: new Date() },
+    });
+  }
+
+  /**
+   * Replace the most recent assistant message in a session.
+   * Used by the output guardrail to swap in the safe fallback.
+   */
+  private async replaceLastAssistantMessage(
+    sessionId: string,
+    newContent: string,
+  ): Promise<void> {
+    const last = await this.prisma.chatMessage.findFirst({
+      where: { sessionId, role: 'assistant', toolCalls: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (last) {
+      await this.prisma.chatMessage.update({
+        where: { id: last.id },
+        data: { content: newContent },
+      });
+    }
+  }
+
+  /**
+   * Build a human-readable description of a destructive action for the
+   * confirmation prompt. Extend this as you add more destructive tools.
+   */
+  private buildActionDescription(
+    toolName: string,
+    args: Record<string, unknown>,
+  ): string {
+    switch (toolName) {
+      case 'delete_transaction':
+        return `transaction ${args.transactionId ?? '(unknown)'}`;
+      case 'delete_account':
+        return `account ${args.accountId ?? args.name ?? '(unknown)'}`;
+      case 'delete_category':
+        return `category ${args.categoryId ?? args.name ?? '(unknown)'}`;
+      case 'delete_budget':
+        return `budget ${args.budgetId ?? '(unknown)'}`;
+      case 'bulk_delete_transactions':
+        return `multiple transactions (bulk delete)`;
+      case 'reset_budget':
+        return `budget reset for ${args.period ?? 'the selected period'}`;
+      case 'clear_all_data':
+        return `ALL data in your account`;
+      default:
+        return `the requested item (${toolName})`;
+    }
   }
 }
