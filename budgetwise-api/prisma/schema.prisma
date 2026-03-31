@@ -11,21 +11,28 @@ model Account {
   name                  String
   type                  AccountType
   balance               Decimal                @default(0) @db.Decimal(12, 2)
+  userId                String?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   transactions          Transaction[]
   recurringTransactions RecurringTransaction[]
+
+  @@index([userId])
 }
 
 model Category {
   id                    String                 @id @default(uuid())
-  name                  String                 @unique
+  name                  String
   icon                  String?
   isSystem              Boolean                @default(false)
+  userId                String?
   createdAt             DateTime               @default(now())
   transactions          Transaction[]
   budgets               Budget[]
   recurringTransactions RecurringTransaction[]
+
+  @@unique([name, userId])
+  @@index([userId])
 }
 
 model Transaction {
@@ -38,9 +45,12 @@ model Transaction {
   account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
   categoryId  String
   category    Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  userId      String?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  isSettled   Boolean          @default(false)
+  isSettled   Boolean         @default(false)
+
+  @@index([userId])
 }
 
 model Budget {
@@ -50,19 +60,24 @@ model Budget {
   year       Int
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId     String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([categoryId, month, year])
+  @@unique([categoryId, month, year, userId])
+  @@index([userId])
 }
 
 model ChatSession {
   id        String        @id @default(uuid())
   title     String?
   isActive  Boolean       @default(true)
+  userId    String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   messages  ChatMessage[]
+
+  @@index([userId])
 }
 
 model ChatMessage {
@@ -88,8 +103,11 @@ model RecurringTransaction {
   account     Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
   categoryId  String
   category    Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  userId      String?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+
+  @@index([userId])
 }
 
 enum AccountType {

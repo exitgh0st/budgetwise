@@ -12,7 +12,7 @@ export class RecurringTransactionsService {
     private transactionsService: TransactionsService,
   ) {}
 
-  async create(dto: CreateRecurringTransactionDto): Promise<RecurringTransaction> {
+  async create(dto: CreateRecurringTransactionDto, userId: string): Promise<RecurringTransaction> {
     return this.prisma.recurringTransaction.create({
       data: {
         type: dto.type,
@@ -22,29 +22,31 @@ export class RecurringTransactionsService {
         nextDueDate: new Date(dto.nextDueDate),
         accountId: dto.accountId,
         categoryId: dto.categoryId,
+        userId,
       },
       include: { account: true, category: true },
     });
   }
 
-  async findAll(): Promise<RecurringTransaction[]> {
+  async findAll(userId: string): Promise<RecurringTransaction[]> {
     return this.prisma.recurringTransaction.findMany({
+      where: { userId },
       include: { account: true, category: true },
       orderBy: { nextDueDate: 'asc' },
     });
   }
 
-  async findOne(id: string): Promise<RecurringTransaction> {
-    const item = await this.prisma.recurringTransaction.findUnique({
-      where: { id },
+  async findOne(id: string, userId: string): Promise<RecurringTransaction> {
+    const item = await this.prisma.recurringTransaction.findFirst({
+      where: { id, userId },
       include: { account: true, category: true },
     });
     if (!item) throw new NotFoundException(`RecurringTransaction ${id} not found`);
     return item;
   }
 
-  async update(id: string, dto: UpdateRecurringTransactionDto): Promise<RecurringTransaction> {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateRecurringTransactionDto, userId: string): Promise<RecurringTransaction> {
+    await this.findOne(id, userId);
     return this.prisma.recurringTransaction.update({
       where: { id },
       data: {
@@ -60,8 +62,8 @@ export class RecurringTransactionsService {
     });
   }
 
-  async remove(id: string): Promise<void> {
-    await this.findOne(id);
+  async remove(id: string, userId: string): Promise<void> {
+    await this.findOne(id, userId);
     await this.prisma.recurringTransaction.delete({ where: { id } });
   }
 
@@ -70,8 +72,8 @@ export class RecurringTransactionsService {
    * TransactionsService.create), then advances nextDueDate by one frequency period.
    * Uses last-valid-day clamping for MONTHLY/YEARLY (e.g. Jan 31 → Feb 28, not Mar 3).
    */
-  async generate(id: string): Promise<object> {
-    const recurring = await this.findOne(id);
+  async generate(id: string, userId: string): Promise<object> {
+    const recurring = await this.findOne(id, userId);
 
     const transaction = await this.transactionsService.create({
       type: recurring.type,
@@ -80,7 +82,7 @@ export class RecurringTransactionsService {
       accountId: recurring.accountId,
       categoryId: recurring.categoryId,
       date: recurring.nextDueDate.toISOString(),
-    });
+    }, userId);
 
     const next = this.advanceDate(recurring.nextDueDate, recurring.frequency);
     await this.prisma.recurringTransaction.update({

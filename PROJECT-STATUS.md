@@ -7,9 +7,9 @@
 ## Current Progress
 
 **Last completed ticket:** `tickets/26-account-balance-adjustment.md`
-**Next ticket to implement:** `tickets/23-csv-export.md`
+**Next ticket to implement:** `tickets/27-backend-auth-multi-tenancy.md`
 **Phase:** Post-Phase 3 (Enhancements)
-**Total progress:** 23 / 23 tickets (2 enhancement tickets remaining)
+**Total progress:** 23 / 23 tickets (4 enhancement tickets remaining)
 
 ---
 
@@ -246,6 +246,14 @@ These changes were made manually outside of the ticket workflow.
 ### Ticket 25 — Dark Mode
 **Status:** Pending
 **Description:** Adds a dark/light theme toggle to the toolbar that switches the entire app between M3 light and dark themes, persisting the user's preference to localStorage and defaulting to the OS color-scheme setting.
+
+### Ticket 27 — Backend: Supabase Auth & Multi-Tenancy
+**Status:** Pending
+**Description:** Adds JWT authentication (Supabase) and multi-tenancy to the entire backend. Global auth guard validates Supabase JWTs, userId added to 6 Prisma models, all 7 services + ToolExecutor updated to filter by userId, onboarding endpoint clones default data for new users.
+
+### Ticket 28 — Frontend: Authentication UI & Route Protection
+**Status:** Pending (depends on Ticket 27)
+**Description:** Adds complete Supabase Auth frontend: login (email/password + Google OAuth), registration with email verification, forgot/reset password, HTTP interceptor for JWT injection, route guards, user menu in toolbar. All app routes protected.
 
 ---
 

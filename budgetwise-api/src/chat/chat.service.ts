@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import OpenAI from 'openai';
 import { PrismaService } from '../prisma/prisma.service';
 import { ToolExecutor } from './tools/tool-executor';
@@ -67,14 +67,15 @@ export class ChatService {
   // SESSION MANAGEMENT
   // ============================================
 
-  async createSession(title?: string) {
+  async createSession(title?: string, userId?: string) {
     return this.prisma.chatSession.create({
-      data: { title },
+      data: { title, userId },
     });
   }
 
-  async getSessions() {
+  async getSessions(userId: string) {
     return this.prisma.chatSession.findMany({
+      where: { userId },
       orderBy: { updatedAt: 'desc' },
       select: {
         id: true,
@@ -92,33 +93,39 @@ export class ChatService {
     });
   }
 
-  async getOrCreateActiveSession(): Promise<string> {
+  async getOrCreateActiveSession(userId: string): Promise<string> {
     const active = await this.prisma.chatSession.findFirst({
-      where: { isActive: true },
+      where: { isActive: true, userId },
       orderBy: { updatedAt: 'desc' },
     });
     if (active) return active.id;
 
-    const session = await this.createSession();
+    const session = await this.createSession(undefined, userId);
     return session.id;
   }
 
-  async startNewSession(title?: string) {
+  async startNewSession(title?: string, userId?: string) {
     await this.prisma.chatSession.updateMany({
-      where: { isActive: true },
+      where: { isActive: true, userId },
       data: { isActive: false },
     });
 
-    return this.createSession(title);
+    return this.createSession(title, userId);
   }
 
-  async deleteSession(sessionId: string) {
-    return this.prisma.chatSession.delete({
-      where: { id: sessionId },
+  async deleteSession(sessionId: string, userId: string) {
+    const session = await this.prisma.chatSession.findFirst({
+      where: { id: sessionId, userId },
     });
+    if (!session) throw new NotFoundException(`Session ${sessionId} not found`);
+    return this.prisma.chatSession.delete({ where: { id: sessionId } });
   }
 
-  async updateSession(sessionId: string, title: string) {
+  async updateSession(sessionId: string, title: string, userId: string) {
+    const session = await this.prisma.chatSession.findFirst({
+      where: { id: sessionId, userId },
+    });
+    if (!session) throw new NotFoundException(`Session ${sessionId} not found`);
     return this.prisma.chatSession.update({
       where: { id: sessionId },
       data: { title },
@@ -129,7 +136,14 @@ export class ChatService {
   // MESSAGE HISTORY
   // ============================================
 
-  async getHistory(sessionId: string, limit = 50, before?: string): Promise<{ messages: any[]; hasMore: boolean }> {
+  async getHistory(sessionId: string, limit = 50, before?: string, userId?: string): Promise<{ messages: any[]; hasMore: boolean }> {
+    if (userId) {
+      const session = await this.prisma.chatSession.findFirst({
+        where: { id: sessionId, userId },
+      });
+      if (!session) throw new NotFoundException(`Session ${sessionId} not found`);
+    }
+
     const where: any = { sessionId, role: { not: 'tool' }, toolCalls: null };
 
     if (before) {
@@ -188,7 +202,13 @@ export class ChatService {
   // MAIN CHAT METHOD
   // ============================================
 
-  async chat(userMessage: string, sessionId: string): Promise<string> {
+  async chat(userMessage: string, sessionId: string, userId: string): Promise<string> {
+    // Verify session ownership
+    const session = await this.prisma.chatSession.findFirst({
+      where: { id: sessionId, userId },
+    });
+    if (!session) throw new NotFoundException(`Session ${sessionId} not found`);
+
     // 1. Save the user message
     await this.prisma.chatMessage.create({
       data: {
@@ -199,10 +219,7 @@ export class ChatService {
     });
 
     // Auto-generate session title from first message
-    const session = await this.prisma.chatSession.findUnique({
-      where: { id: sessionId },
-    });
-    if (session && !session.title) {
+    if (!session.title) {
       const title =
         userMessage.length > 50
           ? userMessage.substring(0, 50) + '...'
@@ -217,7 +234,7 @@ export class ChatService {
     const messages = await this.buildMessageArray(sessionId);
 
     // 3. Call DeepSeek and process tool calls in a loop
-    const finalResponse = await this.processWithToolLoop(messages, sessionId);
+    const finalResponse = await this.processWithToolLoop(messages, sessionId, userId);
 
     // 4. Update session timestamp
     await this.prisma.chatSession.update({
@@ -235,6 +252,7 @@ export class ChatService {
   private async processWithToolLoop(
     messages: ChatCompletionMessageParam[],
     sessionId: string,
+    userId: string,
     maxIterations = 50,
   ): Promise<string> {
     let iteration = 0;
@@ -281,7 +299,7 @@ export class ChatService {
           const toolArgs = JSON.parse(toolCall.function.arguments);
 
           this.logger.log(`Executing tool: ${toolName}`);
-          const result = await this.toolExecutor.execute(toolName, toolArgs);
+          const result = await this.toolExecutor.execute(toolName, toolArgs, userId);
 
           const toolResultContent = JSON.stringify(result);
 

@@ -13,9 +13,9 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateCategoryDto): Promise<Category> {
+  async create(dto: CreateCategoryDto, userId: string): Promise<Category> {
     try {
-      return await this.prisma.category.create({ data: dto });
+      return await this.prisma.category.create({ data: { ...dto, userId } });
     } catch (error: any) {
       if (error.code === 'P2002') {
         throw new ConflictException(`Category "${dto.name}" already exists`);
@@ -24,20 +24,31 @@ export class CategoriesService {
     }
   }
 
-  async findAll(): Promise<Category[]> {
+  async findAll(userId: string): Promise<Category[]> {
     return this.prisma.category.findMany({
+      where: {
+        OR: [{ userId }, { isSystem: true }],
+      },
       orderBy: { name: 'asc' },
     });
   }
 
-  async findOne(id: string): Promise<Category> {
-    const category = await this.prisma.category.findUnique({ where: { id } });
+  async findOne(id: string, userId: string): Promise<Category> {
+    const category = await this.prisma.category.findFirst({
+      where: {
+        id,
+        OR: [{ userId }, { isSystem: true }],
+      },
+    });
     if (!category) throw new NotFoundException(`Category ${id} not found`);
     return category;
   }
 
-  async update(id: string, dto: UpdateCategoryDto): Promise<Category> {
-    const existing = await this.findOne(id);
+  async update(id: string, dto: UpdateCategoryDto, userId: string): Promise<Category> {
+    const existing = await this.prisma.category.findFirst({
+      where: { id, userId },
+    });
+    if (!existing) throw new NotFoundException(`Category ${id} not found`);
     if (existing.isSystem) {
       throw new BadRequestException('System categories cannot be modified');
     }
@@ -51,8 +62,11 @@ export class CategoriesService {
     }
   }
 
-  async remove(id: string): Promise<Category> {
-    const existing = await this.findOne(id);
+  async remove(id: string, userId: string): Promise<Category> {
+    const existing = await this.prisma.category.findFirst({
+      where: { id, userId },
+    });
+    if (!existing) throw new NotFoundException(`Category ${id} not found`);
     if (existing.isSystem) {
       throw new BadRequestException('System categories cannot be deleted');
     }
