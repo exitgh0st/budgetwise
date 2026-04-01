@@ -40,6 +40,23 @@ export class AccountsComponent implements OnInit {
     return this.accounts.reduce((sum, a) => sum + Number(a.balance), 0);
   }
 
+  get totalMaintaining(): number {
+    return this.accounts.reduce((sum, a) => sum + (a.maintainingBalance != null ? Number(a.maintainingBalance) : 0), 0);
+  }
+
+  get totalUsable(): number {
+    return this.totalBalance - this.totalMaintaining;
+  }
+
+  get hasMaintainingBalances(): boolean {
+    return this.accounts.some(a => a.maintainingBalance != null && Number(a.maintainingBalance) > 0);
+  }
+
+  isBelowMaintaining(account: Account): boolean {
+    return account.maintainingBalance != null &&
+      Number(account.balance) < Number(account.maintainingBalance);
+  }
+
   ngOnInit() {
     this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
       this.isMobile = result.matches;
@@ -114,7 +131,9 @@ export class AccountsComponent implements OnInit {
       const { balance, ...updateData } = result;
       const newBalance = Number(balance);
       const balanceChanged = !isNaN(newBalance) && newBalance !== Number(account.balance);
-      const propsChanged = updateData.name !== account.name || updateData.type !== account.type;
+      const maintainingChanged = (result.maintainingBalance ?? null) !== (account.maintainingBalance ?? null) &&
+        !(result.maintainingBalance == null && account.maintainingBalance == null);
+      const propsChanged = updateData.name !== account.name || updateData.type !== account.type || maintainingChanged;
 
       if (!balanceChanged && !propsChanged) return;
 
