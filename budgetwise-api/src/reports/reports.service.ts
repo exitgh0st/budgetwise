@@ -11,6 +11,14 @@ import {
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
+  private async getSystemCategoryIds(): Promise<string[]> {
+    const cats = await this.prisma.category.findMany({
+      where: { isSystem: true },
+      select: { id: true },
+    });
+    return cats.map(c => c.id);
+  }
+
   async getSummary(month?: number, year?: number, userId?: string): Promise<SummaryReport> {
     const now = new Date();
     const m = month ?? now.getMonth() + 1;
@@ -19,8 +27,10 @@ export class ReportsService {
     const startDate = new Date(y, m - 1, 1);
     const endDate = new Date(y, m, 0, 23, 59, 59);
 
+    const systemCategoryIds = await this.getSystemCategoryIds();
     const where: any = { date: { gte: startDate, lte: endDate } };
     if (userId) where.userId = userId;
+    if (systemCategoryIds.length > 0) where.categoryId = { notIn: systemCategoryIds };
 
     const result = await this.prisma.transaction.groupBy({
       by: ['type'],
@@ -48,11 +58,13 @@ export class ReportsService {
     const startDate = new Date(y, m - 1, 1);
     const endDate = new Date(y, m, 0, 23, 59, 59);
 
+    const systemCategoryIds = await this.getSystemCategoryIds();
     const where: any = {
       type: 'EXPENSE',
       date: { gte: startDate, lte: endDate },
     };
     if (userId) where.userId = userId;
+    if (systemCategoryIds.length > 0) where.categoryId = { notIn: systemCategoryIds };
 
     const results = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
@@ -101,11 +113,13 @@ export class ReportsService {
       include: { category: true },
     });
 
+    const systemCategoryIds = await this.getSystemCategoryIds();
     const txWhere: any = {
       type: 'EXPENSE',
       date: { gte: startDate, lte: endDate },
     };
     if (userId) txWhere.userId = userId;
+    if (systemCategoryIds.length > 0) txWhere.categoryId = { notIn: systemCategoryIds };
 
     const spending = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
@@ -142,6 +156,8 @@ export class ReportsService {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
 
+    const systemCategoryIds = await this.getSystemCategoryIds();
+
     for (let i = n - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const m = d.getMonth() + 1;
@@ -151,6 +167,7 @@ export class ReportsService {
 
       const where: any = { date: { gte: startDate, lte: endDate } };
       if (userId) where.userId = userId;
+      if (systemCategoryIds.length > 0) where.categoryId = { notIn: systemCategoryIds };
 
       const grouped = await this.prisma.transaction.groupBy({
         by: ['type'],
