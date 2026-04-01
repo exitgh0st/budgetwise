@@ -45,6 +45,15 @@ export interface AccountDialogData {
           <input matInput type="number" formControlName="balance" placeholder="0.00" />
           <span matTextPrefix>₱&nbsp;</span>
         </mat-form-field>
+
+        @if (isBank) {
+          <mat-form-field appearance="outline">
+            <mat-label>Maintaining Balance</mat-label>
+            <input matInput type="number" formControlName="maintainingBalance" placeholder="0.00" />
+            <span matTextPrefix>₱&nbsp;</span>
+            <mat-hint>Minimum balance required by the bank</mat-hint>
+          </mat-form-field>
+        }
       </form>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -78,17 +87,27 @@ export class AccountDialogComponent implements OnInit {
 
   form!: FormGroup;
 
+  get isBank(): boolean {
+    return this.form?.get('type')?.value === 'BANK';
+  }
+
   ngOnInit() {
     const account = this.data.account;
     this.form = this.fb.group({
       name: [account?.name || '', Validators.required],
       type: [account?.type || 'CASH', Validators.required],
       balance: [account ? Number(account.balance) : 0],
+      maintainingBalance: [account?.maintainingBalance != null ? Number(account.maintainingBalance) : null],
     });
   }
 
   save() {
     if (this.form.invalid) return;
-    this.dialogRef.close({ ...this.form.value });
+    const value = { ...this.form.value };
+    // Clear maintaining balance if account type is not BANK
+    if (value.type !== 'BANK') {
+      value.maintainingBalance = null;
+    }
+    this.dialogRef.close(value);
   }
 }

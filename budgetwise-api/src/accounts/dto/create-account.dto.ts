@@ -15,4 +15,9 @@ export class CreateAccountDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   balance?: number;
+
+  @ApiPropertyOptional({ example: 5000 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  maintainingBalance?: number;
 }
