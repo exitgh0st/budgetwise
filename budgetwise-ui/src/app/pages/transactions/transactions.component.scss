@@ -267,6 +267,11 @@ mat-paginator {
   }
 }
 
+.mat-column-actions {
+  min-width: 180px;
+  flex: 0 0 180px;
+}
+
 // ═══════════════════════════ Recurring cards (mobile)
 
 .recurring-card {
