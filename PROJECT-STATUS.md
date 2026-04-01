@@ -6,8 +6,8 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/27-backend-auth-multi-tenancy.md`
-**Next ticket to implement:** `tickets/28-frontend-auth.md`
+**Last completed ticket:** `tickets/28-frontend-auth.md`
+**Next ticket to implement:** `tickets/23-csv-export.md` or `tickets/25-dark-mode.md` (both pending)
 **Phase:** Post-Phase 3 (Enhancements)
 **Total progress:** 23 / 23 tickets (3 enhancement tickets remaining)
 
@@ -165,6 +165,13 @@
 - **Services/APIs available:** `POST /api/auth/onboard` (idempotent, requires JWT). All existing endpoints now require `Authorization: Bearer <token>`. Swagger UI shows "Authorize" button.
 - **User decisions:** Supabase JWT secret to be added to `.env` separately (user has project already). Existing null-userId seed data left as orphaned (invisible to authenticated users).
 
+### Ticket 28 — Frontend: Authentication UI & Route Protection
+- **What was built:** Complete Supabase Auth frontend. `SupabaseService` (thin singleton client wrapper) + signal-based `AuthService` (session init, sign-in/up/out, Google OAuth, password reset, onboard call). Functional `authInterceptor` injects Bearer JWT on all API requests and auto-signs-out on 401. `authGuard` (protects app routes) + `guestGuard` (redirects logged-in users away from auth pages). Five auth pages: Login, Register, Forgot Password, Reset Password, OAuth Callback. App shell (`app.html`) conditionally renders sidenav/toolbar/chat only when `auth.isAuthenticated()` — auth pages get a clean full-page layout. Toolbar user menu shows email + logout button.
+- **Files created:** `core/services/supabase.service.ts`, `core/services/auth.service.ts`, `core/interceptors/auth.interceptor.ts`, `core/guards/auth.guard.ts`, `core/guards/guest.guard.ts`, all auth page components (login, register, forgot-password, reset-password, callback)
+- **Files modified:** `environment.ts`, `environment.prod.ts`, `app.config.ts`, `app.routes.ts`, `app.ts`, `app.html`, `app.scss`
+- **Services/APIs available:** `AuthService.signInWithEmail()`, `signUpWithEmail()`, `signInWithGoogle()`, `signOut()`, `resetPassword()`, `updatePassword()`, `onboard()`, `getAccessToken()`, `currentUser` signal, `isAuthenticated` computed, `isLoading` signal
+- **User decisions:** Allow login before email verification (no email_confirmed_at gate). Google OAuth included. Violet/rose gradient background for auth pages matching app theme.
+
 ### Ticket 21 — Categories Page
 - **What was built:** Dedicated Categories management page with sortable Material table (desktop), mobile list view with emoji icons, add/edit dialog (name + emoji icon fields), delete with FK violation protection (409/400 → specific snackbar message), empty state, loading spinner, sidenav navigation link.
 - **Files created:** `src/app/pages/categories/` (categories.component.ts/html/scss, category-dialog.component.ts)
@@ -230,8 +237,9 @@ These changes were made manually outside of the ticket workflow.
 - **isSystem category:** `Adjustment` category seeded with `isSystem: true`; guarded from update/delete; visible to all users via OR clause in findAll
 
 ### Frontend (budgetwise-ui/)
-- **Status:** Complete — All phases done (Tickets 08-14, 19-21, 24, 26) + post-ticket changes
-- **Pages:** Dashboard (recent + upcoming transactions), Accounts, Transactions (with Recurring tab), Budgets, Reports, Categories (all lazy-loaded)
+- **Status:** Complete — All phases done (Tickets 08-14, 19-21, 24, 26, 28) + post-ticket changes
+- **Authentication:** `SupabaseService` + signal-based `AuthService`. JWT auth interceptor on all API calls. `authGuard` + `guestGuard`. Login, Register, Forgot/Reset Password, OAuth Callback pages. App shell hidden for unauthenticated users. User menu with logout in toolbar.
+- **Pages:** Dashboard (recent + upcoming transactions), Accounts, Transactions (with Recurring tab), Budgets, Reports, Categories (all lazy-loaded, all protected by `authGuard`)
 - **Shared components:** ConfirmDialogComponent, ChatPanelComponent (persistent sidebar/fullscreen)
 - **Shared pipes:** MarkdownPipe (lightweight bold/italic/code/list rendering)
 - **Page dialogs:** AccountDialog, TransactionDialog, BudgetDialog, CategoryDialog
@@ -260,7 +268,7 @@ These changes were made manually outside of the ticket workflow.
 **Status:** Complete
 
 ### Ticket 28 — Frontend: Authentication UI & Route Protection
-**Status:** Pending (depends on Ticket 27)
+**Status:** Complete
 **Description:** Adds complete Supabase Auth frontend: login (email/password + Google OAuth), registration with email verification, forgot/reset password, HTTP interceptor for JWT injection, route guards, user menu in toolbar. All app routes protected.
 
 ---
@@ -282,6 +290,8 @@ These changes were made manually outside of the ticket workflow.
 - **Balance adjustment is sequential, not parallel** — balance call fires first; if it fails, name/type update is skipped (rollback-friendly). Frontend also skips the API call entirely when balance hasn't changed.
 - **Adjustment badge instead of just category label** — user requested a visual badge (`adjustment` pill) on transaction rows from the system Adjustment category
 - **Ownership violations return 404, not 403** — avoids leaking record existence to unauthorized users
+- **Allow login before email verification** — no `email_confirmed_at` gate in frontend; Supabase enforces this server-side if configured
+- **Supabase anon key in environment files** — both `environment.ts` and `environment.prod.ts` use the same Supabase project (`gsffiyasnkkwrplydmqj`)
 - **Seed no longer creates accounts** — accounts are per-user, created by `POST /api/auth/onboard`; seed only creates global template categories (userId=null)
 - **`userId: null` in Prisma composite unique** — Prisma doesn't support null in composite unique `where` for upsert; seed uses `findFirst` + conditional `create` pattern instead
 
