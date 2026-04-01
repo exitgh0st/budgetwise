@@ -32,9 +32,10 @@ IMPORTANT:
 - For any financial advice, base it on the user's actual spending patterns.
 - You can call multiple tools in sequence to fulfill a request.
 - NEVER directly execute delete_account, delete_transaction, delete_category,
-  delete_budget, bulk_delete_transactions, reset_budget, or clear_all_data.
-  Instead, describe what you are about to delete and tell the user you need
-  their confirmation. The system will handle the confirmation flow for you.`;
+  delete_budget, delete_recurring_transaction, bulk_delete_transactions,
+  reset_budget, or clear_all_data. Instead, describe what you are about to
+  delete and tell the user you need their confirmation. The system will handle
+  the confirmation flow for you.`;
 
 @Injectable()
 export class ChatService {
@@ -193,26 +194,60 @@ export class ChatService {
       { role: 'system', content: SYSTEM_PROMPT },
     ];
 
+    // Track tool_call_ids we expect to see tool responses for
+    let pendingToolCallIds: string[] = [];
+
     for (const msg of history) {
+      // Before adding any non-tool message, flush any orphaned tool_call_ids
+      // by inserting synthetic tool responses. This handles corrupted history
+      // where an assistant tool_calls message has no following tool messages.
+      if (msg.role !== 'tool' && pendingToolCallIds.length > 0) {
+        for (const callId of pendingToolCallIds) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: callId,
+            content: JSON.stringify({ status: 'pending_confirmation' }),
+          } as any);
+        }
+        pendingToolCallIds = [];
+      }
+
       if (msg.role === 'user') {
         messages.push({ role: 'user', content: msg.content });
       } else if (msg.role === 'assistant') {
         const assistantMsg: any = {
           role: 'assistant',
-          content: msg.content || '',
+          content: msg.content || null,
         };
         if (msg.toolCalls) {
-          assistantMsg.tool_calls = JSON.parse(msg.toolCalls);
-          if (!msg.content) assistantMsg.content = null;
+          const toolCalls = JSON.parse(msg.toolCalls);
+          assistantMsg.tool_calls = toolCalls;
+          // Track which tool_call_ids need responses
+          pendingToolCallIds = toolCalls
+            .filter((tc: any) => tc.type === 'function')
+            .map((tc: any) => tc.id as string);
         }
         messages.push(assistantMsg);
       } else if (msg.role === 'tool') {
+        // Mark this tool_call_id as satisfied
+        pendingToolCallIds = pendingToolCallIds.filter(
+          (id) => id !== msg.toolCallId,
+        );
         messages.push({
           role: 'tool',
           tool_call_id: msg.toolCallId || '',
           content: msg.content,
         } as any);
       }
+    }
+
+    // Flush any remaining orphaned tool_call_ids at end of history
+    for (const callId of pendingToolCallIds) {
+      messages.push({
+        role: 'tool',
+        tool_call_id: callId,
+        content: JSON.stringify({ status: 'pending_confirmation' }),
+      } as any);
     }
 
     return messages;
@@ -443,6 +478,31 @@ export class ChatService {
                 expiresAt: new Date(), // placeholder, not used here
               });
 
+            // Save synthetic tool results for the intercepted call and any
+            // remaining calls in this batch. Without these, the assistant
+            // message with tool_calls has no following tool messages, which
+            // causes DeepSeek to reject the history with a 400 on the next turn.
+            const pendingContent = JSON.stringify({ status: 'pending_confirmation' });
+            const currentIndex = assistantMessage.tool_calls!.indexOf(toolCall);
+            const remainingCalls = assistantMessage.tool_calls!.slice(currentIndex);
+            for (const call of remainingCalls) {
+              if (call.type !== 'function') continue;
+              await this.prisma.chatMessage.create({
+                data: {
+                  role: 'tool',
+                  content: pendingContent,
+                  toolCallId: call.id,
+                  toolName: call.function.name,
+                  sessionId,
+                },
+              });
+              messages.push({
+                role: 'tool',
+                tool_call_id: call.id,
+                content: pendingContent,
+              } as any);
+            }
+
             // Save the confirmation prompt as the assistant reply
             await this.prisma.chatMessage.create({
               data: {
@@ -555,7 +615,9 @@ export class ChatService {
   ): string {
     switch (toolName) {
       case 'delete_transaction':
-        return `transaction ${args.transactionId ?? '(unknown)'}`;
+        return `transaction ${args.transactionId ?? args.id ?? '(unknown)'}`;
+      case 'delete_recurring_transaction':
+        return `recurring transaction ${args.id ?? '(unknown)'}`;
       case 'delete_account':
         return `account ${args.accountId ?? args.name ?? '(unknown)'}`;
       case 'delete_category':
