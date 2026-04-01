@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsString, IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AccountType } from '@prisma/client';
 
@@ -11,9 +11,8 @@ export class CreateAccountDto {
   @IsEnum(AccountType)
   type: AccountType;
 
-  @ApiPropertyOptional({ example: 0, minimum: 0 })
+  @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
   balance?: number;
 }
