@@ -109,6 +109,7 @@ model RecurringTransaction {
   updatedAt   DateTime           @updatedAt
 
   @@index([userId])
+  @@index([nextDueDate])
 }
 
 enum AccountType {

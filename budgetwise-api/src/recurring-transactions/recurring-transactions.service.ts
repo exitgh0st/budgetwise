@@ -93,6 +93,36 @@ export class RecurringTransactionsService {
     return transaction;
   }
 
+  async findAllDue(): Promise<RecurringTransaction[]> {
+    return this.prisma.recurringTransaction.findMany({
+      where: {
+        nextDueDate: { lte: new Date() },
+        userId: { not: null },
+      },
+      orderBy: { nextDueDate: 'asc' },
+    });
+  }
+
+  async generateFromRecord(recurring: RecurringTransaction): Promise<void> {
+    const userId = recurring.userId;
+    if (!userId) return;
+
+    await this.transactionsService.create({
+      type: recurring.type,
+      amount: Number(recurring.amount),
+      description: recurring.description ?? undefined,
+      accountId: recurring.accountId,
+      categoryId: recurring.categoryId,
+      date: recurring.nextDueDate.toISOString(),
+    }, userId);
+
+    const next = this.advanceDate(recurring.nextDueDate, recurring.frequency);
+    await this.prisma.recurringTransaction.update({
+      where: { id: recurring.id },
+      data: { nextDueDate: next },
+    });
+  }
+
   private advanceDate(from: Date, frequency: RecurringFrequency): Date {
     const originalDay = from.getDate();
     const month = from.getMonth();
