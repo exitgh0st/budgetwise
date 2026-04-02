@@ -1,15 +1,20 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { RecurringTransactionsService } from './recurring-transactions.service';
+import { RecurringTransactionsCronService } from './recurring-transactions-cron.service';
 import { CreateRecurringTransactionDto } from './dto/create-recurring-transaction.dto';
 import { UpdateRecurringTransactionDto } from './dto/update-recurring-transaction.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { Public } from '../auth/public.decorator';
 
 @ApiTags('Recurring Transactions')
 @ApiBearerAuth()
 @Controller('recurring-transactions')
 export class RecurringTransactionsController {
-  constructor(private readonly service: RecurringTransactionsService) {}
+  constructor(
+    private readonly service: RecurringTransactionsService,
+    private readonly cronService: RecurringTransactionsCronService,
+  ) {}
 
   @Post()
   create(@CurrentUser() user: { userId: string }, @Body() dto: CreateRecurringTransactionDto) {
@@ -40,5 +45,11 @@ export class RecurringTransactionsController {
   @Post(':id/generate')
   generate(@CurrentUser() user: { userId: string }, @Param('id') id: string) {
     return this.service.generate(id, user.userId);
+  }
+
+  @Public()
+  @Post('process-due')
+  processDue() {
+    return this.cronService.processDueTransactions();
   }
 }
