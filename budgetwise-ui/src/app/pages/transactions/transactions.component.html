@@ -229,6 +229,69 @@
           </button>
         </div>
 
+        <!-- Desktop recurring filters -->
+        <div class="filter-bar">
+          <mat-form-field appearance="outline">
+            <mat-label>Account</mat-label>
+            <mat-select [(ngModel)]="recurringFilterAccountId" (selectionChange)="onRecurringFilterChange()">
+              <mat-option value="">All</mat-option>
+              @for (account of accounts; track account.id) {
+                <mat-option [value]="account.id">{{ account.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select [(ngModel)]="recurringFilterCategoryId" (selectionChange)="onRecurringFilterChange()">
+              <mat-option value="">All</mat-option>
+              @for (category of categories; track category.id) {
+                <mat-option [value]="category.id">{{ category.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Type</mat-label>
+            <mat-select [(ngModel)]="recurringFilterType" (selectionChange)="onRecurringFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="INCOME">Income</mat-option>
+              <mat-option value="EXPENSE">Expense</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Frequency</mat-label>
+            <mat-select [(ngModel)]="recurringFilterFrequency" (selectionChange)="onRecurringFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="DAILY">Daily</mat-option>
+              <mat-option value="WEEKLY">Weekly</mat-option>
+              <mat-option value="MONTHLY">Monthly</mat-option>
+              <mat-option value="YEARLY">Yearly</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Next due from</mat-label>
+            <input matInput [matDatepicker]="recurringStartPicker" [(ngModel)]="recurringFilterStartDate" (dateChange)="onRecurringFilterChange()" />
+            <mat-datepicker-toggle matIconSuffix [for]="recurringStartPicker"></mat-datepicker-toggle>
+            <mat-datepicker #recurringStartPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Next due to</mat-label>
+            <input matInput [matDatepicker]="recurringEndPicker" [(ngModel)]="recurringFilterEndDate" (dateChange)="onRecurringFilterChange()" />
+            <mat-datepicker-toggle matIconSuffix [for]="recurringEndPicker"></mat-datepicker-toggle>
+            <mat-datepicker #recurringEndPicker></mat-datepicker>
+          </mat-form-field>
+
+          @if (hasActiveRecurringFilters) {
+            <button mat-icon-button (click)="clearRecurringFilters()" aria-label="Clear filters">
+              <mat-icon>clear</mat-icon>
+            </button>
+          }
+        </div>
+
         @if (recurringLoading) {
           <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         }
@@ -237,14 +300,33 @@
           <div class="empty-state">
             <mat-icon class="empty-icon">repeat</mat-icon>
             <h2>No recurring transactions</h2>
-            <p>Set up recurring bills or income to generate them on demand.</p>
-            <button mat-flat-button color="primary" (click)="openAddRecurringDialog()">
-              <mat-icon>add</mat-icon> Add Recurring
-            </button>
+            @if (hasActiveRecurringFilters) {
+              <p>Try adjusting your filters or clearing them.</p>
+              <button mat-flat-button color="primary" (click)="clearRecurringFilters()">Clear Filters</button>
+            } @else {
+              <p>Set up recurring bills or income to generate them on demand.</p>
+              <button mat-flat-button color="primary" (click)="openAddRecurringDialog()">
+                <mat-icon>add</mat-icon> Add Recurring
+              </button>
+            }
           </div>
         }
 
         @if (recurringItems.length > 0) {
+          <div class="recurring-summary">
+            <div class="summary-item income">
+              <span class="summary-label">Total Income</span>
+              <span class="summary-value">{{ recurringTotalIncome | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </div>
+            <div class="summary-item expense">
+              <span class="summary-label">Total Expense</span>
+              <span class="summary-value">{{ recurringTotalExpense | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </div>
+            <div class="summary-item net" [class.net-positive]="recurringNetAmount >= 0" [class.net-negative]="recurringNetAmount < 0">
+              <span class="summary-label">Net</span>
+              <span class="summary-value">{{ recurringNetAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </div>
+          </div>
           <mat-table [dataSource]="recurringItems" class="recurring-table">
 
             <ng-container matColumnDef="description">
@@ -328,6 +410,80 @@
           <span></span>
         </div>
 
+        <!-- Mobile recurring filters (expansion panel) -->
+        <mat-accordion>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>filter_list</mat-icon>&nbsp;Filters
+                @if (hasActiveRecurringFilters) {
+                  <span class="filter-badge">Active</span>
+                }
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="mobile-filters">
+              <mat-form-field appearance="outline">
+                <mat-label>Account</mat-label>
+                <mat-select [(ngModel)]="recurringFilterAccountId" (selectionChange)="onRecurringFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  @for (account of accounts; track account.id) {
+                    <mat-option [value]="account.id">{{ account.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <mat-select [(ngModel)]="recurringFilterCategoryId" (selectionChange)="onRecurringFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  @for (category of categories; track category.id) {
+                    <mat-option [value]="category.id">{{ category.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Type</mat-label>
+                <mat-select [(ngModel)]="recurringFilterType" (selectionChange)="onRecurringFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  <mat-option value="INCOME">Income</mat-option>
+                  <mat-option value="EXPENSE">Expense</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Frequency</mat-label>
+                <mat-select [(ngModel)]="recurringFilterFrequency" (selectionChange)="onRecurringFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  <mat-option value="DAILY">Daily</mat-option>
+                  <mat-option value="WEEKLY">Weekly</mat-option>
+                  <mat-option value="MONTHLY">Monthly</mat-option>
+                  <mat-option value="YEARLY">Yearly</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Next due from</mat-label>
+                <input matInput [matDatepicker]="recurringStartPickerM" [(ngModel)]="recurringFilterStartDate" (dateChange)="onRecurringFilterChange()" />
+                <mat-datepicker-toggle matIconSuffix [for]="recurringStartPickerM"></mat-datepicker-toggle>
+                <mat-datepicker #recurringStartPickerM></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Next due to</mat-label>
+                <input matInput [matDatepicker]="recurringEndPickerM" [(ngModel)]="recurringFilterEndDate" (dateChange)="onRecurringFilterChange()" />
+                <mat-datepicker-toggle matIconSuffix [for]="recurringEndPickerM"></mat-datepicker-toggle>
+                <mat-datepicker #recurringEndPickerM></mat-datepicker>
+              </mat-form-field>
+
+              @if (hasActiveRecurringFilters) {
+                <button mat-stroked-button (click)="clearRecurringFilters()">Clear Filters</button>
+              }
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+
         @if (recurringLoading) {
           <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         }
@@ -336,7 +492,29 @@
           <div class="empty-state">
             <mat-icon class="empty-icon">repeat</mat-icon>
             <h2>No recurring transactions</h2>
-            <p>Set up recurring bills or income to generate them on demand.</p>
+            @if (hasActiveRecurringFilters) {
+              <p>Try adjusting your filters or clearing them.</p>
+              <button mat-stroked-button (click)="clearRecurringFilters()">Clear Filters</button>
+            } @else {
+              <p>Set up recurring bills or income to generate them on demand.</p>
+            }
+          </div>
+        }
+
+        @if (recurringItems.length > 0) {
+          <div class="recurring-summary">
+            <div class="summary-item income">
+              <span class="summary-label">Total Income</span>
+              <span class="summary-value">{{ recurringTotalIncome | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </div>
+            <div class="summary-item expense">
+              <span class="summary-label">Total Expense</span>
+              <span class="summary-value">{{ recurringTotalExpense | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </div>
+            <div class="summary-item net" [class.net-positive]="recurringNetAmount >= 0" [class.net-negative]="recurringNetAmount < 0">
+              <span class="summary-label">Net</span>
+              <span class="summary-value">{{ recurringNetAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </div>
           </div>
         }
 

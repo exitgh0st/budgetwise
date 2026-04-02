@@ -209,6 +209,69 @@ mat-paginator {
   margin-top: 16px;
 }
 
+// ═══════════════════════════ Recurring summary bar
+
+.recurring-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  .summary-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+
+    &.income {
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    &.expense {
+      background: rgba(244, 67, 54, 0.1);
+    }
+
+    &.net-positive {
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    &.net-negative {
+      background: rgba(244, 67, 54, 0.1);
+    }
+
+    .summary-label {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--mat-sys-outline);
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    &.income .summary-value {
+      color: #4CAF50;
+    }
+
+    &.expense .summary-value {
+      color: #F44336;
+    }
+
+    &.net-positive .summary-value {
+      color: #4CAF50;
+    }
+
+    &.net-negative .summary-value {
+      color: #F44336;
+    }
+  }
+}
+
 // ═══════════════════════════ Recurring table (desktop)
 
 .recurring-table {
