@@ -79,7 +79,7 @@ export class TransactionsComponent implements OnInit {
   pageSize = 20;
   pageIndex = 0;
 
-  // Filter state
+  // Transaction filter state
   filterAccountId = '';
   filterCategoryId = '';
   filterType = '';
@@ -90,6 +90,14 @@ export class TransactionsComponent implements OnInit {
   recurringItems: RecurringTransaction[] = [];
   recurringLoading = false;
   generatingIds = new Set<string>();
+
+  // Recurring filter state
+  recurringFilterAccountId = '';
+  recurringFilterCategoryId = '';
+  recurringFilterType = '';
+  recurringFilterFrequency = '';
+  recurringFilterStartDate: Date | null = null;
+  recurringFilterEndDate: Date | null = null;
 
   recurringColumns = ['description', 'type', 'amount', 'frequency', 'account', 'category', 'nextDueDate', 'actions'];
 
@@ -137,12 +145,36 @@ export class TransactionsComponent implements OnInit {
     this.recurringLoading = true;
     this.recurringTransactionsService.getAll().subscribe({
       next: (items) => {
-        this.recurringItems = items;
+        this.applyRecurringFilters(items);
         this.recurringLoading = false;
       },
       error: () => {
         this.recurringLoading = false;
       },
+    });
+  }
+
+  private applyRecurringFilters(items: RecurringTransaction[]) {
+    this.recurringItems = items.filter(r => {
+      if (this.recurringFilterAccountId && r.account.id !== this.recurringFilterAccountId) return false;
+      if (this.recurringFilterCategoryId && r.category.id !== this.recurringFilterCategoryId) return false;
+      if (this.recurringFilterType && r.type !== this.recurringFilterType) return false;
+      if (this.recurringFilterFrequency && r.frequency !== this.recurringFilterFrequency) return false;
+      if (this.recurringFilterStartDate) {
+        const due = new Date(r.nextDueDate);
+        due.setHours(0, 0, 0, 0);
+        const start = new Date(this.recurringFilterStartDate);
+        start.setHours(0, 0, 0, 0);
+        if (due < start) return false;
+      }
+      if (this.recurringFilterEndDate) {
+        const due = new Date(r.nextDueDate);
+        due.setHours(0, 0, 0, 0);
+        const end = new Date(this.recurringFilterEndDate);
+        end.setHours(0, 0, 0, 0);
+        if (due > end) return false;
+      }
+      return true;
     });
   }
 
@@ -168,6 +200,47 @@ export class TransactionsComponent implements OnInit {
 
   get hasActiveFilters(): boolean {
     return !!(this.filterAccountId || this.filterCategoryId || this.filterType || this.filterStartDate || this.filterEndDate);
+  }
+
+  onRecurringFilterChange() {
+    this.loadRecurring();
+  }
+
+  clearRecurringFilters() {
+    this.recurringFilterAccountId = '';
+    this.recurringFilterCategoryId = '';
+    this.recurringFilterType = '';
+    this.recurringFilterFrequency = '';
+    this.recurringFilterStartDate = null;
+    this.recurringFilterEndDate = null;
+    this.loadRecurring();
+  }
+
+  get recurringTotalIncome(): number {
+    return this.recurringItems
+      .filter(r => r.type === 'INCOME')
+      .reduce((sum, r) => sum + Number(r.amount), 0);
+  }
+
+  get recurringTotalExpense(): number {
+    return this.recurringItems
+      .filter(r => r.type === 'EXPENSE')
+      .reduce((sum, r) => sum + Number(r.amount), 0);
+  }
+
+  get recurringNetAmount(): number {
+    return this.recurringTotalIncome - this.recurringTotalExpense;
+  }
+
+  get hasActiveRecurringFilters(): boolean {
+    return !!(
+      this.recurringFilterAccountId ||
+      this.recurringFilterCategoryId ||
+      this.recurringFilterType ||
+      this.recurringFilterFrequency ||
+      this.recurringFilterStartDate ||
+      this.recurringFilterEndDate
+    );
   }
 
   onPageChange(event: PageEvent) {
@@ -239,8 +312,6 @@ export class TransactionsComponent implements OnInit {
       }
     });
   }
-
-  // Recurring dialog methods
 
   openAddRecurringDialog() {
     const dialogRef = this.dialog.open(RecurringTransactionDialogComponent, {
@@ -327,14 +398,14 @@ export class TransactionsComponent implements OnInit {
   }
 
   frequencyLabel(frequency: string): string {
-    const labels: Record<string, string> = { WEEKLY: 'Weekly', MONTHLY: 'Monthly', YEARLY: 'Yearly' };
+    const labels: Record<string, string> = { DAILY: 'Daily', WEEKLY: 'Weekly', MONTHLY: 'Monthly', YEARLY: 'Yearly' };
     return labels[frequency] || frequency;
   }
 
   private groupByDate(transactions: Transaction[]): DateGroup[] {
     const map = new Map<string, Transaction[]>();
     for (const t of transactions) {
-      const dateKey = new Date(t.date).toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const dateKey = new Date(t.date).toLocaleDateString('en-CA');
       if (!map.has(dateKey)) map.set(dateKey, []);
       map.get(dateKey)!.push(t);
     }
