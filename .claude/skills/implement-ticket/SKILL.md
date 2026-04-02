@@ -32,12 +32,7 @@ You are implementing a ticket for the BudgetWise project. Follow these steps str
 - Fix any that are not met
 - Run the dev server to confirm no errors
 
-## Step 6: Commit and Push
-- `git add -A`
-- Commit with conventional commits format
-- `git push`
-
-## Step 7: Update PROJECT-STATUS.md
+## Step 6: Update PROJECT-STATUS.md
 This step is CRITICAL. Update `PROJECT-STATUS.md` with:
 
 1. **Current Progress section:**
@@ -63,14 +58,7 @@ This step is CRITICAL. Update `PROJECT-STATUS.md` with:
 
 5. **Known Issues — add any issues** discovered during implementation
 
-## Step 8: Compact Context
-After updating PROJECT-STATUS.md, run:
-```
-/compact retain PROJECT-STATUS.md contents and the next ticket number
-```
-This frees up context for the next ticket while preserving essential state.
-
-## Step 9: Report
+## Step 7: Report
 - Summarize what was implemented (keep it brief — details are in PROJECT-STATUS.md)
 - Tell the user which ticket is next
 - Ask: "Ready for the next ticket, or do you want to take a break?"
