@@ -7,11 +7,14 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatFabButton } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
 import { AccountsService } from '../../core/services/accounts.service';
 import { Account, AccountType } from '../../core/models/account.model';
 import { AccountDialogComponent, AccountDialogData } from './account-dialog/account-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-accounts',
@@ -22,6 +25,10 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/componen
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    FormsModule,
   ],
   templateUrl: './accounts.component.html',
   styleUrl: './accounts.component.scss',
@@ -33,25 +40,19 @@ export class AccountsComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
 
   accounts: Account[] = [];
+  filteredAccounts: Account[] = [];
   loading = true;
   isMobile = false;
 
-  get totalBalance(): number {
-    return this.accounts.reduce((sum, a) => sum + Number(a.balance), 0);
+  // Filter state
+  filterSearch = '';
+  filterType = '';
+
+  get hasActiveFilters(): boolean {
+    return this.filterSearch.trim() !== '' || this.filterType !== '';
   }
 
-  get totalMaintainingBalance(): number {
-    return this.accounts.reduce((sum, a) => sum + (a.maintainingBalance != null ? Number(a.maintainingBalance) : 0), 0);
-  }
-
-  get totalUsableBalance(): number {
-    return this.totalBalance - this.totalMaintainingBalance;
-  }
-
-  get hasMaintainingBalances(): boolean {
-    return this.accounts.some(a => a.maintainingBalance != null && Number(a.maintainingBalance) > 0);
-  }
-
+  // Totals always computed from full accounts list, not filtered
   get totalCreditCardDebt(): number {
     return this.accounts
       .filter(a => a.type === 'CREDIT_CARD')
@@ -64,13 +65,26 @@ export class AccountsComponent implements OnInit {
       .reduce((sum, a) => sum + Number(a.balance), 0);
   }
 
+  get totalMaintainingBalance(): number {
+    return this.accounts.reduce(
+      (sum, a) => sum + (a.maintainingBalance != null ? Number(a.maintainingBalance) : 0),
+      0
+    );
+  }
+
   get totalUsableLiquidBalance(): number {
     return this.totalLiquidBalance - this.totalMaintainingBalance;
   }
 
+  get hasMaintainingBalances(): boolean {
+    return this.accounts.some(a => a.maintainingBalance != null && Number(a.maintainingBalance) > 0);
+  }
+
   isBelowMaintaining(account: Account): boolean {
-    return account.maintainingBalance != null &&
-      Number(account.balance) < Number(account.maintainingBalance);
+    return (
+      account.maintainingBalance != null &&
+      Number(account.balance) < Number(account.maintainingBalance)
+    );
   }
 
   ngOnInit() {
@@ -85,12 +99,36 @@ export class AccountsComponent implements OnInit {
     this.accountsService.getAll().subscribe({
       next: (accounts) => {
         this.accounts = accounts;
+        this.applyFilters();
         this.loading = false;
       },
       error: () => {
         this.snackBar.open('Failed to load accounts', 'Dismiss', { duration: 3000 });
         this.loading = false;
       },
+    });
+  }
+
+  onFilterChange() {
+    this.applyFilters();
+  }
+
+  clearFilters() {
+    this.filterSearch = '';
+    this.filterType = '';
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    const search = this.filterSearch.trim().toLowerCase();
+    const type = this.filterType;
+
+    this.filteredAccounts = this.accounts.filter(account => {
+      const matchesSearch =
+        !search || account.name.toLowerCase().includes(search);
+      const matchesType =
+        !type || account.type === type;
+      return matchesSearch && matchesType;
     });
   }
 
@@ -147,9 +185,13 @@ export class AccountsComponent implements OnInit {
       const { balance, ...updateData } = result;
       const newBalance = Number(balance);
       const balanceChanged = !isNaN(newBalance) && newBalance !== Number(account.balance);
-      const maintainingChanged = (result.maintainingBalance ?? null) !== (account.maintainingBalance ?? null) &&
+      const maintainingChanged =
+        (result.maintainingBalance ?? null) !== (account.maintainingBalance ?? null) &&
         !(result.maintainingBalance == null && account.maintainingBalance == null);
-      const propsChanged = updateData.name !== account.name || updateData.type !== account.type || maintainingChanged;
+      const propsChanged =
+        updateData.name !== account.name ||
+        updateData.type !== account.type ||
+        maintainingChanged;
 
       if (!balanceChanged && !propsChanged) return;
 
@@ -173,7 +215,6 @@ export class AccountsComponent implements OnInit {
         });
       };
 
-      // Sequential: balance first (rollback-friendly — if this fails, props won't update)
       if (balanceChanged) {
         this.accountsService.adjustBalance(account.id, newBalance).subscribe({
           next: () => doPropsUpdate(),
