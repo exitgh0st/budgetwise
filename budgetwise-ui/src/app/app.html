@@ -13,6 +13,14 @@
           <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
           <span matListItemTitle>Accounts</span>
         </a>
+        <a mat-list-item routerLink="/bills" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>receipt_long</mat-icon>
+          <span matListItemTitle>Bills</span>
+        </a>
+        <a mat-list-item routerLink="/goals" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>receipt_long</mat-icon>
+          <span matListItemTitle>Goals</span>
+        </a>
         <a mat-list-item routerLink="/transactions" routerLinkActive="active" (click)="isMobile && sidenav.close()">
           <mat-icon matListItemIcon>receipt_long</mat-icon>
           <span matListItemTitle>Transactions</span>
