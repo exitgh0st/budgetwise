@@ -21,6 +21,32 @@
   </button>
 </div>
 }
+
+<div class="filter-bar">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search</mat-label>
+    <input matInput [(ngModel)]="filterSearch" (input)="onFilterChange()" placeholder="Search accounts..." />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="type-field">
+    <mat-label>Type</mat-label>
+    <mat-select [(ngModel)]="filterType" (selectionChange)="onFilterChange()">
+      <mat-option value="">All</mat-option>
+      <mat-option value="BANK">Bank</mat-option>
+      <mat-option value="CREDIT_CARD">Credit Card</mat-option>
+      <mat-option value="EWALLET">E-Wallet</mat-option>
+      <mat-option value="CASH">Cash</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  @if (hasActiveFilters) {
+    <button mat-icon-button (click)="clearFilters()" aria-label="Clear filters">
+      <mat-icon>clear</mat-icon>
+    </button>
+  }
+</div>
+
 <div class="totals-row">
   <div class="total-liquid">
     <span>Total Liquid</span>
@@ -36,9 +62,9 @@
   </div>
 </div>
 
-@if (!loading && accounts.length > 0) {
+@if (!loading && filteredAccounts.length > 0) {
 <div class="accounts-grid">
-  @for (account of accounts; track account.id) {
+  @for (account of filteredAccounts; track account.id) {
   <mat-card>
     <mat-card-header>
       <mat-icon mat-card-avatar class="type-icon">{{ getTypeIcon(account.type) }}</mat-icon>
