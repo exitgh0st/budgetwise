@@ -63,35 +63,61 @@ mat-card {
   }
 }
 
-.total-balance {
+.totals-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 16px;
   margin-top: 24px;
   margin-bottom: 24px;
 
-  padding: 16px 24px;
-  border-radius: 12px;
-  background: var(--mat-sys-primary-container);
-  color: var(--mat-sys-on-primary-container);
-
-  span:first-child {
-    font-size: 16px;
-    font-weight: 500;
-  }
-
-  .total-amount {
-    font-size: 22px;
-    font-weight: 700;
+  .total-liquid,
+  .total-credit {
+    flex: 1;
     display: flex;
-    align-items: baseline;
-    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-radius: 12px;
+
+    span:first-child {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .total-amount {
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .total-gross {
+      font-size: 14px;
+      font-weight: 400;
+      opacity: 0.7;
+    }
   }
 
-  .total-gross {
-    font-size: 14px;
-    font-weight: 400;
-    opacity: 0.7;
+  .total-liquid {
+    background: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+
+  .total-credit {
+    background: #fdecea;
+    color: #c62828;
+  }
+}
+
+@media (max-width: 599px) {
+  .totals-row {
+    flex-direction: column;
+    gap: 12px;
+
+    .total-liquid,
+    .total-credit {
+      padding: 12px 16px;
+    }
   }
 }
 
