@@ -40,16 +40,32 @@ export class AccountsComponent implements OnInit {
     return this.accounts.reduce((sum, a) => sum + Number(a.balance), 0);
   }
 
-  get totalMaintaining(): number {
+  get totalMaintainingBalance(): number {
     return this.accounts.reduce((sum, a) => sum + (a.maintainingBalance != null ? Number(a.maintainingBalance) : 0), 0);
   }
 
-  get totalUsable(): number {
-    return this.totalBalance - this.totalMaintaining;
+  get totalUsableBalance(): number {
+    return this.totalBalance - this.totalMaintainingBalance;
   }
 
   get hasMaintainingBalances(): boolean {
     return this.accounts.some(a => a.maintainingBalance != null && Number(a.maintainingBalance) > 0);
+  }
+
+  get totalCreditCardDebt(): number {
+    return this.accounts
+      .filter(a => a.type === 'CREDIT_CARD')
+      .reduce((sum, a) => sum + Number(a.balance), 0);
+  }
+
+  get totalLiquidBalance(): number {
+    return this.accounts
+      .filter(a => a.type === 'CASH' || a.type === 'BANK')
+      .reduce((sum, a) => sum + Number(a.balance), 0);
+  }
+
+  get totalUsableLiquidBalance(): number {
+    return this.totalLiquidBalance - this.totalMaintainingBalance;
   }
 
   isBelowMaintaining(account: Account): boolean {
