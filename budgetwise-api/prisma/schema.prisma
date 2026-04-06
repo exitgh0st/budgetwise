@@ -133,6 +133,7 @@ enum TransactionType {
 }
 
 enum RecurringFrequency {
+  ONCE
   WEEKLY
   MONTHLY
   YEARLY
