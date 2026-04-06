@@ -101,6 +101,7 @@ Manual changes made outside the ticket workflow:
 |--------|-------------|
 | 23 — CSV Export | Client-side CSV export button on Transactions page matching active filters. No new backend endpoints. |
 | 25 — Dark Mode | Toolbar toggle for M3 dark/light theme. Persist to localStorage, default to OS preference. |
+| 30 — Bills Page | Migrate RecurringTransaction → Bill model (rename table, preserve data). Remove `isSettled` from Transaction. Add `ONCE` frequency for one-off bills. Rename backend module to `bills/`. Update chat agent tools. Remove Recurring tab from Transactions page. Build single-list Bills page with search, filters, summary. |
 
 ---
 

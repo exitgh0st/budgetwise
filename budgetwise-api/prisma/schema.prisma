@@ -7,30 +7,30 @@ datasource db {
 }
 
 model Account {
-  id                    String                 @id @default(uuid())
-  name                  String
-  type                  AccountType
-  balance               Decimal                @default(0) @db.Decimal(12, 2)
-  maintainingBalance    Decimal?               @db.Decimal(12, 2)
-  userId                String?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  transactions          Transaction[]
-  recurringTransactions RecurringTransaction[]
+  id                 String        @id @default(uuid())
+  name               String
+  type               AccountType
+  balance            Decimal       @default(0) @db.Decimal(12, 2)
+  maintainingBalance Decimal?      @db.Decimal(12, 2)
+  userId             String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  transactions       Transaction[]
+  bills              Bill[]
 
   @@index([userId])
 }
 
 model Category {
-  id                    String                 @id @default(uuid())
-  name                  String
-  icon                  String?
-  isSystem              Boolean                @default(false)
-  userId                String?
-  createdAt             DateTime               @default(now())
-  transactions          Transaction[]
-  budgets               Budget[]
-  recurringTransactions RecurringTransaction[]
+  id           String        @id @default(uuid())
+  name         String
+  icon         String?
+  isSystem     Boolean       @default(false)
+  userId       String?
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+  budgets      Budget[]
+  bills        Bill[]
 
   @@unique([name, userId])
   @@index([userId])
@@ -46,12 +46,38 @@ model Transaction {
   account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
   categoryId  String
   category    Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  billId      String?
+  bill        Bill?           @relation(fields: [billId], references: [id], onDelete: SetNull)
   userId      String?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  isSettled   Boolean         @default(false)
 
   @@index([userId])
+  @@index([billId])
+}
+
+model Bill {
+  id                    String              @id @default(uuid())
+  type                  TransactionType
+  amount                Decimal             @db.Decimal(12, 2)
+  description           String?
+  frequency             RecurringFrequency
+  nextDueDate           DateTime
+  status                BillStatus          @default(ACTIVE)
+  totalInstallments     Int?
+  completedInstallments Int                 @default(0)
+  accountId             String
+  account               Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  categoryId            String
+  category              Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  userId                String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  transactions          Transaction[]
+
+  @@index([userId])
+  @@index([nextDueDate])
+  @@index([status])
 }
 
 model Budget {
@@ -93,25 +119,6 @@ model ChatMessage {
   createdAt  DateTime    @default(now())
 }
 
-model RecurringTransaction {
-  id          String             @id @default(uuid())
-  type        TransactionType
-  amount      Decimal            @db.Decimal(12, 2)
-  description String?
-  frequency   RecurringFrequency
-  nextDueDate DateTime
-  accountId   String
-  account     Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  categoryId  String
-  category    Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  userId      String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-
-  @@index([userId])
-  @@index([nextDueDate])
-}
-
 enum AccountType {
   CASH
   BANK
@@ -129,4 +136,10 @@ enum RecurringFrequency {
   WEEKLY
   MONTHLY
   YEARLY
+}
+
+enum BillStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
