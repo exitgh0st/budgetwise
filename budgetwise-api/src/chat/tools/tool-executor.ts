@@ -89,8 +89,9 @@ export class ToolExecutor {
       const result = await handler();
       return result;
     } catch (error) {
-      this.logger.error(`Tool ${toolName} failed: ${error.message}`);
-      return { error: error.message };
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Tool ${toolName} failed: ${errorMessage}`);
+      return { error: errorMessage };
     }
   }
 }
