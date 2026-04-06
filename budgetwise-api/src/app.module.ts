@@ -11,7 +11,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { BudgetsModule } from './budgets/budgets.module';
 import { ReportsModule } from './reports/reports.module';
 import { ChatModule } from './chat/chat.module';
-import { RecurringTransactionsModule } from './recurring-transactions/recurring-transactions.module';
+import { BillsModule } from './bills/bills.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { RecurringTransactionsModule } from './recurring-transactions/recurring-
     BudgetsModule,
     ReportsModule,
     ChatModule,
-    RecurringTransactionsModule,
+    BillsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

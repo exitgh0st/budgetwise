@@ -32,7 +32,7 @@ IMPORTANT:
 - For any financial advice, base it on the user's actual spending patterns.
 - You can call multiple tools in sequence to fulfill a request.
 - NEVER directly execute delete_account, delete_transaction, delete_category,
-  delete_budget, delete_recurring_transaction, bulk_delete_transactions,
+  delete_budget, delete_bill, bulk_delete_transactions,
   reset_budget, or clear_all_data. Instead, describe what you are about to
   delete and tell the user you need their confirmation. The system will handle
   the confirmation flow for you.`;
@@ -616,8 +616,8 @@ export class ChatService {
     switch (toolName) {
       case 'delete_transaction':
         return `transaction ${args.transactionId ?? args.id ?? '(unknown)'}`;
-      case 'delete_recurring_transaction':
-        return `recurring transaction ${args.id ?? '(unknown)'}`;
+      case 'delete_bill':
+        return `bill ${args.id ?? '(unknown)'}`;
       case 'delete_account':
         return `account ${args.accountId ?? args.name ?? '(unknown)'}`;
       case 'delete_category':

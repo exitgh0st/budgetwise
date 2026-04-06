@@ -1,7 +1,7 @@
-import { IsEnum, IsNumber, IsString, IsOptional, IsDateString, Min } from 'class-validator';
-import { TransactionType, RecurringFrequency } from '@prisma/client';
+import { IsEnum, IsNumber, Min, IsOptional, IsString, IsDateString, IsInt } from 'class-validator';
+import { TransactionType, RecurringFrequency, BillStatus } from '@prisma/client';
 
-export class UpdateRecurringTransactionDto {
+export class UpdateBillDto {
   @IsOptional()
   @IsEnum(TransactionType)
   type?: TransactionType;
@@ -30,4 +30,13 @@ export class UpdateRecurringTransactionDto {
   @IsOptional()
   @IsString()
   categoryId?: string;
+
+  @IsOptional()
+  @IsEnum(BillStatus)
+  status?: BillStatus;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  totalInstallments?: number;
 }

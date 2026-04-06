@@ -76,7 +76,6 @@ export class AccountsService {
           amount,
           description: `${account.name} adjustment`,
           date: new Date(),
-          isSettled: true,
           accountId: id,
           categoryId: adjustmentCategory.id,
           userId,

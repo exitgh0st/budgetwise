@@ -20,7 +20,6 @@ export class TransactionsService {
       if (!category) throw new NotFoundException(`Category ${dto.categoryId} not found`);
 
       const date = dto.date ? new Date(dto.date) : new Date();
-      const isSettled = date <= new Date();
 
       const transaction = await tx.transaction.create({
         data: {
@@ -28,7 +27,6 @@ export class TransactionsService {
           amount: dto.amount,
           description: dto.description,
           date,
-          isSettled,
           accountId: dto.accountId,
           categoryId: dto.categoryId,
           userId,
@@ -36,13 +34,11 @@ export class TransactionsService {
         include: { account: true, category: true },
       });
 
-      if (isSettled) {
-        const balanceChange = dto.type === 'EXPENSE' ? -dto.amount : dto.amount;
-        await tx.account.update({
-          where: { id: dto.accountId },
-          data: { balance: { increment: balanceChange } },
-        });
-      }
+      const balanceChange = dto.type === 'EXPENSE' ? -dto.amount : dto.amount;
+      await tx.account.update({
+        where: { id: dto.accountId },
+        data: { balance: { increment: balanceChange } },
+      });
 
       return transaction;
     });
@@ -92,27 +88,21 @@ export class TransactionsService {
       const newType = dto.type ?? existing.type;
       const newAmount = dto.amount ?? Number(existing.amount);
       const newAccountId = dto.accountId ?? existing.accountId;
-      const newIsSettled = newDate <= new Date();
 
-      // Verify new account ownership if it changed
       if (dto.accountId && dto.accountId !== existing.accountId) {
         const newAccount = await tx.account.findFirst({ where: { id: dto.accountId, userId } });
         if (!newAccount) throw new NotFoundException(`Account ${dto.accountId} not found`);
       }
 
-      // Step 1: Reverse old effect ONLY if the old transaction was already settled
-      if (existing.isSettled) {
-        const oldBalanceReverse = existing.type === 'EXPENSE'
-          ? Number(existing.amount)
-          : -Number(existing.amount);
+      // Reverse old balance effect
+      const oldBalanceReverse = existing.type === 'EXPENSE'
+        ? Number(existing.amount)
+        : -Number(existing.amount);
+      await tx.account.update({
+        where: { id: existing.accountId },
+        data: { balance: { increment: oldBalanceReverse } },
+      });
 
-        await tx.account.update({
-          where: { id: existing.accountId },
-          data: { balance: { increment: oldBalanceReverse } },
-        });
-      }
-
-      // Step 2: Apply the update
       const updated = await tx.transaction.update({
         where: { id },
         data: {
@@ -120,22 +110,18 @@ export class TransactionsService {
           amount: newAmount,
           description: dto.description ?? existing.description,
           date: newDate,
-          isSettled: newIsSettled,
           accountId: newAccountId,
           categoryId: dto.categoryId ?? existing.categoryId,
         },
         include: { account: true, category: true },
       });
 
-      // Step 3: Apply new effect ONLY if the new date is current or past
-      if (newIsSettled) {
-        const newBalanceChange = newType === 'EXPENSE' ? -newAmount : newAmount;
-
-        await tx.account.update({
-          where: { id: newAccountId },
-          data: { balance: { increment: newBalanceChange } },
-        });
-      }
+      // Apply new balance effect
+      const newBalanceChange = newType === 'EXPENSE' ? -newAmount : newAmount;
+      await tx.account.update({
+        where: { id: newAccountId },
+        data: { balance: { increment: newBalanceChange } },
+      });
 
       return updated;
     });
@@ -146,16 +132,13 @@ export class TransactionsService {
       const transaction = await tx.transaction.findFirst({ where: { id, userId } });
       if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
 
-      // Reverse the balance effect ONLY if it was settled
-      if (transaction.isSettled) {
-        const balanceReverse = transaction.type === 'EXPENSE'
-          ? Number(transaction.amount)
-          : -Number(transaction.amount);
-        await tx.account.update({
-          where: { id: transaction.accountId },
-          data: { balance: { increment: balanceReverse } },
-        });
-      }
+      const balanceReverse = transaction.type === 'EXPENSE'
+        ? Number(transaction.amount)
+        : -Number(transaction.amount);
+      await tx.account.update({
+        where: { id: transaction.accountId },
+        data: { balance: { increment: balanceReverse } },
+      });
 
       return tx.transaction.delete({ where: { id } });
     });

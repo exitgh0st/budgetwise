@@ -260,10 +260,6 @@ export const toolDefinitions: ChatCompletionTool[] = [
             type: 'string',
             description: 'End of date range (ISO format)',
           },
-          isSettled: {
-            type: 'boolean',
-            description: 'Filter by settlement status',
-          },
           limit: { type: 'number', description: 'Max results. Default 20.' },
           offset: { type: 'number', description: 'Pagination offset. Default 0.' },
         },
@@ -495,20 +491,20 @@ export const toolDefinitions: ChatCompletionTool[] = [
     },
   },
 
-  // ============ RECURRING TRANSACTIONS ============
+  // ============ BILLS ============
   {
     type: 'function',
     function: {
-      name: 'create_recurring_transaction',
+      name: 'create_bill',
       description:
-        'Set up a recurring transaction template (e.g. monthly rent, weekly allowance, yearly subscription). Use when the user wants to schedule a repeating income or expense. Does NOT immediately create a transaction â€” call generate_recurring_transaction to post the actual entry.',
+        'Create a bill (one-time or recurring expense/income template). Use when the user wants to schedule a future expense like rent, subscriptions, or a one-off payment. Does NOT immediately create a transaction — call generate_bill to post the actual entry.',
       parameters: {
         type: 'object',
         properties: {
           type: {
             type: 'string',
             enum: ['INCOME', 'EXPENSE'],
-            description: 'Whether this is a recurring income or expense',
+            description: 'Whether this is income or expense',
           },
           amount: {
             type: 'number',
@@ -516,16 +512,16 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           description: {
             type: 'string',
-            description: 'Brief label, e.g. "Monthly rent", "Netflix subscription"',
+            description: 'Brief label, e.g. "Monthly rent", "Laptop repair"',
           },
           frequency: {
             type: 'string',
-            enum: ['WEEKLY', 'MONTHLY', 'YEARLY'],
-            description: 'How often this recurs',
+            enum: ['ONCE', 'WEEKLY', 'MONTHLY', 'YEARLY'],
+            description: 'How often this recurs. Use ONCE for one-time bills.',
           },
           nextDueDate: {
             type: 'string',
-            description: 'ISO date string for the first (or next) occurrence',
+            description: 'ISO date string for when this bill is due',
           },
           accountId: {
             type: 'string',
@@ -533,7 +529,12 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           categoryId: {
             type: 'string',
-            description: 'The category ID. Match to closest existing category, or create one first.',
+            description: 'The category ID',
+          },
+          totalInstallments: {
+            type: 'number',
+            description:
+              'Optional. Total number of installments before auto-completing. Auto-set to 1 for ONCE frequency.',
           },
         },
         required: ['type', 'amount', 'frequency', 'nextDueDate', 'accountId', 'categoryId'],
@@ -543,21 +544,30 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'list_recurring_transactions',
+      name: 'list_bills',
       description:
-        'List all recurring transaction templates, sorted by next due date. Use to show upcoming recurring bills or income, or to find a recurring transaction ID.',
-      parameters: { type: 'object', properties: {} },
+        'List all bills, sorted by next due date. Use to show upcoming bills or scheduled income, or to find a bill ID.',
+      parameters: {
+        type: 'object',
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['ACTIVE', 'PAUSED', 'COMPLETED'],
+            description: 'Optional. Filter bills by status.',
+          },
+        },
+      },
     },
   },
   {
     type: 'function',
     function: {
-      name: 'get_recurring_transaction',
-      description: 'Get details of a specific recurring transaction template by ID.',
+      name: 'get_bill',
+      description: 'Get details of a specific bill by ID.',
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'The recurring transaction ID' },
+          id: { type: 'string', description: 'The bill ID' },
         },
         required: ['id'],
       },
@@ -566,20 +576,29 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'update_recurring_transaction',
+      name: 'update_bill',
       description:
-        'Update a recurring transaction template (amount, frequency, next due date, etc.). Does not affect already-generated transactions.',
+        'Update a bill (amount, frequency, next due date, status, etc.). Does not affect already-generated transactions.',
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'The recurring transaction ID to update' },
+          id: { type: 'string', description: 'The bill ID to update' },
           type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
           amount: { type: 'number' },
           description: { type: 'string' },
-          frequency: { type: 'string', enum: ['WEEKLY', 'MONTHLY', 'YEARLY'] },
+          frequency: { type: 'string', enum: ['ONCE', 'WEEKLY', 'MONTHLY', 'YEARLY'] },
           nextDueDate: { type: 'string', description: 'ISO date string' },
           accountId: { type: 'string' },
           categoryId: { type: 'string' },
+          totalInstallments: {
+            type: 'number',
+            description: 'Optional. Total number of installments before auto-completing.',
+          },
+          status: {
+            type: 'string',
+            enum: ['ACTIVE', 'PAUSED', 'COMPLETED'],
+            description: 'Optional. New status for this bill.',
+          },
         },
         required: ['id'],
       },
@@ -588,13 +607,13 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'delete_recurring_transaction',
+      name: 'delete_bill',
       description:
-        'Delete a recurring transaction template. Does not delete already-generated transactions. Confirm with user first.',
+        'Delete a bill. Does not delete already-generated transactions. Confirm with user first.',
       parameters: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'The recurring transaction ID to delete' },
+          id: { type: 'string', description: 'The bill ID to delete' },
         },
         required: ['id'],
       },
@@ -603,15 +622,15 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'generate_recurring_transaction',
+      name: 'generate_bill',
       description:
-        'Post a real transaction from a recurring template for its current due date, then automatically advance the next due date by one frequency period. Use when the user says a recurring bill or income has come in, or when manually triggering a scheduled entry. Returns the newly created transaction.',
+        'Post a real transaction from a bill for its current due date, then automatically advance the next due date by one frequency period when applicable. Use when the user says a bill or scheduled income has come in, or when manually triggering a scheduled entry. Returns the newly created transaction.',
       parameters: {
         type: 'object',
         properties: {
           id: {
             type: 'string',
-            description: 'The recurring transaction ID to generate from',
+            description: 'The bill ID to generate from',
           },
         },
         required: ['id'],
@@ -619,3 +638,4 @@ export const toolDefinitions: ChatCompletionTool[] = [
     },
   },
 ];
+

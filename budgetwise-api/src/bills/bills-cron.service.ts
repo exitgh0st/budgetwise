@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { RecurringTransactionsService } from './recurring-transactions.service';
+import { BillsService } from './bills.service';
 
 @Injectable()
-export class RecurringTransactionsCronService {
-  private readonly logger = new Logger(RecurringTransactionsCronService.name);
+export class BillsCronService {
+  private readonly logger = new Logger(BillsCronService.name);
 
-  constructor(private readonly recurringService: RecurringTransactionsService) {}
+  constructor(private readonly billsService: BillsService) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async runHourly(): Promise<void> {
@@ -14,7 +14,7 @@ export class RecurringTransactionsCronService {
   }
 
   async processDueTransactions(): Promise<{ processed: number; failed: number; iterations: number }> {
-    this.logger.log('Recurring transactions cron job started');
+    this.logger.log('Bills cron job started');
 
     let totalProcessed = 0;
     let totalFailed = 0;
@@ -22,7 +22,7 @@ export class RecurringTransactionsCronService {
     const MAX_ITERATIONS = 100;
 
     while (iterations < MAX_ITERATIONS) {
-      const dueRecords = await this.recurringService.findAllDue();
+      const dueRecords = await this.billsService.findAllDue();
 
       if (dueRecords.length === 0) break;
 
@@ -30,12 +30,12 @@ export class RecurringTransactionsCronService {
 
       for (const record of dueRecords) {
         try {
-          await this.recurringService.generateFromRecord(record);
+          await this.billsService.generateFromRecord(record);
           totalProcessed++;
         } catch (err) {
           totalFailed++;
           this.logger.error(
-            `Failed to generate transaction for recurring ID=${record.id} userId=${record.userId}: ${err instanceof Error ? err.message : String(err)}`,
+            `Failed to generate transaction for bill ID=${record.id} userId=${record.userId}: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }
@@ -44,7 +44,7 @@ export class RecurringTransactionsCronService {
     }
 
     this.logger.log(
-      `Cron job complete — Processed: ${totalProcessed}, Failed: ${totalFailed}, Iterations: ${iterations}`,
+      `Cron job complete - Processed: ${totalProcessed}, Failed: ${totalFailed}, Iterations: ${iterations}`,
     );
 
     return { processed: totalProcessed, failed: totalFailed, iterations };

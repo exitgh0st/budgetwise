@@ -4,7 +4,7 @@ import { CategoriesService } from '../../categories/categories.service';
 import { TransactionsService } from '../../transactions/transactions.service';
 import { BudgetsService } from '../../budgets/budgets.service';
 import { ReportsService } from '../../reports/reports.service';
-import { RecurringTransactionsService } from '../../recurring-transactions/recurring-transactions.service';
+import { BillsService } from '../../bills/bills.service';
 
 @Injectable()
 export class ToolExecutor {
@@ -16,7 +16,7 @@ export class ToolExecutor {
     private transactions: TransactionsService,
     private budgets: BudgetsService,
     private reports: ReportsService,
-    private recurringTransactions: RecurringTransactionsService,
+    private bills: BillsService,
   ) {}
 
   async execute(toolName: string, args: any, userId: string): Promise<any> {
@@ -65,19 +65,19 @@ export class ToolExecutor {
         this.reports.getBudgetStatus(args.month, args.year, userId),
       get_monthly_trend: () => this.reports.getMonthlyTrend(args.months, userId),
 
-      // Recurring Transactions
-      create_recurring_transaction: () =>
-        this.recurringTransactions.create(args, userId),
-      list_recurring_transactions: () =>
-        this.recurringTransactions.findAll(userId),
-      get_recurring_transaction: () =>
-        this.recurringTransactions.findOne(id, userId),
-      update_recurring_transaction: () =>
-        this.recurringTransactions.update(id, data, userId),
-      delete_recurring_transaction: () =>
-        this.recurringTransactions.remove(id, userId),
-      generate_recurring_transaction: () =>
-        this.recurringTransactions.generate(id, userId),
+      // Bills
+      create_bill: () =>
+        this.bills.create(args, userId),
+      list_bills: () =>
+        this.bills.findAll(userId, args.status),
+      get_bill: () =>
+        this.bills.findOne(id, userId),
+      update_bill: () =>
+        this.bills.update(id, data, userId),
+      delete_bill: () =>
+        this.bills.remove(id, userId),
+      generate_bill: () =>
+        this.bills.generate(id, userId),
     };
 
     const handler = handlers[toolName];

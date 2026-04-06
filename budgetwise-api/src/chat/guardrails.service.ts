@@ -42,7 +42,7 @@ export const DESTRUCTIVE_TOOLS = new Set([
   'delete_transaction',
   'delete_category',
   'delete_budget',
-  'delete_recurring_transaction',
+  'delete_bill',
   'bulk_delete_transactions',
   'reset_budget',
   'clear_all_data',
