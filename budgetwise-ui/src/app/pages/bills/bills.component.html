@@ -259,11 +259,12 @@
               <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <div class="row-actions">
-                  <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
-                    @if (isGenerating(bill.id)) {
+                  <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
+                    @if (isPaying(bill.id)) {
                       <span class="button-spinner" aria-hidden="true"></span>
                     }
-                    Generate
+                    <mat-icon>payment</mat-icon>
+                    Pay
                   </button>
                   <button mat-icon-button type="button" aria-label="Edit bill" (click)="openEditDialog(bill)">
                     <mat-icon>edit</mat-icon>
@@ -311,11 +312,12 @@
                   </div>
 
                   <div class="bill-card-actions">
-                    <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
-                      @if (isGenerating(bill.id)) {
+                    <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
+                      @if (isPaying(bill.id)) {
                         <span class="button-spinner" aria-hidden="true"></span>
                       }
-                      Generate
+                      <mat-icon>payment</mat-icon>
+                    Pay
                     </button>
                     <button mat-icon-button type="button" aria-label="Edit bill" (click)="openEditDialog(bill)">
                       <mat-icon>edit</mat-icon>
@@ -595,11 +597,12 @@
               <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <div class="row-actions">
-                  <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
-                    @if (isGenerating(bill.id)) {
+                  <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
+                    @if (isPaying(bill.id)) {
                       <span class="button-spinner" aria-hidden="true"></span>
                     }
-                    Generate
+                    <mat-icon>payment</mat-icon>
+                    Pay
                   </button>
                   <button mat-icon-button type="button" aria-label="Edit income" (click)="openEditDialog(bill)">
                     <mat-icon>edit</mat-icon>
@@ -647,11 +650,12 @@
                   </div>
 
                   <div class="bill-card-actions">
-                    <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
-                      @if (isGenerating(bill.id)) {
+                    <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
+                      @if (isPaying(bill.id)) {
                         <span class="button-spinner" aria-hidden="true"></span>
                       }
-                      Generate
+                      <mat-icon>payment</mat-icon>
+                    Pay
                     </button>
                     <button mat-icon-button type="button" aria-label="Edit income" (click)="openEditDialog(bill)">
                       <mat-icon>edit</mat-icon>

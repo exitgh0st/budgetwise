@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Bill, RecurringFrequency } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -13,9 +17,8 @@ export class BillsService {
   ) {}
 
   async create(dto: CreateBillDto, userId: string): Promise<Bill> {
-    const totalInstallments = dto.frequency === 'ONCE'
-      ? 1
-      : (dto.totalInstallments ?? null);
+    const totalInstallments =
+      dto.frequency === 'ONCE' ? 1 : (dto.totalInstallments ?? null);
     const completedInstallments = dto.completedInstallments ?? 0;
 
     this.validateInstallments(completedInstallments, totalInstallments);
@@ -60,11 +63,12 @@ export class BillsService {
   async update(id: string, dto: UpdateBillDto, userId: string): Promise<Bill> {
     const existing = await this.findOne(id, userId);
     const nextFrequency = dto.frequency ?? existing.frequency;
-    const totalInstallments = nextFrequency === 'ONCE'
-      ? 1
-      : (dto.totalInstallments ?? existing.totalInstallments);
-    console.log('Updating bill with totalInstallments:', totalInstallments, 'and completedInstallments:', dto.completedInstallments, 'existing:', existing);
-    const completedInstallments = dto.completedInstallments ?? existing.completedInstallments;
+    const totalInstallments =
+      nextFrequency === 'ONCE'
+        ? 1
+        : (dto.totalInstallments ?? existing.totalInstallments);
+    const completedInstallments =
+      dto.completedInstallments ?? existing.completedInstallments;
 
     this.validateInstallments(completedInstallments, totalInstallments);
 
@@ -75,12 +79,17 @@ export class BillsService {
         ...(dto.amount !== undefined && { amount: dto.amount }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.frequency !== undefined && { frequency: dto.frequency }),
-        ...(dto.nextDueDate !== undefined && { nextDueDate: new Date(dto.nextDueDate) }),
+        ...(dto.nextDueDate !== undefined && {
+          nextDueDate: new Date(dto.nextDueDate),
+        }),
         ...(dto.accountId !== undefined && { accountId: dto.accountId }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
         ...(dto.status !== undefined && { status: dto.status }),
-        ...(dto.completedInstallments !== undefined && { completedInstallments: dto.completedInstallments }),
-        ...((dto.totalInstallments !== undefined || dto.frequency !== undefined) && { totalInstallments }),
+        ...(dto.completedInstallments !== undefined && {
+          completedInstallments: dto.completedInstallments,
+        }),
+        ...((dto.totalInstallments !== undefined ||
+          dto.frequency !== undefined) && { totalInstallments }),
       },
       include: { account: true, category: true },
     });
@@ -98,43 +107,28 @@ export class BillsService {
       throw new BadRequestException('Cannot generate from a non-active bill');
     }
 
-    const transaction = await this.transactionsService.create({
-      type: bill.type,
-      amount: Number(bill.amount),
-      description: bill.description ?? undefined,
-      accountId: bill.accountId,
-      categoryId: bill.categoryId,
-      // Manual generation should create a settled transaction now, not a future-dated one.
-      date: new Date().toISOString(),
-    }, userId);
+    const transaction = await this.transactionsService.create(
+      {
+        type: bill.type,
+        amount: Number(bill.amount),
+        description: bill.description ?? undefined,
+        accountId: bill.accountId,
+        categoryId: bill.categoryId,
+        // Manual generation should create a settled transaction now, not a future-dated one.
+        date: new Date().toISOString(),
+      },
+      userId,
+    );
 
     await this.prisma.transaction.update({
       where: { id: transaction.id },
       data: { billId: bill.id },
     });
 
-    const newCompleted = bill.completedInstallments + 1;
-    const isComplete = bill.frequency === 'ONCE'
-      || (bill.totalInstallments !== null && newCompleted >= bill.totalInstallments);
-
-    if (isComplete) {
-      await this.prisma.bill.update({
-        where: { id },
-        data: {
-          completedInstallments: newCompleted,
-          status: 'COMPLETED',
-        },
-      });
-    } else {
-      const next = this.advanceDate(bill.nextDueDate, bill.frequency);
-      await this.prisma.bill.update({
-        where: { id },
-        data: {
-          completedInstallments: newCompleted,
-          nextDueDate: next,
-        },
-      });
-    }
+    await this.prisma.bill.update({
+      where: { id },
+      data: this.getBillProgressUpdate(bill),
+    });
 
     return transaction;
   }
@@ -154,36 +148,27 @@ export class BillsService {
     const userId = bill.userId;
     if (!userId) return;
 
-    const transaction = await this.transactionsService.create({
-      type: bill.type,
-      amount: Number(bill.amount),
-      description: bill.description ?? undefined,
-      accountId: bill.accountId,
-      categoryId: bill.categoryId,
-      date: bill.nextDueDate.toISOString(),
-    }, userId);
+    const transaction = await this.transactionsService.create(
+      {
+        type: bill.type,
+        amount: Number(bill.amount),
+        description: bill.description ?? undefined,
+        accountId: bill.accountId,
+        categoryId: bill.categoryId,
+        date: bill.nextDueDate.toISOString(),
+      },
+      userId,
+    );
 
     await this.prisma.transaction.update({
       where: { id: transaction.id },
       data: { billId: bill.id },
     });
 
-    const newCompleted = bill.completedInstallments + 1;
-    const isComplete = bill.frequency === 'ONCE'
-      || (bill.totalInstallments !== null && newCompleted >= bill.totalInstallments);
-
-    if (isComplete) {
-      await this.prisma.bill.update({
-        where: { id: bill.id },
-        data: { completedInstallments: newCompleted, status: 'COMPLETED' },
-      });
-    } else {
-      const next = this.advanceDate(bill.nextDueDate, bill.frequency);
-      await this.prisma.bill.update({
-        where: { id: bill.id },
-        data: { completedInstallments: newCompleted, nextDueDate: next },
-      });
-    }
+    await this.prisma.bill.update({
+      where: { id: bill.id },
+      data: this.getBillProgressUpdate(bill),
+    });
   }
 
   private advanceDate(from: Date, frequency: RecurringFrequency): Date {
@@ -203,7 +188,11 @@ export class BillsService {
         const nextYear = year + Math.floor(nextMonth / 12);
         const normalizedMonth = nextMonth % 12;
         const lastDay = new Date(nextYear, normalizedMonth + 1, 0).getDate();
-        return new Date(nextYear, normalizedMonth, Math.min(originalDay, lastDay));
+        return new Date(
+          nextYear,
+          normalizedMonth,
+          Math.min(originalDay, lastDay),
+        );
       }
 
       case 'YEARLY': {
@@ -217,9 +206,47 @@ export class BillsService {
     }
   }
 
-  private validateInstallments(completedInstallments: number, totalInstallments: number | null): void {
-    if (totalInstallments !== null && completedInstallments > totalInstallments) {
-      throw new BadRequestException('Current installment must be less than or equal to total installments');
+  private validateInstallments(
+    completedInstallments: number,
+    totalInstallments: number | null,
+  ): void {
+    if (
+      totalInstallments !== null &&
+      completedInstallments > totalInstallments
+    ) {
+      throw new BadRequestException(
+        'Current installment must be less than or equal to total installments',
+      );
     }
+  }
+
+  private getBillProgressUpdate(bill: Bill) {
+    const nextDueDate = this.advanceDate(bill.nextDueDate, bill.frequency);
+
+    if (bill.frequency === 'ONCE') {
+      return {
+        completedInstallments: bill.completedInstallments + 1,
+        status: 'COMPLETED' as const,
+      };
+    }
+
+    if (bill.totalInstallments === null) {
+      return {
+        nextDueDate,
+      };
+    }
+
+    const newCompleted = bill.completedInstallments + 1;
+    if (newCompleted >= bill.totalInstallments) {
+      return {
+        completedInstallments: newCompleted,
+        status: 'COMPLETED' as const,
+      };
+    }
+
+    return {
+      completedInstallments: newCompleted,
+      nextDueDate,
+    };
   }
 }

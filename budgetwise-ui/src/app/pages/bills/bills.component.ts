@@ -64,7 +64,7 @@ export class BillsComponent implements OnInit {
   incomeBills: Bill[] = [];
   loading = false;
   isMobile = false;
-  generatingIds = new Set<string>();
+  payingIds = new Set<string>();
   searchQuery = '';
   activeTabIndex = 0;
 
@@ -261,23 +261,42 @@ export class BillsComponent implements OnInit {
     });
   }
 
-  generateOccurrence(bill: Bill) {
-    this.generatingIds.add(bill.id);
-    this.billsService.generate(bill.id).subscribe({
-      next: () => {
-        this.generatingIds.delete(bill.id);
-        this.snackBar.open('Transaction generated from bill', 'Dismiss', { duration: 3000 });
-        this.loadBills();
-      },
-      error: err => {
-        this.generatingIds.delete(bill.id);
-        this.snackBar.open(err.error?.message || 'Failed to generate transaction', 'Dismiss', { duration: 3000 });
-      },
+  payBill(bill: Bill) {
+    if (this.payingIds.has(bill.id)) return;
+
+    this.payingIds.add(bill.id);
+    const label = bill.description || bill.category?.name || 'this bill';
+    const direction = bill.type === 'EXPENSE' ? 'debited from' : 'credited to';
+    const amount = Number(bill.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Pay Bill',
+        message: `Pay ₱${amount} for "${label}"? This amount will be ${direction} ${bill.account.name}.`,
+      } as ConfirmDialogData,
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) {
+        this.payingIds.delete(bill.id);
+        return;
+      }
+      this.billsService.generate(bill.id).subscribe({
+        next: () => {
+          this.payingIds.delete(bill.id);
+          this.snackBar.open('Bill paid — transaction recorded', 'Dismiss', { duration: 3000 });
+          this.loadBills();
+        },
+        error: err => {
+          this.payingIds.delete(bill.id);
+          this.snackBar.open(err.error?.message || 'Failed to pay bill', 'Dismiss', { duration: 3000 });
+        },
+      });
     });
   }
 
-  isGenerating(id: string): boolean {
-    return this.generatingIds.has(id);
+  isPaying(id: string): boolean {
+    return this.payingIds.has(id);
   }
 
   frequencyLabel(freq: RecurringFrequency): string {
