@@ -1,1 +1,677 @@
-<p>bills works!</p>
+<div class="page-header">
+  <h1>Upcoming Transactions</h1>
+</div>
+
+<mat-tab-group animationDuration="200ms" (selectedTabChange)="onTabChange($event.index)">
+  <mat-tab label="Bills">
+    <div class="tab-content">
+      @if (!isMobile) {
+        <div class="tab-actions-bar">
+          <mat-form-field appearance="outline" class="search-bar search-bar-inline">
+            <mat-label>Search bills</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+            @if (searchQuery) {
+              <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" (click)="openAddDialog('EXPENSE')">
+            <mat-icon>add</mat-icon>
+            Add Bill
+          </button>
+        </div>
+      } @else {
+        <mat-form-field appearance="outline" class="search-bar">
+          <mat-label>Search bills</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+          @if (searchQuery) {
+            <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      }
+
+      @if (!isMobile) {
+        <div class="filter-bar">
+          <mat-form-field appearance="outline">
+            <mat-label>Account</mat-label>
+            <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              @for (account of accounts; track account.id) {
+                <mat-option [value]="account.id">{{ account.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              @for (category of categories; track category.id) {
+                <mat-option [value]="category.id">{{ category.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Frequency</mat-label>
+            <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="ONCE">Once</mat-option>
+              <mat-option value="WEEKLY">Weekly</mat-option>
+              <mat-option value="MONTHLY">Monthly</mat-option>
+              <mat-option value="YEARLY">Yearly</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="ACTIVE">Active</mat-option>
+              <mat-option value="COMPLETED">Completed</mat-option>
+              <mat-option value="CANCELLED">Cancelled</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date From</mat-label>
+            <input matInput [matDatepicker]="startPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+            <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date To</mat-label>
+            <input matInput [matDatepicker]="endPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+            <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+
+          @if (hasActiveFilters) {
+            <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+          }
+        </div>
+      } @else {
+        <mat-accordion>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>filter_list</mat-icon>
+                Filters
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="filter-panel">
+              <mat-form-field appearance="outline">
+                <mat-label>Account</mat-label>
+                <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  @for (account of accounts; track account.id) {
+                    <mat-option [value]="account.id">{{ account.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  @for (category of categories; track category.id) {
+                    <mat-option [value]="category.id">{{ category.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Frequency</mat-label>
+                <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  <mat-option value="ONCE">Once</mat-option>
+                  <mat-option value="WEEKLY">Weekly</mat-option>
+                  <mat-option value="MONTHLY">Monthly</mat-option>
+                  <mat-option value="YEARLY">Yearly</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  <mat-option value="ACTIVE">Active</mat-option>
+                  <mat-option value="COMPLETED">Completed</mat-option>
+                  <mat-option value="CANCELLED">Cancelled</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Due Date From</mat-label>
+                <input matInput [matDatepicker]="mobileStartPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+                <mat-datepicker-toggle matIconSuffix [for]="mobileStartPicker"></mat-datepicker-toggle>
+                <mat-datepicker #mobileStartPicker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Due Date To</mat-label>
+                <input matInput [matDatepicker]="mobileEndPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+                <mat-datepicker-toggle matIconSuffix [for]="mobileEndPicker"></mat-datepicker-toggle>
+                <mat-datepicker #mobileEndPicker></mat-datepicker>
+              </mat-form-field>
+
+              @if (hasActiveFilters) {
+                <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+              }
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      }
+
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      @if (!loading && expenseBills.length === 0) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">receipt_long</mat-icon>
+          <h2>No bills found</h2>
+          @if (hasActiveFilters) {
+            <p>Try adjusting your filters or clearing them.</p>
+            <button mat-flat-button color="primary" type="button" (click)="clearFilters()">Clear Filters</button>
+          } @else {
+            <p>Add your first bill to start tracking scheduled expenses.</p>
+            <button mat-flat-button color="primary" type="button" (click)="openAddDialog('EXPENSE')">
+              <mat-icon>add</mat-icon>
+              Add Bill
+            </button>
+          }
+        </div>
+      }
+
+      @if (!loading && expenseBills.length > 0) {
+        <div class="bills-summary">
+          <mat-card class="summary-card expense">
+            <mat-card-content>
+              <span class="summary-label">Total Bills</span>
+              <span class="summary-value">{{ totalExpense | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        @if (!isMobile) {
+          <mat-table [dataSource]="expenseBills" class="bills-table">
+            <ng-container matColumnDef="description">
+              <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <div class="description-cell">
+                  <mat-icon>{{ bill.frequency === 'ONCE' ? 'receipt' : 'repeat' }}</mat-icon>
+                  <div class="description-copy">
+                    <span class="description-text">{{ bill.description || bill.category.name }}</span>
+                    @if ((bill.totalInstallments ?? 0) > 0) {
+                      <span class="description-subtext">{{ bill.completedInstallments }}/{{ bill.totalInstallments }}</span>
+                    }
+                  </div>
+                </div>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="amount">
+              <mat-header-cell *matHeaderCellDef>Amount</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <span class="amount expense">{{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="frequency">
+              <mat-header-cell *matHeaderCellDef>Frequency</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ frequencyLabel(bill.frequency) }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <mat-chip class="status-chip" [color]="statusColor(bill.status)" [class.completed-chip]="bill.status === 'COMPLETED'" [class.cancelled-chip]="bill.status === 'CANCELLED'">
+                  {{ bill.status }}
+                </mat-chip>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="account">
+              <mat-header-cell *matHeaderCellDef>Account</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ bill.account.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="category">
+              <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ bill.category.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="nextDueDate">
+              <mat-header-cell *matHeaderCellDef>Next Due</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ bill.nextDueDate | date:'MMM d, yyyy' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <div class="row-actions">
+                  <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
+                    @if (isGenerating(bill.id)) {
+                      <span class="button-spinner" aria-hidden="true"></span>
+                    }
+                    Generate
+                  </button>
+                  <button mat-icon-button type="button" aria-label="Edit bill" (click)="openEditDialog(bill)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" type="button" aria-label="Delete bill" (click)="confirmDelete(bill)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          </mat-table>
+        } @else {
+          <div class="mobile-list">
+            @for (bill of expenseBills; track bill.id) {
+              <mat-card class="bill-card">
+                <mat-card-content>
+                  <div class="bill-card-row">
+                    <div class="bill-card-info">
+                      <mat-icon>{{ bill.frequency === 'ONCE' ? 'receipt' : 'repeat' }}</mat-icon>
+                      <div class="bill-card-details">
+                        <span class="description-text">{{ bill.description || bill.category.name }}</span>
+                        <span class="meta-text">{{ bill.account.name }} - {{ bill.category.name }}</span>
+                      </div>
+                    </div>
+                    <span class="amount expense">
+                      {{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                    </span>
+                  </div>
+
+                  <div class="bill-card-meta">
+                    <span>{{ frequencyLabel(bill.frequency) }}</span>
+                    <span>{{ bill.nextDueDate | date:'MMM d, yyyy' }}</span>
+                  </div>
+
+                  <div class="bill-card-meta">
+                    <mat-chip class="status-chip" [color]="statusColor(bill.status)" [class.completed-chip]="bill.status === 'COMPLETED'" [class.cancelled-chip]="bill.status === 'CANCELLED'">
+                      {{ bill.status }}
+                    </mat-chip>
+                    @if ((bill.totalInstallments ?? 0) > 0) {
+                      <span>{{ bill.completedInstallments }}/{{ bill.totalInstallments }}</span>
+                    }
+                  </div>
+
+                  <div class="bill-card-actions">
+                    <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
+                      @if (isGenerating(bill.id)) {
+                        <span class="button-spinner" aria-hidden="true"></span>
+                      }
+                      Generate
+                    </button>
+                    <button mat-icon-button type="button" aria-label="Edit bill" (click)="openEditDialog(bill)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" type="button" aria-label="Delete bill" (click)="confirmDelete(bill)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        }
+      }
+
+      @if (isMobile) {
+        <button mat-fab class="fab-add" color="primary" type="button" aria-label="Add bill" (click)="openAddDialog('EXPENSE')">
+          <mat-icon>add</mat-icon>
+        </button>
+      }
+    </div>
+  </mat-tab>
+
+  <mat-tab label="Income">
+    <div class="tab-content">
+      @if (!isMobile) {
+        <div class="tab-actions-bar">
+          <mat-form-field appearance="outline" class="search-bar search-bar-inline">
+            <mat-label>Search income</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+            @if (searchQuery) {
+              <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" (click)="openAddDialog('INCOME')">
+            <mat-icon>add</mat-icon>
+            Add Income
+          </button>
+        </div>
+      } @else {
+        <mat-form-field appearance="outline" class="search-bar">
+          <mat-label>Search income</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+          @if (searchQuery) {
+            <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      }
+
+      @if (!isMobile) {
+        <div class="filter-bar">
+          <mat-form-field appearance="outline">
+            <mat-label>Account</mat-label>
+            <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              @for (account of accounts; track account.id) {
+                <mat-option [value]="account.id">{{ account.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              @for (category of categories; track category.id) {
+                <mat-option [value]="category.id">{{ category.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Frequency</mat-label>
+            <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="ONCE">Once</mat-option>
+              <mat-option value="WEEKLY">Weekly</mat-option>
+              <mat-option value="MONTHLY">Monthly</mat-option>
+              <mat-option value="YEARLY">Yearly</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+              <mat-option value="">All</mat-option>
+              <mat-option value="ACTIVE">Active</mat-option>
+              <mat-option value="COMPLETED">Completed</mat-option>
+              <mat-option value="CANCELLED">Cancelled</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date From</mat-label>
+            <input matInput [matDatepicker]="incomeStartPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+            <mat-datepicker-toggle matIconSuffix [for]="incomeStartPicker"></mat-datepicker-toggle>
+            <mat-datepicker #incomeStartPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Due Date To</mat-label>
+            <input matInput [matDatepicker]="incomeEndPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+            <mat-datepicker-toggle matIconSuffix [for]="incomeEndPicker"></mat-datepicker-toggle>
+            <mat-datepicker #incomeEndPicker></mat-datepicker>
+          </mat-form-field>
+
+          @if (hasActiveFilters) {
+            <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+          }
+        </div>
+      } @else {
+        <mat-accordion>
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>filter_list</mat-icon>
+                Filters
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="filter-panel">
+              <mat-form-field appearance="outline">
+                <mat-label>Account</mat-label>
+                <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  @for (account of accounts; track account.id) {
+                    <mat-option [value]="account.id">{{ account.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Category</mat-label>
+                <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  @for (category of categories; track category.id) {
+                    <mat-option [value]="category.id">{{ category.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Frequency</mat-label>
+                <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  <mat-option value="ONCE">Once</mat-option>
+                  <mat-option value="WEEKLY">Weekly</mat-option>
+                  <mat-option value="MONTHLY">Monthly</mat-option>
+                  <mat-option value="YEARLY">Yearly</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+                  <mat-option value="">All</mat-option>
+                  <mat-option value="ACTIVE">Active</mat-option>
+                  <mat-option value="COMPLETED">Completed</mat-option>
+                  <mat-option value="CANCELLED">Cancelled</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Due Date From</mat-label>
+                <input matInput [matDatepicker]="incomeMobileStartPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+                <mat-datepicker-toggle matIconSuffix [for]="incomeMobileStartPicker"></mat-datepicker-toggle>
+                <mat-datepicker #incomeMobileStartPicker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Due Date To</mat-label>
+                <input matInput [matDatepicker]="incomeMobileEndPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+                <mat-datepicker-toggle matIconSuffix [for]="incomeMobileEndPicker"></mat-datepicker-toggle>
+                <mat-datepicker #incomeMobileEndPicker></mat-datepicker>
+              </mat-form-field>
+
+              @if (hasActiveFilters) {
+                <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+              }
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      }
+
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      @if (!loading && incomeBills.length === 0) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">payments</mat-icon>
+          <h2>No income found</h2>
+          @if (hasActiveFilters) {
+            <p>Try adjusting your filters or clearing them.</p>
+            <button mat-flat-button color="primary" type="button" (click)="clearFilters()">Clear Filters</button>
+          } @else {
+            <p>Add your first recurring income item to start tracking scheduled income.</p>
+            <button mat-flat-button color="primary" type="button" (click)="openAddDialog('INCOME')">
+              <mat-icon>add</mat-icon>
+              Add Income
+            </button>
+          }
+        </div>
+      }
+
+      @if (!loading && incomeBills.length > 0) {
+        <div class="bills-summary">
+          <mat-card class="summary-card income">
+            <mat-card-content>
+              <span class="summary-label">Total Income</span>
+              <span class="summary-value">{{ totalIncome | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        @if (!isMobile) {
+          <mat-table [dataSource]="incomeBills" class="bills-table">
+            <ng-container matColumnDef="description">
+              <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <div class="description-cell">
+                  <mat-icon>{{ bill.frequency === 'ONCE' ? 'receipt' : 'repeat' }}</mat-icon>
+                  <div class="description-copy">
+                    <span class="description-text">{{ bill.description || bill.category.name }}</span>
+                    @if ((bill.totalInstallments ?? 0) > 0) {
+                      <span class="description-subtext">{{ bill.completedInstallments }}/{{ bill.totalInstallments }}</span>
+                    }
+                  </div>
+                </div>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="amount">
+              <mat-header-cell *matHeaderCellDef>Amount</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <span class="amount income">{{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="frequency">
+              <mat-header-cell *matHeaderCellDef>Frequency</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ frequencyLabel(bill.frequency) }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+              <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <mat-chip class="status-chip" [color]="statusColor(bill.status)" [class.completed-chip]="bill.status === 'COMPLETED'" [class.cancelled-chip]="bill.status === 'CANCELLED'">
+                  {{ bill.status }}
+                </mat-chip>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="account">
+              <mat-header-cell *matHeaderCellDef>Account</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ bill.account.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="category">
+              <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ bill.category.name }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="nextDueDate">
+              <mat-header-cell *matHeaderCellDef>Next Due</mat-header-cell>
+              <mat-cell *matCellDef="let bill">{{ bill.nextDueDate | date:'MMM d, yyyy' }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+              <mat-cell *matCellDef="let bill">
+                <div class="row-actions">
+                  <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
+                    @if (isGenerating(bill.id)) {
+                      <span class="button-spinner" aria-hidden="true"></span>
+                    }
+                    Generate
+                  </button>
+                  <button mat-icon-button type="button" aria-label="Edit income" (click)="openEditDialog(bill)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" type="button" aria-label="Delete income" (click)="confirmDelete(bill)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          </mat-table>
+        } @else {
+          <div class="mobile-list">
+            @for (bill of incomeBills; track bill.id) {
+              <mat-card class="bill-card">
+                <mat-card-content>
+                  <div class="bill-card-row">
+                    <div class="bill-card-info">
+                      <mat-icon>{{ bill.frequency === 'ONCE' ? 'receipt' : 'repeat' }}</mat-icon>
+                      <div class="bill-card-details">
+                        <span class="description-text">{{ bill.description || bill.category.name }}</span>
+                        <span class="meta-text">{{ bill.account.name }} - {{ bill.category.name }}</span>
+                      </div>
+                    </div>
+                    <span class="amount income">
+                      {{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                    </span>
+                  </div>
+
+                  <div class="bill-card-meta">
+                    <span>{{ frequencyLabel(bill.frequency) }}</span>
+                    <span>{{ bill.nextDueDate | date:'MMM d, yyyy' }}</span>
+                  </div>
+
+                  <div class="bill-card-meta">
+                    <mat-chip class="status-chip" [color]="statusColor(bill.status)" [class.completed-chip]="bill.status === 'COMPLETED'" [class.cancelled-chip]="bill.status === 'CANCELLED'">
+                      {{ bill.status }}
+                    </mat-chip>
+                    @if ((bill.totalInstallments ?? 0) > 0) {
+                      <span>{{ bill.completedInstallments }}/{{ bill.totalInstallments }}</span>
+                    }
+                  </div>
+
+                  <div class="bill-card-actions">
+                    <button mat-flat-button color="primary" type="button" (click)="generateOccurrence(bill)" [disabled]="bill.status !== 'ACTIVE' || isGenerating(bill.id)">
+                      @if (isGenerating(bill.id)) {
+                        <span class="button-spinner" aria-hidden="true"></span>
+                      }
+                      Generate
+                    </button>
+                    <button mat-icon-button type="button" aria-label="Edit income" (click)="openEditDialog(bill)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" type="button" aria-label="Delete income" (click)="confirmDelete(bill)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        }
+      }
+
+      @if (isMobile) {
+        <button mat-fab class="fab-add" color="primary" type="button" aria-label="Add income" (click)="openAddDialog('INCOME')">
+          <mat-icon>add</mat-icon>
+        </button>
+      }
+    </div>
+  </mat-tab>
+</mat-tab-group>
