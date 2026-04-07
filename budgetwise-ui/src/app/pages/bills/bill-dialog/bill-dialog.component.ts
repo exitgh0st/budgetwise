@@ -92,10 +92,10 @@ export interface BillDialogData {
 
         @if (showInstallments) {
           <mat-form-field appearance="outline">
-            <mat-label>Current Installment</mat-label>
+            <mat-label>Completed Installments</mat-label>
             <input matInput type="number" formControlName="completedInstallments" min="0" step="1" />
             @if (form.hasError('installmentProgressExceedsTotal')) {
-              <mat-error>Current installment must be less than or equal to total installments.</mat-error>
+              <mat-error>Completed installments must be less than or equal to total installments.</mat-error>
             }
           </mat-form-field>
 
@@ -106,7 +106,7 @@ export interface BillDialogData {
               <mat-error>Total installments must be at least 1.</mat-error>
             }
             @if (form.hasError('installmentProgressExceedsTotal')) {
-              <mat-error>Total installments must be greater than or equal to the current installment.</mat-error>
+              <mat-error>Total installments must be greater than or equal to completed installments.</mat-error>
             }
           </mat-form-field>
         }
@@ -181,11 +181,16 @@ export class BillDialogComponent implements OnInit {
       },
       { validators: installmentsValidator() },
     );
+
+    this.syncCompletedInstallmentsControl(this.form.get('totalInstallments')?.value);
+    this.form.get('totalInstallments')?.valueChanges.subscribe((totalInstallments) => {
+      this.syncCompletedInstallmentsControl(totalInstallments);
+    });
   }
 
   save() {
     if (this.form.invalid) return;
-    const value = { ...this.form.value };
+    const value = { ...this.form.getRawValue() };
     value.nextDueDate = new Date(value.nextDueDate).toISOString();
     value.amount = Number(value.amount);
     value.completedInstallments = Number(value.completedInstallments ?? 0);
@@ -196,21 +201,46 @@ export class BillDialogComponent implements OnInit {
     }
     this.dialogRef.close(value);
   }
+
+  private syncCompletedInstallmentsControl(totalInstallments: unknown) {
+    const completedInstallmentsControl = this.form.get('completedInstallments');
+
+    if (!completedInstallmentsControl) {
+      return;
+    }
+
+    const normalizedTotalInstallments =
+      totalInstallments === null || totalInstallments === '' ? null : Number(totalInstallments);
+    const shouldDisable =
+      normalizedTotalInstallments === null ||
+      Number.isNaN(normalizedTotalInstallments) ||
+      normalizedTotalInstallments <= 0;
+
+    if (shouldDisable) {
+      completedInstallmentsControl.setValue(0, { emitEvent: false });
+      completedInstallmentsControl.disable({ emitEvent: false });
+      return;
+    }
+
+    if (completedInstallmentsControl.disabled) {
+      completedInstallmentsControl.enable({ emitEvent: false });
+    }
+  }
 }
 
 function installmentsValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
-    const currentRaw = control.get('completedInstallments')?.value;
+    const completedRaw = control.get('completedInstallments')?.value;
     const totalRaw = control.get('totalInstallments')?.value;
 
-    if (currentRaw === null || currentRaw === '' || totalRaw === null || totalRaw === '') {
+    if (completedRaw === null || completedRaw === '' || totalRaw === null || totalRaw === '') {
       return null;
     }
 
-    const current = Number(currentRaw);
+    const completed = Number(completedRaw);
     const total = Number(totalRaw);
 
-    if (Number.isNaN(current) || Number.isNaN(total) || current <= total) {
+    if (Number.isNaN(completed) || Number.isNaN(total) || completed <= total) {
       return null;
     }
 

@@ -1,6 +1,6 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { forkJoin } from 'rxjs';
@@ -41,6 +42,7 @@ import { BillDialogComponent, BillDialogData } from './bill-dialog/bill-dialog.c
     MatInputModule,
     MatProgressBarModule,
     MatExpansionModule,
+    MatSortModule,
     MatTableModule,
     MatChipsModule,
     MatTabsModule,
@@ -57,26 +59,25 @@ export class BillsComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
+  private readonly dateFormatter = new Intl.DateTimeFormat('en-PH', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   bills: Bill[] = [];
-  filteredBills: Bill[] = [];
   expenseBills: Bill[] = [];
   incomeBills: Bill[] = [];
   loading = false;
   isMobile = false;
   payingIds = new Set<string>();
-  searchQuery = '';
   activeTabIndex = 0;
-
-  filterAccountId = '';
-  filterCategoryId = '';
-  filterFrequency = '';
-  filterStatus = '';
-  filterStartDate: Date | null = null;
-  filterEndDate: Date | null = null;
+  expenseFilters = this.createDefaultFilters();
+  incomeFilters = this.createDefaultFilters();
 
   accounts: Account[] = [];
   categories: Category[] = [];
+  sortState: Sort = { active: 'nextDueDate', direction: 'asc' };
 
   displayedColumns = ['description', 'amount', 'frequency', 'status', 'account', 'category', 'nextDueDate', 'actions'];
 
@@ -98,18 +99,6 @@ export class BillsComponent implements OnInit {
 
   get netAmount(): number {
     return this.totalIncome - this.totalExpense;
-  }
-
-  get hasActiveFilters(): boolean {
-    return !!(
-      this.filterAccountId ||
-      this.filterCategoryId ||
-      this.filterFrequency ||
-      this.filterStatus ||
-      this.filterStartDate ||
-      this.filterEndDate ||
-      this.searchQuery
-    );
   }
 
   get activeTabType(): 'EXPENSE' | 'INCOME' {
@@ -147,54 +136,84 @@ export class BillsComponent implements OnInit {
   }
 
   applyFilters() {
-    const query = this.searchQuery.trim().toLowerCase();
-    this.filteredBills = this.bills.filter(bill => {
-      if (this.filterAccountId && bill.accountId !== this.filterAccountId) return false;
-      if (this.filterCategoryId && bill.categoryId !== this.filterCategoryId) return false;
-      if (this.filterFrequency && bill.frequency !== this.filterFrequency) return false;
-      if (this.filterStatus && bill.status !== this.filterStatus) return false;
-
-      const dueDate = new Date(bill.nextDueDate);
-      dueDate.setHours(0, 0, 0, 0);
-
-      if (this.filterStartDate) {
-        const start = new Date(this.filterStartDate);
-        start.setHours(0, 0, 0, 0);
-        if (dueDate < start) return false;
-      }
-
-      if (this.filterEndDate) {
-        const end = new Date(this.filterEndDate);
-        end.setHours(0, 0, 0, 0);
-        if (dueDate > end) return false;
-      }
-
-      if (!query) return true;
-
-      return [bill.description || '', bill.account.name, bill.category.name]
-        .some(value => value.toLowerCase().includes(query));
-    });
-    this.expenseBills = this.filteredBills.filter(bill => bill.type === 'EXPENSE');
-    this.incomeBills = this.filteredBills.filter(bill => bill.type === 'INCOME');
+    this.expenseBills = this.filterBills('EXPENSE');
+    this.incomeBills = this.filterBills('INCOME');
   }
 
   onFilterChange() {
     this.applyFilters();
   }
 
+  onSortChange(sort: Sort) {
+    this.sortState = {
+      active: sort.active || 'nextDueDate',
+      direction: sort.direction || 'asc',
+    };
+    this.expenseBills = this.sortBills(this.expenseBills);
+    this.incomeBills = this.sortBills(this.incomeBills);
+  }
+
   onTabChange(index: number) {
     this.activeTabIndex = index;
   }
 
-  clearFilters() {
-    this.filterAccountId = '';
-    this.filterCategoryId = '';
-    this.filterFrequency = '';
-    this.filterStatus = '';
-    this.filterStartDate = null;
-    this.filterEndDate = null;
-    this.searchQuery = '';
+  clearFilters(type: 'EXPENSE' | 'INCOME' = this.activeTabType) {
+    if (type === 'EXPENSE') {
+      this.expenseFilters = this.createDefaultFilters();
+    } else {
+      this.incomeFilters = this.createDefaultFilters();
+    }
     this.applyFilters();
+  }
+
+  getSummaryFilterSuffix(type: 'EXPENSE' | 'INCOME'): string {
+    const filters = this.getFilters(type);
+    const activeFilters: string[] = [];
+
+    if (filters.searchQuery.trim()) {
+      activeFilters.push(`Search: ${filters.searchQuery.trim()}`);
+    }
+
+    if (filters.filterAccountId) {
+      const account = this.accounts.find(item => item.id === filters.filterAccountId);
+      if (account) {
+        activeFilters.push(`Account: ${account.name}`);
+      }
+    }
+
+    if (filters.filterCategoryId) {
+      const category = this.categories.find(item => item.id === filters.filterCategoryId);
+      if (category) {
+        activeFilters.push(`Category: ${category.name}`);
+      }
+    }
+
+    if (filters.filterFrequency) {
+      activeFilters.push(`Frequency: ${this.frequencyLabel(filters.filterFrequency as RecurringFrequency)}`);
+    }
+
+    if (filters.filterStatus) {
+      activeFilters.push(`Status: ${this.toTitleCase(filters.filterStatus)}`);
+    }
+
+    if (filters.filterStartDate || filters.filterEndDate) {
+      activeFilters.push(this.getDateRangeLabel(type));
+    }
+
+    return activeFilters.length > 0 ? ` (${activeFilters.join(', ')})` : '';
+  }
+
+  hasFiltersFor(type: 'EXPENSE' | 'INCOME'): boolean {
+    const filters = this.getFilters(type);
+    return !!(
+      filters.filterAccountId ||
+      filters.filterCategoryId ||
+      filters.filterFrequency ||
+      filters.filterStatus ||
+      filters.filterStartDate ||
+      filters.filterEndDate ||
+      filters.searchQuery
+    );
   }
 
   openAddDialog(type: 'EXPENSE' | 'INCOME' = this.activeTabType) {
@@ -267,12 +286,16 @@ export class BillsComponent implements OnInit {
     this.payingIds.add(bill.id);
     const label = bill.description || bill.category?.name || 'this bill';
     const direction = bill.type === 'EXPENSE' ? 'debited from' : 'credited to';
+    const actionLabel = bill.type === 'EXPENSE' ? 'Pay' : 'Receive';
+    const successMessage = bill.type === 'EXPENSE' ? 'Bill paid - transaction recorded' : 'Income received - transaction recorded';
+    const failureMessage = bill.type === 'EXPENSE' ? 'Failed to pay bill' : 'Failed to receive income';
     const amount = Number(bill.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 });
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
-        title: 'Pay Bill',
-        message: `Pay ₱${amount} for "${label}"? This amount will be ${direction} ${bill.account.name}.`,
+        title: actionLabel,
+        message: `${actionLabel} for "${label}" worth ₱${amount}? This amount will be ${direction} ${bill.account.name}.`,
+        confirmText: actionLabel,
       } as ConfirmDialogData,
     });
 
@@ -284,12 +307,12 @@ export class BillsComponent implements OnInit {
       this.billsService.generate(bill.id).subscribe({
         next: () => {
           this.payingIds.delete(bill.id);
-          this.snackBar.open('Bill paid — transaction recorded', 'Dismiss', { duration: 3000 });
+          this.snackBar.open(successMessage, 'Dismiss', { duration: 3000 });
           this.loadBills();
         },
         error: err => {
           this.payingIds.delete(bill.id);
-          this.snackBar.open(err.error?.message || 'Failed to pay bill', 'Dismiss', { duration: 3000 });
+          this.snackBar.open(err.error?.message || failureMessage, 'Dismiss', { duration: 3000 });
         },
       });
     });
@@ -315,5 +338,123 @@ export class BillsComponent implements OnInit {
       CANCELLED: '',
     } as const;
     return colors[status];
+  }
+
+  private sortBills(bills: Bill[]): Bill[] {
+    const { active, direction } = this.sortState;
+
+    if (!active || !direction) {
+      return [...bills];
+    }
+
+    const multiplier = direction === 'asc' ? 1 : -1;
+
+    return [...bills].sort((left, right) => {
+      const leftValue = this.getSortableValue(left, active);
+      const rightValue = this.getSortableValue(right, active);
+
+      if (leftValue < rightValue) {
+        return -1 * multiplier;
+      }
+
+      if (leftValue > rightValue) {
+        return 1 * multiplier;
+      }
+
+      return 0;
+    });
+  }
+
+  private getSortableValue(bill: Bill, column: string): number | string {
+    switch (column) {
+      case 'description':
+        return (bill.description || bill.category.name).toLowerCase();
+      case 'amount':
+        return Number(bill.amount);
+      case 'frequency':
+        return this.frequencyLabel(bill.frequency).toLowerCase();
+      case 'status':
+        return bill.status.toLowerCase();
+      case 'account':
+        return bill.account.name.toLowerCase();
+      case 'category':
+        return bill.category.name.toLowerCase();
+      case 'nextDueDate':
+        return new Date(bill.nextDueDate).getTime();
+      default:
+        return '';
+    }
+  }
+
+  private filterBills(type: 'EXPENSE' | 'INCOME'): Bill[] {
+    const filters = this.getFilters(type);
+    const query = filters.searchQuery.trim().toLowerCase();
+
+    const filteredBills = this.bills.filter(bill => {
+      if (bill.type !== type) return false;
+      if (filters.filterAccountId && bill.accountId !== filters.filterAccountId) return false;
+      if (filters.filterCategoryId && bill.categoryId !== filters.filterCategoryId) return false;
+      if (filters.filterFrequency && bill.frequency !== filters.filterFrequency) return false;
+      if (filters.filterStatus && bill.status !== filters.filterStatus) return false;
+
+      const dueDate = new Date(bill.nextDueDate);
+      dueDate.setHours(0, 0, 0, 0);
+
+      if (filters.filterStartDate) {
+        const start = new Date(filters.filterStartDate);
+        start.setHours(0, 0, 0, 0);
+        if (dueDate < start) return false;
+      }
+
+      if (filters.filterEndDate) {
+        const end = new Date(filters.filterEndDate);
+        end.setHours(0, 0, 0, 0);
+        if (dueDate > end) return false;
+      }
+
+      if (!query) return true;
+
+      return [bill.description || '', bill.account.name, bill.category.name].some(value => value.toLowerCase().includes(query));
+    });
+
+    return this.sortBills(filteredBills);
+  }
+
+  private getFilters(type: 'EXPENSE' | 'INCOME') {
+    return type === 'EXPENSE' ? this.expenseFilters : this.incomeFilters;
+  }
+
+  private createDefaultFilters() {
+    return {
+      searchQuery: '',
+      filterAccountId: '',
+      filterCategoryId: '',
+      filterFrequency: '',
+      filterStatus: '',
+      filterStartDate: null as Date | null,
+      filterEndDate: null as Date | null,
+    };
+  }
+
+  private getDateRangeLabel(type: 'EXPENSE' | 'INCOME'): string {
+    const filters = this.getFilters(type);
+
+    if (filters.filterStartDate && filters.filterEndDate) {
+      return `From ${this.formatDateLabel(filters.filterStartDate)} to ${this.formatDateLabel(filters.filterEndDate)}`;
+    }
+
+    if (filters.filterStartDate) {
+      return `From ${this.formatDateLabel(filters.filterStartDate)}`;
+    }
+
+    return `To ${this.formatDateLabel(filters.filterEndDate!)}`;
+  }
+
+  private formatDateLabel(value: Date): string {
+    return this.dateFormatter.format(new Date(value));
+  }
+
+  private toTitleCase(value: string): string {
+    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
   }
 }

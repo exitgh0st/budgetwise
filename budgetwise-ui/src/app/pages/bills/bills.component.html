@@ -10,9 +10,9 @@
           <mat-form-field appearance="outline" class="search-bar search-bar-inline">
             <mat-label>Search bills</mat-label>
             <mat-icon matPrefix>search</mat-icon>
-            <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
-            @if (searchQuery) {
-              <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+            <input matInput [(ngModel)]="expenseFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+            @if (expenseFilters.searchQuery) {
+              <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="expenseFilters.searchQuery = ''; onFilterChange()">
                 <mat-icon>close</mat-icon>
               </button>
             }
@@ -27,9 +27,9 @@
         <mat-form-field appearance="outline" class="search-bar">
           <mat-label>Search bills</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
-          @if (searchQuery) {
-            <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+          <input matInput [(ngModel)]="expenseFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+          @if (expenseFilters.searchQuery) {
+            <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="expenseFilters.searchQuery = ''; onFilterChange()">
               <mat-icon>close</mat-icon>
             </button>
           }
@@ -40,7 +40,7 @@
         <div class="filter-bar">
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
-            <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="expenseFilters.filterAccountId" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               @for (account of accounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
@@ -50,7 +50,7 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
-            <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="expenseFilters.filterCategoryId" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               @for (category of categories; track category.id) {
                 <mat-option [value]="category.id">{{ category.name }}</mat-option>
@@ -60,7 +60,7 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Frequency</mat-label>
-            <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="expenseFilters.filterFrequency" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               <mat-option value="ONCE">Once</mat-option>
               <mat-option value="WEEKLY">Weekly</mat-option>
@@ -71,7 +71,7 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Status</mat-label>
-            <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="expenseFilters.filterStatus" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               <mat-option value="ACTIVE">Active</mat-option>
               <mat-option value="COMPLETED">Completed</mat-option>
@@ -81,20 +81,20 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Due Date From</mat-label>
-            <input matInput [matDatepicker]="startPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+            <input matInput [matDatepicker]="startPicker" [(ngModel)]="expenseFilters.filterStartDate" (dateChange)="onFilterChange()" />
             <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
             <mat-datepicker #startPicker></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Due Date To</mat-label>
-            <input matInput [matDatepicker]="endPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+            <input matInput [matDatepicker]="endPicker" [(ngModel)]="expenseFilters.filterEndDate" (dateChange)="onFilterChange()" />
             <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
 
-          @if (hasActiveFilters) {
-            <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+          @if (hasFiltersFor('EXPENSE')) {
+            <button mat-stroked-button type="button" (click)="clearFilters('EXPENSE')">Clear Filters</button>
           }
         </div>
       } @else {
@@ -110,7 +110,7 @@
             <div class="filter-panel">
               <mat-form-field appearance="outline">
                 <mat-label>Account</mat-label>
-                <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="expenseFilters.filterAccountId" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   @for (account of accounts; track account.id) {
                     <mat-option [value]="account.id">{{ account.name }}</mat-option>
@@ -120,7 +120,7 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Category</mat-label>
-                <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="expenseFilters.filterCategoryId" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   @for (category of categories; track category.id) {
                     <mat-option [value]="category.id">{{ category.name }}</mat-option>
@@ -130,7 +130,7 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Frequency</mat-label>
-                <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="expenseFilters.filterFrequency" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   <mat-option value="ONCE">Once</mat-option>
                   <mat-option value="WEEKLY">Weekly</mat-option>
@@ -141,7 +141,7 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Status</mat-label>
-                <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="expenseFilters.filterStatus" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   <mat-option value="ACTIVE">Active</mat-option>
                   <mat-option value="COMPLETED">Completed</mat-option>
@@ -151,20 +151,20 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Due Date From</mat-label>
-                <input matInput [matDatepicker]="mobileStartPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+                <input matInput [matDatepicker]="mobileStartPicker" [(ngModel)]="expenseFilters.filterStartDate" (dateChange)="onFilterChange()" />
                 <mat-datepicker-toggle matIconSuffix [for]="mobileStartPicker"></mat-datepicker-toggle>
                 <mat-datepicker #mobileStartPicker></mat-datepicker>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Due Date To</mat-label>
-                <input matInput [matDatepicker]="mobileEndPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+                <input matInput [matDatepicker]="mobileEndPicker" [(ngModel)]="expenseFilters.filterEndDate" (dateChange)="onFilterChange()" />
                 <mat-datepicker-toggle matIconSuffix [for]="mobileEndPicker"></mat-datepicker-toggle>
                 <mat-datepicker #mobileEndPicker></mat-datepicker>
               </mat-form-field>
 
-              @if (hasActiveFilters) {
-                <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+              @if (hasFiltersFor('EXPENSE')) {
+                <button mat-stroked-button type="button" (click)="clearFilters('EXPENSE')">Clear Filters</button>
               }
             </div>
           </mat-expansion-panel>
@@ -179,9 +179,9 @@
         <div class="empty-state">
           <mat-icon class="empty-icon">receipt_long</mat-icon>
           <h2>No bills found</h2>
-          @if (hasActiveFilters) {
+          @if (hasFiltersFor('EXPENSE')) {
             <p>Try adjusting your filters or clearing them.</p>
-            <button mat-flat-button color="primary" type="button" (click)="clearFilters()">Clear Filters</button>
+            <button mat-flat-button color="primary" type="button" (click)="clearFilters('EXPENSE')">Clear Filters</button>
           } @else {
             <p>Add your first bill to start tracking scheduled expenses.</p>
             <button mat-flat-button color="primary" type="button" (click)="openAddDialog('EXPENSE')">
@@ -196,16 +196,28 @@
         <div class="bills-summary">
           <mat-card class="summary-card expense">
             <mat-card-content>
-              <span class="summary-label">Total Bills</span>
+              <span class="summary-label">
+                Upcoming Bills Total
+                @if (getSummaryFilterSuffix('EXPENSE')) {
+                  <span class="summary-filter-suffix">{{ getSummaryFilterSuffix('EXPENSE') }}</span>
+                }
+              </span>
               <span class="summary-value">{{ totalExpense | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
             </mat-card-content>
           </mat-card>
         </div>
 
         @if (!isMobile) {
-          <mat-table [dataSource]="expenseBills" class="bills-table">
+          <mat-table
+            [dataSource]="expenseBills"
+            class="bills-table"
+            matSort
+            [matSortActive]="sortState.active"
+            [matSortDirection]="sortState.direction"
+            (matSortChange)="onSortChange($event)"
+          >
             <ng-container matColumnDef="description">
-              <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Description</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <div class="description-cell">
                   <mat-icon>{{ bill.frequency === 'ONCE' ? 'receipt' : 'repeat' }}</mat-icon>
@@ -220,19 +232,19 @@
             </ng-container>
 
             <ng-container matColumnDef="amount">
-              <mat-header-cell *matHeaderCellDef>Amount</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Amount</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <span class="amount expense">{{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
               </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="frequency">
-              <mat-header-cell *matHeaderCellDef>Frequency</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Frequency</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ frequencyLabel(bill.frequency) }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="status">
-              <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <mat-chip class="status-chip" [color]="statusColor(bill.status)" [class.completed-chip]="bill.status === 'COMPLETED'" [class.cancelled-chip]="bill.status === 'CANCELLED'">
                   {{ bill.status }}
@@ -241,17 +253,17 @@
             </ng-container>
 
             <ng-container matColumnDef="account">
-              <mat-header-cell *matHeaderCellDef>Account</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Account</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ bill.account.name }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="category">
-              <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Category</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ bill.category.name }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="nextDueDate">
-              <mat-header-cell *matHeaderCellDef>Next Due</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Next Due</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ bill.nextDueDate | date:'MMM d, yyyy' }}</mat-cell>
             </ng-container>
 
@@ -348,9 +360,9 @@
           <mat-form-field appearance="outline" class="search-bar search-bar-inline">
             <mat-label>Search income</mat-label>
             <mat-icon matPrefix>search</mat-icon>
-            <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
-            @if (searchQuery) {
-              <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+            <input matInput [(ngModel)]="incomeFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+            @if (incomeFilters.searchQuery) {
+              <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="incomeFilters.searchQuery = ''; onFilterChange()">
                 <mat-icon>close</mat-icon>
               </button>
             }
@@ -365,9 +377,9 @@
         <mat-form-field appearance="outline" class="search-bar">
           <mat-label>Search income</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
-          @if (searchQuery) {
-            <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="searchQuery = ''; onFilterChange()">
+          <input matInput [(ngModel)]="incomeFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
+          @if (incomeFilters.searchQuery) {
+            <button mat-icon-button matSuffix type="button" aria-label="Clear search" (click)="incomeFilters.searchQuery = ''; onFilterChange()">
               <mat-icon>close</mat-icon>
             </button>
           }
@@ -378,7 +390,7 @@
         <div class="filter-bar">
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
-            <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="incomeFilters.filterAccountId" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               @for (account of accounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
@@ -388,7 +400,7 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
-            <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="incomeFilters.filterCategoryId" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               @for (category of categories; track category.id) {
                 <mat-option [value]="category.id">{{ category.name }}</mat-option>
@@ -398,7 +410,7 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Frequency</mat-label>
-            <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="incomeFilters.filterFrequency" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               <mat-option value="ONCE">Once</mat-option>
               <mat-option value="WEEKLY">Weekly</mat-option>
@@ -409,7 +421,7 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Status</mat-label>
-            <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+            <mat-select [(ngModel)]="incomeFilters.filterStatus" (selectionChange)="onFilterChange()">
               <mat-option value="">All</mat-option>
               <mat-option value="ACTIVE">Active</mat-option>
               <mat-option value="COMPLETED">Completed</mat-option>
@@ -419,20 +431,20 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Due Date From</mat-label>
-            <input matInput [matDatepicker]="incomeStartPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+            <input matInput [matDatepicker]="incomeStartPicker" [(ngModel)]="incomeFilters.filterStartDate" (dateChange)="onFilterChange()" />
             <mat-datepicker-toggle matIconSuffix [for]="incomeStartPicker"></mat-datepicker-toggle>
             <mat-datepicker #incomeStartPicker></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Due Date To</mat-label>
-            <input matInput [matDatepicker]="incomeEndPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+            <input matInput [matDatepicker]="incomeEndPicker" [(ngModel)]="incomeFilters.filterEndDate" (dateChange)="onFilterChange()" />
             <mat-datepicker-toggle matIconSuffix [for]="incomeEndPicker"></mat-datepicker-toggle>
             <mat-datepicker #incomeEndPicker></mat-datepicker>
           </mat-form-field>
 
-          @if (hasActiveFilters) {
-            <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+          @if (hasFiltersFor('INCOME')) {
+            <button mat-stroked-button type="button" (click)="clearFilters('INCOME')">Clear Filters</button>
           }
         </div>
       } @else {
@@ -448,7 +460,7 @@
             <div class="filter-panel">
               <mat-form-field appearance="outline">
                 <mat-label>Account</mat-label>
-                <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="incomeFilters.filterAccountId" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   @for (account of accounts; track account.id) {
                     <mat-option [value]="account.id">{{ account.name }}</mat-option>
@@ -458,7 +470,7 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Category</mat-label>
-                <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="incomeFilters.filterCategoryId" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   @for (category of categories; track category.id) {
                     <mat-option [value]="category.id">{{ category.name }}</mat-option>
@@ -468,7 +480,7 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Frequency</mat-label>
-                <mat-select [(ngModel)]="filterFrequency" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="incomeFilters.filterFrequency" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   <mat-option value="ONCE">Once</mat-option>
                   <mat-option value="WEEKLY">Weekly</mat-option>
@@ -479,7 +491,7 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Status</mat-label>
-                <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFilterChange()">
+                <mat-select [(ngModel)]="incomeFilters.filterStatus" (selectionChange)="onFilterChange()">
                   <mat-option value="">All</mat-option>
                   <mat-option value="ACTIVE">Active</mat-option>
                   <mat-option value="COMPLETED">Completed</mat-option>
@@ -489,20 +501,20 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Due Date From</mat-label>
-                <input matInput [matDatepicker]="incomeMobileStartPicker" [(ngModel)]="filterStartDate" (dateChange)="onFilterChange()" />
+                <input matInput [matDatepicker]="incomeMobileStartPicker" [(ngModel)]="incomeFilters.filterStartDate" (dateChange)="onFilterChange()" />
                 <mat-datepicker-toggle matIconSuffix [for]="incomeMobileStartPicker"></mat-datepicker-toggle>
                 <mat-datepicker #incomeMobileStartPicker></mat-datepicker>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Due Date To</mat-label>
-                <input matInput [matDatepicker]="incomeMobileEndPicker" [(ngModel)]="filterEndDate" (dateChange)="onFilterChange()" />
+                <input matInput [matDatepicker]="incomeMobileEndPicker" [(ngModel)]="incomeFilters.filterEndDate" (dateChange)="onFilterChange()" />
                 <mat-datepicker-toggle matIconSuffix [for]="incomeMobileEndPicker"></mat-datepicker-toggle>
                 <mat-datepicker #incomeMobileEndPicker></mat-datepicker>
               </mat-form-field>
 
-              @if (hasActiveFilters) {
-                <button mat-stroked-button type="button" (click)="clearFilters()">Clear Filters</button>
+              @if (hasFiltersFor('INCOME')) {
+                <button mat-stroked-button type="button" (click)="clearFilters('INCOME')">Clear Filters</button>
               }
             </div>
           </mat-expansion-panel>
@@ -517,9 +529,9 @@
         <div class="empty-state">
           <mat-icon class="empty-icon">payments</mat-icon>
           <h2>No income found</h2>
-          @if (hasActiveFilters) {
+          @if (hasFiltersFor('INCOME')) {
             <p>Try adjusting your filters or clearing them.</p>
-            <button mat-flat-button color="primary" type="button" (click)="clearFilters()">Clear Filters</button>
+            <button mat-flat-button color="primary" type="button" (click)="clearFilters('INCOME')">Clear Filters</button>
           } @else {
             <p>Add your first recurring income item to start tracking scheduled income.</p>
             <button mat-flat-button color="primary" type="button" (click)="openAddDialog('INCOME')">
@@ -534,16 +546,28 @@
         <div class="bills-summary">
           <mat-card class="summary-card income">
             <mat-card-content>
-              <span class="summary-label">Total Income</span>
+              <span class="summary-label">
+                Upcoming Income Total
+                @if (getSummaryFilterSuffix('INCOME')) {
+                  <span class="summary-filter-suffix">{{ getSummaryFilterSuffix('INCOME') }}</span>
+                }
+              </span>
               <span class="summary-value">{{ totalIncome | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
             </mat-card-content>
           </mat-card>
         </div>
 
         @if (!isMobile) {
-          <mat-table [dataSource]="incomeBills" class="bills-table">
+          <mat-table
+            [dataSource]="incomeBills"
+            class="bills-table"
+            matSort
+            [matSortActive]="sortState.active"
+            [matSortDirection]="sortState.direction"
+            (matSortChange)="onSortChange($event)"
+          >
             <ng-container matColumnDef="description">
-              <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Description</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <div class="description-cell">
                   <mat-icon>{{ bill.frequency === 'ONCE' ? 'receipt' : 'repeat' }}</mat-icon>
@@ -558,19 +582,19 @@
             </ng-container>
 
             <ng-container matColumnDef="amount">
-              <mat-header-cell *matHeaderCellDef>Amount</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Amount</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <span class="amount income">{{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
               </mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="frequency">
-              <mat-header-cell *matHeaderCellDef>Frequency</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Frequency</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ frequencyLabel(bill.frequency) }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="status">
-              <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <mat-chip class="status-chip" [color]="statusColor(bill.status)" [class.completed-chip]="bill.status === 'COMPLETED'" [class.cancelled-chip]="bill.status === 'CANCELLED'">
                   {{ bill.status }}
@@ -579,17 +603,17 @@
             </ng-container>
 
             <ng-container matColumnDef="account">
-              <mat-header-cell *matHeaderCellDef>Account</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Account</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ bill.account.name }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="category">
-              <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Category</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ bill.category.name }}</mat-cell>
             </ng-container>
 
             <ng-container matColumnDef="nextDueDate">
-              <mat-header-cell *matHeaderCellDef>Next Due</mat-header-cell>
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Next Due</mat-header-cell>
               <mat-cell *matCellDef="let bill">{{ bill.nextDueDate | date:'MMM d, yyyy' }}</mat-cell>
             </ng-container>
 
@@ -602,7 +626,7 @@
                       <span class="button-spinner" aria-hidden="true"></span>
                     }
                     <mat-icon>payment</mat-icon>
-                    Pay
+                    Receive
                   </button>
                   <button mat-icon-button type="button" aria-label="Edit income" (click)="openEditDialog(bill)">
                     <mat-icon>edit</mat-icon>
@@ -655,7 +679,7 @@
                         <span class="button-spinner" aria-hidden="true"></span>
                       }
                       <mat-icon>payment</mat-icon>
-                    Pay
+                    Receive
                     </button>
                     <button mat-icon-button type="button" aria-label="Edit income" (click)="openEditDialog(bill)">
                       <mat-icon>edit</mat-icon>
