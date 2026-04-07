@@ -22,7 +22,6 @@
   margin-bottom: 16px;
 }
 
-// Desktop filter bar
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -36,7 +35,6 @@
   }
 }
 
-// Mobile filters
 .mobile-filters {
   display: flex;
   flex-direction: column;
@@ -56,7 +54,6 @@ mat-accordion {
   margin-bottom: 16px;
 }
 
-// Transaction list
 .transaction-list {
   margin-top: 8px;
 }
@@ -147,11 +144,11 @@ mat-accordion {
   white-space: nowrap;
 
   &.income {
-    color: #4CAF50;
+    color: #4caf50;
   }
 
   &.expense {
-    color: #F44336;
+    color: #f44336;
   }
 }
 
@@ -168,7 +165,6 @@ mat-accordion {
   }
 }
 
-// Empty state
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -196,7 +192,6 @@ mat-accordion {
   }
 }
 
-// FAB
 .fab-add {
   position: fixed;
   bottom: 24px;
@@ -204,195 +199,8 @@ mat-accordion {
   z-index: 10;
 }
 
-// Paginator
 mat-paginator {
   margin-top: 16px;
-}
-
-// ═══════════════════════════ Recurring summary bar
-
-.recurring-summary {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-
-  .summary-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 16px;
-    border-radius: 8px;
-
-    &.income {
-      background: rgba(76, 175, 80, 0.1);
-    }
-
-    &.expense {
-      background: rgba(244, 67, 54, 0.1);
-    }
-
-    &.net-positive {
-      background: rgba(76, 175, 80, 0.1);
-    }
-
-    &.net-negative {
-      background: rgba(244, 67, 54, 0.1);
-    }
-
-    .summary-label {
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--mat-sys-outline);
-      margin-bottom: 4px;
-    }
-
-    .summary-value {
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    &.income .summary-value {
-      color: #4CAF50;
-    }
-
-    &.expense .summary-value {
-      color: #F44336;
-    }
-
-    &.net-positive .summary-value {
-      color: #4CAF50;
-    }
-
-    &.net-negative .summary-value {
-      color: #F44336;
-    }
-  }
-}
-
-// ═══════════════════════════ Recurring table (desktop)
-
-.recurring-table {
-  width: 100%;
-  margin-top: 8px;
-
-  .mat-mdc-header-cell,
-  .mat-mdc-cell {
-    padding: 0 8px;
-  }
-}
-
-.recurring-icon {
-  margin-right: 6px;
-}
-
-.type-badge {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.3px;
-
-  &.income-badge {
-    background: rgba(76, 175, 80, 0.15);
-    color: #2e7d32;
-  }
-
-  &.expense-badge {
-    background: rgba(244, 67, 54, 0.15);
-    color: #c62828;
-  }
-}
-
-.recurring-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  button[mat-flat-button] {
-    min-width: 90px;
-    font-size: 13px;
-    height: 32px;
-    line-height: 32px;
-    padding: 0 12px;
-  }
-
-  button[mat-icon-button] {
-    width: 36px;
-    height: 36px;
-
-    mat-icon {
-      font-size: 18px;
-    }
-  }
-}
-
-.mat-column-actions {
-  min-width: 180px;
-  flex: 0 0 180px;
-}
-
-// ═══════════════════════════ Recurring cards (mobile)
-
-.recurring-card {
-  margin-bottom: 12px;
-}
-
-.recurring-card-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.recurring-card-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.recurring-card-details {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-
-  .description {
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .account-name {
-    font-size: 12px;
-    color: var(--mat-sys-outline);
-  }
-}
-
-.recurring-card-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-
-  .next-due {
-    font-size: 13px;
-    color: var(--mat-sys-outline);
-  }
-}
-
-.recurring-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border-top: 1px solid var(--mat-sys-outline-variant);
-  padding-top: 8px;
-  margin-top: 4px;
 }
 
 @media (max-width: 599px) {
