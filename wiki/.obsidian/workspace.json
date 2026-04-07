@@ -1,0 +1,226 @@
+{
+  "main": {
+    "id": "2aff29abfca261f7",
+    "type": "split",
+    "children": [
+      {
+        "id": "549d748e4945b9f7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8a7b0d9aa3313b93",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "entities/bill.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "bill"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f71db7d6401206ae",
+    "type": "split",
+    "children": [
+      {
+        "id": "7dd91fdde938f85d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "deec3fffcd07cad0",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "fb3d083c04f7030d",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "tag:transaction",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "a11c8a9b5b04657b",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "32b333c6ea2639ba",
+    "type": "split",
+    "children": [
+      {
+        "id": "301e6c0735965748",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "988161d531194737",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "entities/bill.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for bill"
+            }
+          },
+          {
+            "id": "79b4f2071a9d29ad",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "entities/bill.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from bill"
+            }
+          },
+          {
+            "id": "283ac7467aa77f70",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "63ac007d500eb936",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "9c32ef7872c8be1b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "entities/bill.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of bill"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "8a7b0d9aa3313b93",
+  "lastOpenFiles": [
+    "entities/transaction.md",
+    "modules/frontend/goals-page.md",
+    "architecture/database-schema.md",
+    "architecture/data-flow.md",
+    "project/decisions.md",
+    "modules/backend/bills.md",
+    "entities/bill.md",
+    "index.md.tmp.53992.1775529917664",
+    "project/known-issues.md",
+    "project/tickets-overview.md",
+    "shared/pipes.md",
+    "shared/interceptors.md",
+    "shared/guards.md",
+    "shared/core-models.md",
+    "shared/core-services.md",
+    "entities/chat-message.md",
+    "entities/chat-session.md",
+    "entities/budget.md",
+    "entities/transaction.md.tmp.53992.1775529652516",
+    "entities/category.md",
+    "entities/account.md",
+    "modules/frontend/chat-panel.md",
+    "modules/frontend/auth-pages.md",
+    "index.md",
+    "modules/frontend/categories-page.md",
+    "modules/frontend/reports-page.md",
+    "modules/frontend/budgets-page.md",
+    "modules/frontend/bills-page.md",
+    "overview.md.tmp.53992.1775529361948",
+    "log.md.tmp.53992.1775529348214",
+    "index.md.tmp.53992.1775529340918",
+    "project",
+    "shared",
+    "entities",
+    "modules/frontend",
+    "modules/backend"
+  ]
+}
