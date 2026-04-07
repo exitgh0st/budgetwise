@@ -7,7 +7,7 @@ import { CategoriesModule } from '../categories/categories.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { BudgetsModule } from '../budgets/budgets.module';
 import { ReportsModule } from '../reports/reports.module';
-import { BillsModule } from 'src/bills/bills.module';
+import { BillsModule } from '../bills/bills.module';
 import { PendingConfirmationService } from './pending-confirmation.service';
 import { GuardrailsService } from './guardrails.service';
 

@@ -226,11 +226,6 @@ export const toolDefinitions: ChatCompletionTool[] = [
             type: 'string',
             description: 'ISO date string. Defaults to now if not specified.',
           },
-          isSettled: {
-            type: 'boolean',
-            description:
-              'Whether the transaction has been settled. Defaults to false if not specified.',
-          },
         },
         required: ['type', 'amount', 'accountId', 'categoryId'],
       },
@@ -295,10 +290,6 @@ export const toolDefinitions: ChatCompletionTool[] = [
           accountId: { type: 'string' },
           categoryId: { type: 'string' },
           date: { type: 'string' },
-          isSettled: {
-            type: 'boolean',
-            description: 'Whether the transaction has been settled',
-          },
         },
         required: ['id'],
       },
@@ -497,7 +488,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
     function: {
       name: 'create_bill',
       description:
-        'Create a bill (one-time or recurring expense/income template). Use when the user wants to schedule a future expense like rent, subscriptions, or a one-off payment. Does NOT immediately create a transaction — call generate_bill to post the actual entry.',
+        'Create a bill (one-time or recurring expense/income template). Use when the user wants to schedule a future expense like rent, subscriptions, or a one-off payment. Does NOT immediately create a transaction ï¿½ call generate_bill to post the actual entry.',
       parameters: {
         type: 'object',
         properties: {
@@ -552,7 +543,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
         properties: {
           status: {
             type: 'string',
-            enum: ['ACTIVE', 'PAUSED', 'COMPLETED'],
+            enum: ['ACTIVE', 'COMPLETED', 'CANCELLED'],
             description: 'Optional. Filter bills by status.',
           },
         },
@@ -596,7 +587,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           status: {
             type: 'string',
-            enum: ['ACTIVE', 'PAUSED', 'COMPLETED'],
+            enum: ['ACTIVE', 'COMPLETED', 'CANCELLED'],
             description: 'Optional. New status for this bill.',
           },
         },
