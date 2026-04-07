@@ -266,8 +266,7 @@ export class ChatService {
     const session = await this.prisma.chatSession.findFirst({
       where: { id: sessionId, userId },
     });
-    if (!session)
-      throw new NotFoundException(`Session ${sessionId} not found`);
+    if (!session) throw new NotFoundException(`Session ${sessionId} not found`);
 
     // ──────────────────────────────────────────────────────────────────────
     // GUARDRAIL: Handle pending destructive action confirmation
@@ -482,9 +481,12 @@ export class ChatService {
             // remaining calls in this batch. Without these, the assistant
             // message with tool_calls has no following tool messages, which
             // causes DeepSeek to reject the history with a 400 on the next turn.
-            const pendingContent = JSON.stringify({ status: 'pending_confirmation' });
-            const currentIndex = assistantMessage.tool_calls!.indexOf(toolCall);
-            const remainingCalls = assistantMessage.tool_calls!.slice(currentIndex);
+            const pendingContent = JSON.stringify({
+              status: 'pending_confirmation',
+            });
+            const currentIndex = assistantMessage.tool_calls.indexOf(toolCall);
+            const remainingCalls =
+              assistantMessage.tool_calls.slice(currentIndex);
             for (const call of remainingCalls) {
               if (call.type !== 'function') continue;
               await this.prisma.chatMessage.create({

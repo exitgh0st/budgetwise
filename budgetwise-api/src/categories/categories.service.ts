@@ -44,7 +44,11 @@ export class CategoriesService {
     return category;
   }
 
-  async update(id: string, dto: UpdateCategoryDto, userId: string): Promise<Category> {
+  async update(
+    id: string,
+    dto: UpdateCategoryDto,
+    userId: string,
+  ): Promise<Category> {
     const existing = await this.prisma.category.findFirst({
       where: { id, userId },
     });

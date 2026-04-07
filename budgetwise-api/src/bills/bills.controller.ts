@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  HttpCode,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { BillsService } from './bills.service';
 import { BillsCronService } from './bills-cron.service';
@@ -32,7 +41,11 @@ export class BillsController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() user: { userId: string }, @Param('id') id: string, @Body() dto: UpdateBillDto) {
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateBillDto,
+  ) {
     return this.service.update(id, dto, user.userId);
   }
 

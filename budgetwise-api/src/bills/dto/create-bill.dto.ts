@@ -1,4 +1,12 @@
-import { IsEnum, IsNumber, Min, IsOptional, IsString, IsDateString, IsInt } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  Min,
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsInt,
+} from 'class-validator';
 import { TransactionType, RecurringFrequency } from '@prisma/client';
 
 export class CreateBillDto {

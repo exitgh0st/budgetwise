@@ -13,7 +13,11 @@ export class BillsCronService {
     await this.processDueTransactions();
   }
 
-  async processDueTransactions(): Promise<{ processed: number; failed: number; iterations: number }> {
+  async processDueTransactions(): Promise<{
+    processed: number;
+    failed: number;
+    iterations: number;
+  }> {
     this.logger.log('Bills cron job started');
 
     let totalProcessed = 0;
@@ -26,7 +30,9 @@ export class BillsCronService {
 
       if (dueRecords.length === 0) break;
 
-      this.logger.log(`Iteration ${iterations + 1}: found ${dueRecords.length} due record(s)`);
+      this.logger.log(
+        `Iteration ${iterations + 1}: found ${dueRecords.length} due record(s)`,
+      );
 
       for (const record of dueRecords) {
         try {

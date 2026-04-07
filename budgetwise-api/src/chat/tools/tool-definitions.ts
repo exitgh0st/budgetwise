@@ -256,7 +256,10 @@ export const toolDefinitions: ChatCompletionTool[] = [
             description: 'End of date range (ISO format)',
           },
           limit: { type: 'number', description: 'Max results. Default 20.' },
-          offset: { type: 'number', description: 'Pagination offset. Default 0.' },
+          offset: {
+            type: 'number',
+            description: 'Pagination offset. Default 0.',
+          },
         },
       },
     },
@@ -279,7 +282,8 @@ export const toolDefinitions: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'update_transaction',
-      description: 'Update a transaction. Adjusts account balances accordingly.',
+      description:
+        'Update a transaction. Adjusts account balances accordingly.',
       parameters: {
         type: 'object',
         properties: {
@@ -528,7 +532,14 @@ export const toolDefinitions: ChatCompletionTool[] = [
               'Optional. Total number of installments before auto-completing. Auto-set to 1 for ONCE frequency.',
           },
         },
-        required: ['type', 'amount', 'frequency', 'nextDueDate', 'accountId', 'categoryId'],
+        required: [
+          'type',
+          'amount',
+          'frequency',
+          'nextDueDate',
+          'accountId',
+          'categoryId',
+        ],
       },
     },
   },
@@ -577,13 +588,17 @@ export const toolDefinitions: ChatCompletionTool[] = [
           type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
           amount: { type: 'number' },
           description: { type: 'string' },
-          frequency: { type: 'string', enum: ['ONCE', 'WEEKLY', 'MONTHLY', 'YEARLY'] },
+          frequency: {
+            type: 'string',
+            enum: ['ONCE', 'WEEKLY', 'MONTHLY', 'YEARLY'],
+          },
           nextDueDate: { type: 'string', description: 'ISO date string' },
           accountId: { type: 'string' },
           categoryId: { type: 'string' },
           totalInstallments: {
             type: 'number',
-            description: 'Optional. Total number of installments before auto-completing.',
+            description:
+              'Optional. Total number of installments before auto-completing.',
           },
           status: {
             type: 'string',
@@ -629,4 +644,3 @@ export const toolDefinitions: ChatCompletionTool[] = [
     },
   },
 ];
-

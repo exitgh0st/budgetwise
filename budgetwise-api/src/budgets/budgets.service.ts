@@ -12,7 +12,8 @@ export class BudgetsService {
     const category = await this.prisma.category.findFirst({
       where: { id: dto.categoryId, OR: [{ userId }, { isSystem: true }] },
     });
-    if (!category) throw new NotFoundException(`Category ${dto.categoryId} not found`);
+    if (!category)
+      throw new NotFoundException(`Category ${dto.categoryId} not found`);
 
     const now = new Date();
     const month = dto.month ?? now.getMonth() + 1;

@@ -33,7 +33,11 @@ export class ChatController {
     @Body() dto: SendMessageDto,
   ) {
     try {
-      const reply = await this.chatService.chat(dto.message, dto.sessionId, user.userId);
+      const reply = await this.chatService.chat(
+        dto.message,
+        dto.sessionId,
+        user.userId,
+      );
       return { reply, sessionId: dto.sessionId };
     } catch (error: any) {
       this.logger.error('Chat error:', error.message);
@@ -80,8 +84,15 @@ export class ChatController {
   // Get or create the active session (used when chat panel first opens)
   @Get('sessions/active')
   async getActiveSession(@CurrentUser() user: { userId: string }) {
-    const sessionId = await this.chatService.getOrCreateActiveSession(user.userId);
-    const { messages, hasMore } = await this.chatService.getHistory(sessionId, 50, undefined, user.userId);
+    const sessionId = await this.chatService.getOrCreateActiveSession(
+      user.userId,
+    );
+    const { messages, hasMore } = await this.chatService.getHistory(
+      sessionId,
+      50,
+      undefined,
+      user.userId,
+    );
     return { sessionId, messages, hasMore };
   }
 

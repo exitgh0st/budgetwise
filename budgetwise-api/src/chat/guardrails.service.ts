@@ -23,13 +23,13 @@ const INJECTION_PATTERNS: RegExp[] = [
   /you\s+are\s+now\s+(a\s+)?(different|new|another|unrestricted)/i,
   /act\s+as\s+(if\s+you\s+(are|were)\s+)?(a\s+)?(different|new|DAN|evil|jailbreak)/i,
   /pretend\s+(you\s+(are|have\s+no)|there\s+are\s+no)/i,
-  /do\s+anything\s+now/i,                    // "DAN" jailbreak
+  /do\s+anything\s+now/i, // "DAN" jailbreak
   /jailbreak/i,
   /override\s+(your\s+)?(system|safety|guidelines|prompt)/i,
   /bypass\s+(your\s+)?(restrictions|filters|guardrails|safety)/i,
   /new\s+system\s+prompt/i,
   /\[system\]/i,
-  /<\|.*?\|>/,                               // token injection attempts
+  /<\|.*?\|>/, // token injection attempts
   /###\s*instruction/i,
 ];
 
@@ -104,7 +104,10 @@ export class GuardrailsService {
       baseURL: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
     });
     // Use the cheapest/fastest model for guardrail classification
-    this.model = process.env.DEEPSEEK_GUARDRAIL_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+    this.model =
+      process.env.DEEPSEEK_GUARDRAIL_MODEL ||
+      process.env.DEEPSEEK_MODEL ||
+      'deepseek-chat';
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -145,7 +148,9 @@ export class GuardrailsService {
   private detectPromptInjection(message: string): GuardrailResult {
     for (const pattern of INJECTION_PATTERNS) {
       if (pattern.test(message)) {
-        this.logger.warn(`Prompt injection detected: "${message.substring(0, 80)}"`);
+        this.logger.warn(
+          `Prompt injection detected: "${message.substring(0, 80)}"`,
+        );
         return {
           allowed: false,
           blockedReason:
@@ -172,11 +177,16 @@ export class GuardrailsService {
         ],
       });
 
-      const raw = response.choices[0].message.content?.trim() ?? '{"allowed": true}';
-      const parsed = this.safeParseJson<{ allowed: boolean; reason?: string }>(raw);
+      const raw =
+        response.choices[0].message.content?.trim() ?? '{"allowed": true}';
+      const parsed = this.safeParseJson<{ allowed: boolean; reason?: string }>(
+        raw,
+      );
 
       if (!parsed.allowed) {
-        this.logger.log(`Scope check blocked: ${parsed.reason ?? 'out of scope'}`);
+        this.logger.log(
+          `Scope check blocked: ${parsed.reason ?? 'out of scope'}`,
+        );
         return {
           allowed: false,
           blockedReason:
@@ -207,15 +217,22 @@ export class GuardrailsService {
         temperature: 0,
         messages: [
           { role: 'system', content: OUTPUT_SCANNER_PROMPT },
-          { role: 'user', content: `Assistant response to review:\n\n${response}` },
+          {
+            role: 'user',
+            content: `Assistant response to review:\n\n${response}`,
+          },
         ],
       });
 
       const raw = result.choices[0].message.content?.trim() ?? '{"safe": true}';
-      const parsed = this.safeParseJson<{ safe: boolean; reason?: string }>(raw);
+      const parsed = this.safeParseJson<{ safe: boolean; reason?: string }>(
+        raw,
+      );
 
       if (!parsed.safe) {
-        this.logger.warn(`Output guardrail blocked response: ${parsed.reason ?? 'unsafe output'}`);
+        this.logger.warn(
+          `Output guardrail blocked response: ${parsed.reason ?? 'unsafe output'}`,
+        );
         return {
           allowed: false,
           blockedReason:

@@ -27,8 +27,6 @@ import { BillsModule } from './bills/bills.module';
     ChatModule,
     BillsModule,
   ],
-  providers: [
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-  ],
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class AppModule {}

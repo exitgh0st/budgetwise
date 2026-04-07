@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -14,7 +22,10 @@ export class AccountsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new account' })
-  create(@CurrentUser() user: { userId: string }, @Body() dto: CreateAccountDto) {
+  create(
+    @CurrentUser() user: { userId: string },
+    @Body() dto: CreateAccountDto,
+  ) {
     return this.accountsService.create(dto, user.userId);
   }
 
@@ -32,7 +43,11 @@ export class AccountsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update an account' })
-  update(@CurrentUser() user: { userId: string }, @Param('id') id: string, @Body() dto: UpdateAccountDto) {
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateAccountDto,
+  ) {
     return this.accountsService.update(id, dto, user.userId);
   }
 
@@ -43,8 +58,14 @@ export class AccountsController {
   }
 
   @Post(':id/adjust-balance')
-  @ApiOperation({ summary: 'Adjust account balance via adjustment transaction' })
-  adjustBalance(@CurrentUser() user: { userId: string }, @Param('id') id: string, @Body() dto: AdjustBalanceDto) {
+  @ApiOperation({
+    summary: 'Adjust account balance via adjustment transaction',
+  })
+  adjustBalance(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: AdjustBalanceDto,
+  ) {
     return this.accountsService.adjustBalance(id, dto.newBalance, user.userId);
   }
 }

@@ -21,6 +21,11 @@ import { GuardrailsService } from './guardrails.service';
     ReportsModule,
   ],
   controllers: [ChatController],
-  providers: [ChatService, ToolExecutor, PendingConfirmationService, GuardrailsService],
+  providers: [
+    ChatService,
+    ToolExecutor,
+    PendingConfirmationService,
+    GuardrailsService,
+  ],
 })
 export class ChatModule {}

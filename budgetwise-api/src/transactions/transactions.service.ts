@@ -7,17 +7,24 @@ import { FilterTransactionsDto } from './dto/filter-transactions.dto';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateTransactionDto, userId: string): Promise<Transaction> {
+  async create(
+    dto: CreateTransactionDto,
+    userId: string,
+  ): Promise<Transaction> {
     return this.prisma.$transaction(async (tx) => {
-      const account = await tx.account.findFirst({ where: { id: dto.accountId, userId } });
-      if (!account) throw new NotFoundException(`Account ${dto.accountId} not found`);
+      const account = await tx.account.findFirst({
+        where: { id: dto.accountId, userId },
+      });
+      if (!account)
+        throw new NotFoundException(`Account ${dto.accountId} not found`);
 
       const category = await tx.category.findFirst({
         where: { id: dto.categoryId, OR: [{ userId }, { isSystem: true }] },
       });
-      if (!category) throw new NotFoundException(`Category ${dto.categoryId} not found`);
+      if (!category)
+        throw new NotFoundException(`Category ${dto.categoryId} not found`);
 
       const date = dto.date ? new Date(dto.date) : new Date();
 
@@ -75,13 +82,20 @@ export class TransactionsService {
       where: { id, userId },
       include: { account: true, category: true },
     });
-    if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
+    if (!transaction)
+      throw new NotFoundException(`Transaction ${id} not found`);
     return transaction;
   }
 
-  async update(id: string, dto: UpdateTransactionDto, userId: string): Promise<Transaction> {
+  async update(
+    id: string,
+    dto: UpdateTransactionDto,
+    userId: string,
+  ): Promise<Transaction> {
     return this.prisma.$transaction(async (tx) => {
-      const existing = await tx.transaction.findFirst({ where: { id, userId } });
+      const existing = await tx.transaction.findFirst({
+        where: { id, userId },
+      });
       if (!existing) throw new NotFoundException(`Transaction ${id} not found`);
 
       const newDate = dto.date ? new Date(dto.date) : existing.date;
@@ -90,14 +104,18 @@ export class TransactionsService {
       const newAccountId = dto.accountId ?? existing.accountId;
 
       if (dto.accountId && dto.accountId !== existing.accountId) {
-        const newAccount = await tx.account.findFirst({ where: { id: dto.accountId, userId } });
-        if (!newAccount) throw new NotFoundException(`Account ${dto.accountId} not found`);
+        const newAccount = await tx.account.findFirst({
+          where: { id: dto.accountId, userId },
+        });
+        if (!newAccount)
+          throw new NotFoundException(`Account ${dto.accountId} not found`);
       }
 
       // Reverse old balance effect
-      const oldBalanceReverse = existing.type === 'EXPENSE'
-        ? Number(existing.amount)
-        : -Number(existing.amount);
+      const oldBalanceReverse =
+        existing.type === 'EXPENSE'
+          ? Number(existing.amount)
+          : -Number(existing.amount);
       await tx.account.update({
         where: { id: existing.accountId },
         data: { balance: { increment: oldBalanceReverse } },
@@ -129,12 +147,16 @@ export class TransactionsService {
 
   async remove(id: string, userId: string): Promise<Transaction> {
     return this.prisma.$transaction(async (tx) => {
-      const transaction = await tx.transaction.findFirst({ where: { id, userId } });
-      if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
+      const transaction = await tx.transaction.findFirst({
+        where: { id, userId },
+      });
+      if (!transaction)
+        throw new NotFoundException(`Transaction ${id} not found`);
 
-      const balanceReverse = transaction.type === 'EXPENSE'
-        ? Number(transaction.amount)
-        : -Number(transaction.amount);
+      const balanceReverse =
+        transaction.type === 'EXPENSE'
+          ? Number(transaction.amount)
+          : -Number(transaction.amount);
       await tx.account.update({
         where: { id: transaction.accountId },
         data: { balance: { increment: balanceReverse } },

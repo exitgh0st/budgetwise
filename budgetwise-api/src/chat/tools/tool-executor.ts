@@ -34,7 +34,8 @@ export class ToolExecutor {
       get_account: () => this.accounts.findOne(id, userId),
       update_account: () => this.accounts.update(id, data, userId),
       delete_account: () => this.accounts.remove(id, userId),
-      adjust_balance: () => this.accounts.adjustBalance(args.accountId, args.newBalance, userId),
+      adjust_balance: () =>
+        this.accounts.adjustBalance(args.accountId, args.newBalance, userId),
 
       // Categories
       create_category: () => this.categories.create(args, userId),
@@ -63,21 +64,16 @@ export class ToolExecutor {
         this.reports.getSpendingByCategory(args.month, args.year, userId),
       get_budget_status: () =>
         this.reports.getBudgetStatus(args.month, args.year, userId),
-      get_monthly_trend: () => this.reports.getMonthlyTrend(args.months, userId),
+      get_monthly_trend: () =>
+        this.reports.getMonthlyTrend(args.months, userId),
 
       // Bills
-      create_bill: () =>
-        this.bills.create(args, userId),
-      list_bills: () =>
-        this.bills.findAll(userId, args.status),
-      get_bill: () =>
-        this.bills.findOne(id, userId),
-      update_bill: () =>
-        this.bills.update(id, data, userId),
-      delete_bill: () =>
-        this.bills.remove(id, userId),
-      generate_bill: () =>
-        this.bills.generate(id, userId),
+      create_bill: () => this.bills.create(args, userId),
+      list_bills: () => this.bills.findAll(userId, args.status),
+      get_bill: () => this.bills.findOne(id, userId),
+      update_bill: () => this.bills.update(id, data, userId),
+      delete_bill: () => this.bills.remove(id, userId),
+      generate_bill: () => this.bills.generate(id, userId),
     };
 
     const handler = handlers[toolName];
@@ -89,7 +85,8 @@ export class ToolExecutor {
       const result = await handler();
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       this.logger.error(`Tool ${toolName} failed: ${errorMessage}`);
       return { error: errorMessage };
     }

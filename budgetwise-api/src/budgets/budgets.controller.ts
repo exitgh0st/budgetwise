@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BudgetsService } from './budgets.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
@@ -13,15 +22,29 @@ export class BudgetsController {
   constructor(private budgetsService: BudgetsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create or update a budget for a category/month/year' })
-  create(@CurrentUser() user: { userId: string }, @Body() dto: CreateBudgetDto) {
+  @ApiOperation({
+    summary: 'Create or update a budget for a category/month/year',
+  })
+  create(
+    @CurrentUser() user: { userId: string },
+    @Body() dto: CreateBudgetDto,
+  ) {
     return this.budgetsService.create(dto, user.userId);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all budgets, optionally filtered by month/year' })
-  findAll(@CurrentUser() user: { userId: string }, @Query() filters: FilterBudgetsDto) {
-    return this.budgetsService.findAll(filters.month, filters.year, user.userId);
+  @ApiOperation({
+    summary: 'Get all budgets, optionally filtered by month/year',
+  })
+  findAll(
+    @CurrentUser() user: { userId: string },
+    @Query() filters: FilterBudgetsDto,
+  ) {
+    return this.budgetsService.findAll(
+      filters.month,
+      filters.year,
+      user.userId,
+    );
   }
 
   @Get(':id')
@@ -32,7 +55,11 @@ export class BudgetsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a budget amount' })
-  update(@CurrentUser() user: { userId: string }, @Param('id') id: string, @Body() dto: UpdateBudgetDto) {
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateBudgetDto,
+  ) {
     return this.budgetsService.update(id, dto, user.userId);
   }
 

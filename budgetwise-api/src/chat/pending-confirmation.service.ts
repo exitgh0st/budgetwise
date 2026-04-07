@@ -19,15 +19,46 @@ export interface PendingAction {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CONFIRM_PHRASES = new Set([
-  'yes', 'yeah', 'yep', 'yup', 'sure', 'ok', 'okay', 'confirm', 'confirmed',
-  'proceed', 'go ahead', 'do it', 'yes please', 'yes delete', 'delete it',
-  'yes remove', 'remove it', 'absolutely', 'correct', 'affirmative',
+  'yes',
+  'yeah',
+  'yep',
+  'yup',
+  'sure',
+  'ok',
+  'okay',
+  'confirm',
+  'confirmed',
+  'proceed',
+  'go ahead',
+  'do it',
+  'yes please',
+  'yes delete',
+  'delete it',
+  'yes remove',
+  'remove it',
+  'absolutely',
+  'correct',
+  'affirmative',
 ]);
 
 const CANCEL_PHRASES = new Set([
-  'no', 'nope', 'nah', 'cancel', 'stop', 'abort', 'never mind', 'nevermind',
-  'dont', "don't", 'skip', 'ignore', 'keep it', 'no thanks', 'no delete',
-  'go back', 'undo',
+  'no',
+  'nope',
+  'nah',
+  'cancel',
+  'stop',
+  'abort',
+  'never mind',
+  'nevermind',
+  'dont',
+  "don't",
+  'skip',
+  'ignore',
+  'keep it',
+  'no thanks',
+  'no delete',
+  'go back',
+  'undo',
 ]);
 
 // TTL for pending actions (ms) — expire after 2 minutes of inactivity
@@ -56,7 +87,9 @@ export class PendingConfirmationService {
       ...action,
       expiresAt: new Date(Date.now() + PENDING_TTL_MS),
     });
-    this.logger.log(`Pending action set for user ${userId}: ${action.toolName}`);
+    this.logger.log(
+      `Pending action set for user ${userId}: ${action.toolName}`,
+    );
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -98,13 +131,21 @@ export class PendingConfirmationService {
 
     // Check for cancel first (higher priority — safer default)
     for (const phrase of CANCEL_PHRASES) {
-      if (normalized === phrase || normalized.startsWith(phrase + ' ') || normalized.endsWith(' ' + phrase)) {
+      if (
+        normalized === phrase ||
+        normalized.startsWith(phrase + ' ') ||
+        normalized.endsWith(' ' + phrase)
+      ) {
         return 'cancel';
       }
     }
 
     for (const phrase of CONFIRM_PHRASES) {
-      if (normalized === phrase || normalized.startsWith(phrase + ' ') || normalized.endsWith(' ' + phrase)) {
+      if (
+        normalized === phrase ||
+        normalized.startsWith(phrase + ' ') ||
+        normalized.endsWith(' ' + phrase)
+      ) {
         return 'confirm';
       }
     }

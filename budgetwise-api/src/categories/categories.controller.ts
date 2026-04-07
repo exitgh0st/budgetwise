@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -13,7 +21,10 @@ export class CategoriesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new category' })
-  create(@CurrentUser() user: { userId: string }, @Body() dto: CreateCategoryDto) {
+  create(
+    @CurrentUser() user: { userId: string },
+    @Body() dto: CreateCategoryDto,
+  ) {
     return this.categoriesService.create(dto, user.userId);
   }
 
@@ -31,7 +42,11 @@ export class CategoriesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a category' })
-  update(@CurrentUser() user: { userId: string }, @Param('id') id: string, @Body() dto: UpdateCategoryDto) {
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ) {
     return this.categoriesService.update(id, dto, user.userId);
   }
 

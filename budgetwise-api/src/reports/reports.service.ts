@@ -16,10 +16,14 @@ export class ReportsService {
       where: { isSystem: true },
       select: { id: true },
     });
-    return cats.map(c => c.id);
+    return cats.map((c) => c.id);
   }
 
-  async getSummary(month?: number, year?: number, userId?: string): Promise<SummaryReport> {
+  async getSummary(
+    month?: number,
+    year?: number,
+    userId?: string,
+  ): Promise<SummaryReport> {
     const now = new Date();
     const m = month ?? now.getMonth() + 1;
     const y = year ?? now.getFullYear();
@@ -30,7 +34,8 @@ export class ReportsService {
     const systemCategoryIds = await this.getSystemCategoryIds();
     const where: any = { date: { gte: startDate, lte: endDate } };
     if (userId) where.userId = userId;
-    if (systemCategoryIds.length > 0) where.categoryId = { notIn: systemCategoryIds };
+    if (systemCategoryIds.length > 0)
+      where.categoryId = { notIn: systemCategoryIds };
 
     const result = await this.prisma.transaction.groupBy({
       by: ['type'],
@@ -38,8 +43,12 @@ export class ReportsService {
       _sum: { amount: true },
     });
 
-    const income = Number(result.find(r => r.type === 'INCOME')?._sum.amount ?? 0);
-    const expenses = Number(result.find(r => r.type === 'EXPENSE')?._sum.amount ?? 0);
+    const income = Number(
+      result.find((r) => r.type === 'INCOME')?._sum.amount ?? 0,
+    );
+    const expenses = Number(
+      result.find((r) => r.type === 'EXPENSE')?._sum.amount ?? 0,
+    );
 
     return {
       month: m,
@@ -50,7 +59,11 @@ export class ReportsService {
     };
   }
 
-  async getSpendingByCategory(month?: number, year?: number, userId?: string): Promise<CategoryBreakdown[]> {
+  async getSpendingByCategory(
+    month?: number,
+    year?: number,
+    userId?: string,
+  ): Promise<CategoryBreakdown[]> {
     const now = new Date();
     const m = month ?? now.getMonth() + 1;
     const y = year ?? now.getFullYear();
@@ -64,7 +77,8 @@ export class ReportsService {
       date: { gte: startDate, lte: endDate },
     };
     if (userId) where.userId = userId;
-    if (systemCategoryIds.length > 0) where.categoryId = { notIn: systemCategoryIds };
+    if (systemCategoryIds.length > 0)
+      where.categoryId = { notIn: systemCategoryIds };
 
     const results = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
@@ -73,16 +87,19 @@ export class ReportsService {
       _count: true,
     });
 
-    const categoryIds = results.map(r => r.categoryId);
+    const categoryIds = results.map((r) => r.categoryId);
     const categories = await this.prisma.category.findMany({
       where: { id: { in: categoryIds } },
     });
-    const categoryMap = new Map(categories.map(c => [c.id, c]));
+    const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
-    const totalSpending = results.reduce((sum, r) => sum + Number(r._sum.amount ?? 0), 0);
+    const totalSpending = results.reduce(
+      (sum, r) => sum + Number(r._sum.amount ?? 0),
+      0,
+    );
 
     return results
-      .map(r => {
+      .map((r) => {
         const cat = categoryMap.get(r.categoryId);
         const spent = Number(r._sum.amount ?? 0);
         return {
@@ -90,14 +107,19 @@ export class ReportsService {
           categoryName: cat?.name ?? 'Unknown',
           categoryIcon: cat?.icon ?? null,
           totalSpent: spent,
-          percentage: totalSpending > 0 ? Math.round((spent / totalSpending) * 100) : 0,
+          percentage:
+            totalSpending > 0 ? Math.round((spent / totalSpending) * 100) : 0,
           transactionCount: r._count,
         };
       })
       .sort((a, b) => b.totalSpent - a.totalSpent);
   }
 
-  async getBudgetStatus(month?: number, year?: number, userId?: string): Promise<BudgetStatus[]> {
+  async getBudgetStatus(
+    month?: number,
+    year?: number,
+    userId?: string,
+  ): Promise<BudgetStatus[]> {
     const now = new Date();
     const m = month ?? now.getMonth() + 1;
     const y = year ?? now.getFullYear();
@@ -119,16 +141,19 @@ export class ReportsService {
       date: { gte: startDate, lte: endDate },
     };
     if (userId) txWhere.userId = userId;
-    if (systemCategoryIds.length > 0) txWhere.categoryId = { notIn: systemCategoryIds };
+    if (systemCategoryIds.length > 0)
+      txWhere.categoryId = { notIn: systemCategoryIds };
 
     const spending = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
       where: txWhere,
       _sum: { amount: true },
     });
-    const spendingMap = new Map(spending.map(s => [s.categoryId, Number(s._sum.amount ?? 0)]));
+    const spendingMap = new Map(
+      spending.map((s) => [s.categoryId, Number(s._sum.amount ?? 0)]),
+    );
 
-    return budgets.map(b => {
+    return budgets.map((b) => {
       const spent = spendingMap.get(b.categoryId) ?? 0;
       const budgetAmount = Number(b.amount);
       const remaining = budgetAmount - spent;
@@ -140,20 +165,34 @@ export class ReportsService {
         budgetAmount,
         spent,
         remaining,
-        percentUsed: budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0,
+        percentUsed:
+          budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0,
         isOver: spent > budgetAmount,
       };
     });
   }
 
-  async getMonthlyTrend(months?: number, userId?: string): Promise<MonthlyTrend[]> {
+  async getMonthlyTrend(
+    months?: number,
+    userId?: string,
+  ): Promise<MonthlyTrend[]> {
     const n = months ?? 6;
     const now = new Date();
     const results: MonthlyTrend[] = [];
 
     const monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
 
     const systemCategoryIds = await this.getSystemCategoryIds();
@@ -167,7 +206,8 @@ export class ReportsService {
 
       const where: any = { date: { gte: startDate, lte: endDate } };
       if (userId) where.userId = userId;
-      if (systemCategoryIds.length > 0) where.categoryId = { notIn: systemCategoryIds };
+      if (systemCategoryIds.length > 0)
+        where.categoryId = { notIn: systemCategoryIds };
 
       const grouped = await this.prisma.transaction.groupBy({
         by: ['type'],
@@ -175,8 +215,12 @@ export class ReportsService {
         _sum: { amount: true },
       });
 
-      const income = Number(grouped.find(g => g.type === 'INCOME')?._sum.amount ?? 0);
-      const expenses = Number(grouped.find(g => g.type === 'EXPENSE')?._sum.amount ?? 0);
+      const income = Number(
+        grouped.find((g) => g.type === 'INCOME')?._sum.amount ?? 0,
+      );
+      const expenses = Number(
+        grouped.find((g) => g.type === 'EXPENSE')?._sum.amount ?? 0,
+      );
 
       results.push({
         month: m,

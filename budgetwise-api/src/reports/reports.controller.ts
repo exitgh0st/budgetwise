@@ -57,6 +57,9 @@ export class ReportsController {
     @CurrentUser() user: { userId: string },
     @Query('months') months?: number,
   ) {
-    return this.reportsService.getMonthlyTrend(months ? Number(months) : undefined, user.userId);
+    return this.reportsService.getMonthlyTrend(
+      months ? Number(months) : undefined,
+      user.userId,
+    );
   }
 }

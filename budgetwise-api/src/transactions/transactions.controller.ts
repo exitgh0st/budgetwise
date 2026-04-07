@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -14,13 +23,19 @@ export class TransactionsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a transaction and update account balance' })
-  create(@CurrentUser() user: { userId: string }, @Body() dto: CreateTransactionDto) {
+  create(
+    @CurrentUser() user: { userId: string },
+    @Body() dto: CreateTransactionDto,
+  ) {
     return this.transactionsService.create(dto, user.userId);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get transactions with filters and pagination' })
-  findAll(@CurrentUser() user: { userId: string }, @Query() filters: FilterTransactionsDto) {
+  findAll(
+    @CurrentUser() user: { userId: string },
+    @Query() filters: FilterTransactionsDto,
+  ) {
     return this.transactionsService.findAll(filters, user.userId);
   }
 
@@ -32,7 +47,11 @@ export class TransactionsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a transaction and adjust account balances' })
-  update(@CurrentUser() user: { userId: string }, @Param('id') id: string, @Body() dto: UpdateTransactionDto) {
+  update(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: UpdateTransactionDto,
+  ) {
     return this.transactionsService.update(id, dto, user.userId);
   }
 
