@@ -16,6 +16,9 @@ export class BillsService {
     const totalInstallments = dto.frequency === 'ONCE'
       ? 1
       : (dto.totalInstallments ?? null);
+    const completedInstallments = dto.completedInstallments ?? 0;
+
+    this.validateInstallments(completedInstallments, totalInstallments);
 
     return this.prisma.bill.create({
       data: {
@@ -27,6 +30,7 @@ export class BillsService {
         accountId: dto.accountId,
         categoryId: dto.categoryId,
         totalInstallments,
+        completedInstallments,
         userId,
       },
       include: { account: true, category: true },
@@ -54,7 +58,16 @@ export class BillsService {
   }
 
   async update(id: string, dto: UpdateBillDto, userId: string): Promise<Bill> {
-    await this.findOne(id, userId);
+    const existing = await this.findOne(id, userId);
+    const nextFrequency = dto.frequency ?? existing.frequency;
+    const totalInstallments = nextFrequency === 'ONCE'
+      ? 1
+      : (dto.totalInstallments ?? existing.totalInstallments);
+    console.log('Updating bill with totalInstallments:', totalInstallments, 'and completedInstallments:', dto.completedInstallments, 'existing:', existing);
+    const completedInstallments = dto.completedInstallments ?? existing.completedInstallments;
+
+    this.validateInstallments(completedInstallments, totalInstallments);
+
     return this.prisma.bill.update({
       where: { id },
       data: {
@@ -66,7 +79,8 @@ export class BillsService {
         ...(dto.accountId !== undefined && { accountId: dto.accountId }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
         ...(dto.status !== undefined && { status: dto.status }),
-        ...(dto.totalInstallments !== undefined && { totalInstallments: dto.totalInstallments }),
+        ...(dto.completedInstallments !== undefined && { completedInstallments: dto.completedInstallments }),
+        ...((dto.totalInstallments !== undefined || dto.frequency !== undefined) && { totalInstallments }),
       },
       include: { account: true, category: true },
     });
@@ -90,7 +104,8 @@ export class BillsService {
       description: bill.description ?? undefined,
       accountId: bill.accountId,
       categoryId: bill.categoryId,
-      date: bill.nextDueDate.toISOString(),
+      // Manual generation should create a settled transaction now, not a future-dated one.
+      date: new Date().toISOString(),
     }, userId);
 
     await this.prisma.transaction.update({
@@ -199,6 +214,12 @@ export class BillsService {
 
       default:
         return new Date(from);
+    }
+  }
+
+  private validateInstallments(completedInstallments: number, totalInstallments: number | null): void {
+    if (totalInstallments !== null && completedInstallments > totalInstallments) {
+      throw new BadRequestException('Current installment must be less than or equal to total installments');
     }
   }
 }

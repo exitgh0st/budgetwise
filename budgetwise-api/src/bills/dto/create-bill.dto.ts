@@ -29,4 +29,9 @@ export class CreateBillDto {
   @IsInt()
   @Min(1)
   totalInstallments?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  completedInstallments?: number;
 }
