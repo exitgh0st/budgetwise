@@ -7,10 +7,20 @@ This is the canonical format for BudgetWise tickets. Fill in all applicable sect
 ```markdown
 # Ticket XX — [Feature Name]
 
-**Phase:** [e.g., Post-Phase 3]
+**Phase:** [infer from PROJECT-STATUS.md, or leave blank for user to set]
 **Priority:** High / Medium / Low
 **Depends on:** Ticket NN ([name]), Ticket NN ([name]) / Nothing
 **Blocks:** Ticket NN ([name]) / Nothing
+
+---
+
+## Wiki pages touched
+
+[Cite the wiki pages this ticket will affect or build on. Use Obsidian-style wikilinks. Example:]
+
+- [[modules/backend/bills]]
+- [[modules/frontend/bills-page]]
+- [[entities/bill]]
 
 ---
 

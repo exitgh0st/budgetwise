@@ -29,8 +29,6 @@ Tickets are in `tickets/`. **Read and implement ONE ticket at a time.** Complete
 
 **Rules:**
 1. **Start of every session:** Read `PROJECT-STATUS.md` first (or use `/resume`), then `wiki/index.md`. Never read source files to reconstruct context — the wiki has already distilled it.
-2. **After every ticket:** Update `PROJECT-STATUS.md`, then `/compact`.
-3. **When context gets tight:** `/compact retain PROJECT-STATUS.md contents and the current ticket number`.
 
 ### Skills
 
@@ -51,6 +49,10 @@ A structured knowledge base of this codebase lives in `wiki/` (Obsidian vault). 
 The pattern is documented in `CODEBASE-WIKI.md` at the project root. Read it once if you need to perform an ingest; otherwise just consume the wiki pages.
 
 **NOTE:** The pattern doc says `.wiki/` — in this repo the vault is `wiki/` instead. Use `wiki/`.
+
+### Wiki sync marker
+
+The wiki is synced to a specific git commit. The exact SHA is stored in **`wiki/.ingest-marker`** (single-line file). Read it whenever the user asks about wiki freshness, or before any ingest operation, so you know which commits are already reflected. After a successful ingest, overwrite the file with the new `HEAD` SHA and append a `wiki/log.md` entry.
 
 ### Read order at session start
 1. `PROJECT-STATUS.md` — session/ticket state

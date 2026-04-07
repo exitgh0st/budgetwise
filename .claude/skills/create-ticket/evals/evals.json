@@ -4,46 +4,50 @@
     {
       "id": 1,
       "prompt": "create a ticket for adding dark mode to the BudgetWise UI. It should toggle between light and dark themes and remember the user's preference.",
-      "expected_output": "A complete ticket markdown file saved to d:\\repositories\\budgetwise\\tickets\\23-dark-mode.md (or similar number) with: metadata block (Phase, Priority, Depends on, Blocks), Objective section, Frontend Changes with Angular Material theming code, Implementation Notes, Files to Create/Modify, and at least 5 specific Acceptance Criteria. PROJECT-STATUS.md should be updated with the new ticket entry.",
+      "expected_output": "A complete ticket markdown file saved to d:\\repositories\\budgetwise\\tickets\\ with the next sequential number. Must include: metadata block (Phase, Priority, Depends on, Blocks), a 'Wiki pages touched' section citing the relevant frontend wiki pages as [[wikilinks]], Objective, Frontend Changes with Angular Material theming code, Implementation Notes, Files to Create/Modify, and at least 5 Acceptance Criteria. PROJECT-STATUS.md should be updated with the new ticket entry. The skill should read wiki/index.md and relevant frontend wiki pages before drafting — not scan budgetwise-ui/src/.",
       "files": [],
       "expectations": [
-        "Ticket file is written to d:\\repositories\\budgetwise\\tickets\\ with a filename starting with 23 or higher",
+        "Ticket file is written to d:\\repositories\\budgetwise\\tickets\\ with the next sequential number (derived from the actual tickets/ directory, not hardcoded)",
         "Ticket contains a metadata block with Phase, Priority, Depends on, and Blocks fields",
+        "Ticket contains a 'Wiki pages touched' section with at least one [[wikilink]] to a frontend wiki page",
         "Ticket contains an Objective section describing the dark mode feature",
         "Ticket contains Angular/TypeScript code snippets showing how to implement theming",
         "Ticket contains at least 5 Acceptance Criteria formatted as - [ ] checkboxes",
-        "Ticket mentions localStorage or similar for persisting the theme preference",
-        "PROJECT-STATUS.md is updated with a reference to the new ticket"
+        "Ticket mentions localStorage (or equivalent) for persisting the theme preference",
+        "PROJECT-STATUS.md is updated with a reference to the new ticket",
+        "The skill reads wiki/index.md and at least one frontend wiki page before drafting (no raw source scanning as the primary context source)"
       ]
     },
     {
       "id": 2,
       "prompt": "I want to add CSV export for transactions. Users should be able to click a button on the Transactions page to download all their transactions as a CSV file. Create a ticket for this.",
-      "expected_output": "A complete ticket markdown file for CSV export functionality. Should include: metadata, objective, frontend changes (button + download logic), and acceptance criteria. Since this is frontend-only (CSV generation can happen client-side), should NOT require backend changes. Should reference the existing TransactionsService at budgetwise-ui/src/app/core/services/transactions.service.ts.",
+      "expected_output": "A complete ticket for CSV export. Should include metadata, 'Wiki pages touched' citing the transactions wiki pages, objective, frontend changes (button + download logic), and acceptance criteria. Should be frontend-only (client-side CSV generation) and must reference the existing transactions service by the name documented in the wiki — not a guessed file path.",
       "files": [],
       "expectations": [
-        "Ticket file is written to d:\\repositories\\budgetwise\\tickets\\ with correct sequential numbering",
+        "Ticket file is written with correct sequential numbering derived from the tickets/ directory",
         "Ticket contains a metadata block with Phase, Priority, Depends on, and Blocks fields",
-        "Ticket references the existing TransactionsService rather than creating a new one",
+        "Ticket contains a 'Wiki pages touched' section citing [[modules/frontend/transactions]] (or the actual transactions page name in the wiki) and [[entities/transaction]]",
+        "Ticket references the existing transactions service by its real class name (as documented in the wiki) rather than creating a new one",
         "Ticket includes TypeScript code showing how to generate and download a CSV file",
         "Ticket specifies what columns should appear in the CSV output",
         "Ticket contains Acceptance Criteria with at least one criterion about the downloaded file format",
-        "Ticket correctly identifies this as frontend-only work (or justifies backend involvement if chosen)"
+        "Ticket correctly identifies this as frontend-only work"
       ]
     },
     {
       "id": 3,
-      "prompt": "create a ticket for recurring transactions — users should be able to mark a transaction as recurring (weekly, monthly, yearly) and have it automatically repeat. This needs both backend and frontend work.",
-      "expected_output": "A complete ticket for recurring transactions. This is complex full-stack work requiring: Prisma schema changes (new fields on Transaction or a new RecurringTransaction model), a backend service/job to create recurring instances, and frontend UI changes to the transaction form. Should include detailed implementation guidance since this touches the most critical service (TransactionsService with balance sync).",
+      "prompt": "create a ticket for bulk-importing transactions from a CSV file. Users upload a CSV on the transactions page, see a preview, then confirm to import. Needs backend parsing + frontend UI.",
+      "expected_output": "A complete full-stack ticket. Must include Backend Changes (DTO, service method, controller endpoint), Frontend Changes (upload + preview UI), 'Wiki pages touched' citing both backend and frontend transaction wiki pages, and Implementation Notes warning about the existing atomic balance-sync pattern (Prisma $transaction) in the transactions service.",
       "files": [],
       "expectations": [
-        "Ticket file is written to d:\\repositories\\budgetwise\\tickets\\ with correct sequential numbering",
+        "Ticket file is written with correct sequential numbering",
         "Ticket contains both Backend Changes and Frontend Changes sections",
-        "Ticket references the Prisma schema and proposes specific schema changes (new fields or model)",
-        "Ticket includes TypeScript/Prisma code snippets for the new schema or service methods",
-        "Ticket mentions the critical balance sync concern (Prisma $transaction pattern)",
-        "Ticket includes an Implementation Notes section with warnings about the complexity",
-        "Ticket contains at least 6 Acceptance Criteria covering both backend API behavior and frontend UI"
+        "Ticket contains a 'Wiki pages touched' section citing both [[modules/backend/transactions]] and [[modules/frontend/transactions]] (or their real names in the wiki) plus [[entities/transaction]]",
+        "Ticket includes TypeScript/Prisma code snippets for the new DTO, service method, and controller endpoint",
+        "Ticket mentions the atomic balance-sync concern (Prisma $transaction pattern) in Implementation Notes",
+        "Ticket includes an Implementation Notes section with warnings about complexity or edge cases (duplicate rows, invalid categories, etc.)",
+        "Ticket contains at least 6 Acceptance Criteria covering both backend API behavior and frontend UI",
+        "The skill reads wiki pages first rather than scanning budgetwise-api/src/ or budgetwise-ui/src/ as the primary context source"
       ]
     }
   ]
