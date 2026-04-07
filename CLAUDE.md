@@ -28,7 +28,7 @@ Tickets are in `tickets/`. **Read and implement ONE ticket at a time.** Complete
 `PROJECT-STATUS.md` is the living memory of this project. It tracks: last completed ticket, next ticket, everything built so far, key decisions, and known issues.
 
 **Rules:**
-1. **Start of every session:** Read `PROJECT-STATUS.md` first (or use `/resume`). Never read source files to reconstruct context.
+1. **Start of every session:** Read `PROJECT-STATUS.md` first (or use `/resume`), then `wiki/index.md`. Never read source files to reconstruct context — the wiki has already distilled it.
 2. **After every ticket:** Update `PROJECT-STATUS.md`, then `/compact`.
 3. **When context gets tight:** `/compact retain PROJECT-STATUS.md contents and the current ticket number`.
 
@@ -41,6 +41,38 @@ Tickets are in `tickets/`. **Read and implement ONE ticket at a time.** Complete
 | `/status` | Quick progress check |
 | `/commit` | Manual commit when needed |
 | `/check-ticket [file]` | Verify acceptance criteria |
+
+---
+
+## Codebase Wiki — wiki/
+
+A structured knowledge base of this codebase lives in `wiki/` (Obsidian vault). It is the agent's primary context source for "what exists / how it works / how things connect." Reading 3–5 wiki pages is far cheaper than scanning source files.
+
+The pattern is documented in `CODEBASE-WIKI.md` at the project root. Read it once if you need to perform an ingest; otherwise just consume the wiki pages.
+
+**NOTE:** The pattern doc says `.wiki/` — in this repo the vault is `wiki/` instead. Use `wiki/`.
+
+### Read order at session start
+1. `PROJECT-STATUS.md` — session/ticket state
+2. `wiki/index.md` — codebase map
+3. Specific `wiki/` pages relevant to the request (follow `[[wikilinks]]`)
+4. Source files only when the wiki is insufficient or stale
+
+### Rules
+1. **Before planning or implementing any feature, read `wiki/index.md` and the relevant module/entity pages.** Do not scan `budgetwise-api/src/` or `budgetwise-ui/src/app/` to reconstruct context that the wiki already covers.
+2. **Do NOT modify wiki pages during normal development.** Wiki updates happen ONLY during explicit ingest operations requested by the user.
+3. **When creating tickets, cite wiki pages** (e.g. "touches [[transactions]], [[transaction]]") instead of pasting code.
+4. **After completing a ticket**, append a one-line note to `wiki/log.md` of the form `## [YYYY-MM-DD] ticket | #N completed — wiki ingest pending` and stop. Do NOT auto-ingest. The user runs ingest manually.
+5. **If you notice the wiki is stale** (a page references a file/endpoint that no longer exists), tell the user — do not silently fix it.
+
+### Ingest operations (only when the user explicitly asks)
+- `ingest full` — rebuild every wiki page from `budgetwise-api/src/` and `budgetwise-ui/src/app/`
+- `ingest module {name}` — re-ingest one backend module or frontend feature
+- `ingest file {path}` — re-ingest a single file and update affected pages
+- `ingest post-ticket {N}` — ingest based on the ticket file + git diff
+- `lint wiki` — health check (broken `[[links]]`, orphans, stale references, missing cross-refs)
+
+When ingesting, follow `CODEBASE-WIKI.md` exactly for page formats, frontmatter, file naming, and the index/log conventions.
 
 ---
 
