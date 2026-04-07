@@ -2,12 +2,14 @@
 
 > Read this file FIRST at the start of every session. Use `/resume` to do this automatically.
 
+**Last updated at commit:** `3e15f5c` — feat: improve bills page filters and sorting (2026-04-08)
+
 ## Current Progress
 
-**Last completed ticket:** `tickets/29-recurring-cron.md`
-**Next ticket to implement:** `tickets/23-csv-export.md` or `tickets/25-dark-mode.md` (both pending)
+**Last completed ticket:** `tickets/30-bills-page.md`
+**Next ticket to implement:** `tickets/31-account-providers.md` (or `tickets/23-csv-export.md` / `tickets/25-dark-mode.md`)
 **Phase:** Post-Phase 3 (Enhancements)
-**Total progress:** 23 / 23 core tickets complete — 2 enhancement tickets remaining
+**Total progress:** 24 / 23 core tickets complete — 3 enhancement tickets remaining (23, 25, 31)
 
 ---
 
@@ -42,6 +44,7 @@
 | 27 — Backend Auth | Global Supabase HS256→ES256 JWT guard, userId on all 6 models, `POST /api/auth/onboard`, `@Public()` + `@CurrentUser()` decorators. |
 | 28 — Frontend Auth | SupabaseService + signal AuthService, JWT interceptor, authGuard + guestGuard, Login/Register/ForgotPw/ResetPw/Callback pages. App shell hidden for unauthenticated users. |
 | 29 — Recurring Cron | `@nestjs/schedule` hourly cron auto-generates due recurring transactions. `POST /api/recurring-transactions/process-due` (@Public) manual trigger. `@@index([nextDueDate])` migration. |
+| 30 — Bills Page | Migrated `RecurringTransaction` → `Bill` model. `BillStatus` (ACTIVE/COMPLETED/CANCELLED), `ONCE` frequency added. Full CRUD + `POST :id/generate` + hourly cron (`BillsCronService`). `billId` on Transaction links generated transactions to source bill. Bills frontend: dual-tab (expense/income), search/filter/sort, installment tracking (X/Y), pay action. Recurring tab removed from Transactions page. |
 
 ---
 
@@ -68,24 +71,26 @@ Manual changes made outside the ticket workflow:
 | **Recurring tab filters + summary** — Client-side filters (account, category, type, frequency, date range) + income/expense totals on Recurring tab | `transactions.component.ts/html/scss` |
 | **Fix: recurring delete button** — delete button visibility fixed in recurring table rows | `transactions.component.html` |
 | **Fix: destructive tool calls** — resolved tool call error for delete operations | `tool-executor.ts` |
+| **Bills page filters + sorting** — client-side search, account/category/frequency/status/due-date range filters, sortable columns, dynamic filter summary | `bills.component.ts/html/scss` |
+| **AGENTS.md** — top-level agent guidance file added to project root | `AGENTS.md` |
 
 ---
 
 ## What Exists
 
 ### Backend (`budgetwise-api/`)
-- **Modules:** Auth, Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat, RecurringTransactions
+- **Modules:** Auth, Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat, Bills
 - **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via `SUPABASE_JWT_SECRET`. `@Public()` exempts routes. All endpoints require Bearer JWT.
 - **Multi-tenancy:** Every query scoped to `userId` from JWT `sub`. Categories return own + global (userId=null) templates. Ownership violations → 404.
-- **Database models:** Account (+ maintainingBalance, CREDIT_CARD/LOAN types, userId), Category (isSystem, userId), Transaction (isSettled, userId), Budget (userId), ChatSession (userId), ChatMessage, RecurringTransaction (userId), `@@index([nextDueDate])`
+- **Database models:** Account (+ maintainingBalance, CREDIT_CARD/LOAN types, userId), Category (isSystem, userId), Transaction (isSettled, billId, userId), Budget (userId), ChatSession (userId), ChatMessage, Bill (BillStatus, RecurringFrequency incl. ONCE, totalInstallments, completedInstallments, userId, `@@index([nextDueDate])`)
 - **Seed:** 11 global template categories (userId=null) + Adjustment system category. No accounts (created by onboard).
 - **CORS:** `ORIGIN` env var
-- **Chat:** DeepSeek V3 via OpenAI SDK, tool call loop max=50, GuardrailsService (injection filter + scope LLM check), PendingConfirmationService for destructive tools, 25 tools total (24 original + adjust_balance)
-- **Recurring cron:** Hourly `@Cron(EVERY_HOUR)`, processes up to 100 records per run, per-record error isolation
+- **Chat:** DeepSeek V3 via OpenAI SDK, tool call loop max=50, GuardrailsService (injection filter + scope LLM check), PendingConfirmationService for destructive tools, 31 tools total (accounts×6, categories×5, transactions×5, budgets×5, reports×4, bills×6)
+- **Bills cron:** Hourly `@Cron(EVERY_HOUR)` via `BillsCronService`, processes due bills, per-record error isolation
 
 ### Frontend (`budgetwise-ui/`)
 - **Auth:** SupabaseService + signal-based AuthService, JWT interceptor, authGuard + guestGuard, full auth pages, user menu + logout in toolbar
-- **Pages:** Dashboard, Accounts, Transactions (+ Recurring tab with filters/summary), Budgets, Reports, Categories — all lazy-loaded, auth-protected
+- **Pages:** Dashboard, Accounts, Transactions, Bills (expense + income tabs, search/filter/sort, installment tracking, pay action), Budgets, Reports, Categories — all lazy-loaded, auth-protected
 - **Account types:** SAVINGS, CHECKING, CREDIT_CARD, LOAN, E_WALLET, CASH
 - **Shared:** ConfirmDialogComponent, ChatPanelComponent, MarkdownPipe
 - **Production:** `environment.prod.ts` → `https://budgetwise-api-k9z9.onrender.com/api`
@@ -101,7 +106,6 @@ Manual changes made outside the ticket workflow:
 |--------|-------------|
 | 23 — CSV Export | Client-side CSV export button on Transactions page matching active filters. No new backend endpoints. |
 | 25 — Dark Mode | Toolbar toggle for M3 dark/light theme. Persist to localStorage, default to OS preference. |
-| 30 — Bills Page | Migrate RecurringTransaction → Bill model (rename table, preserve data). Remove `isSettled` from Transaction. Add `ONCE` frequency for one-off bills. Rename backend module to `bills/`. Update chat agent tools. Remove Recurring tab from Transactions page. Build single-list Bills page with search, filters, summary. |
 | 31 — Account Providers | Add nullable `Account.providerId`, static PH provider registry (17 providers: banks + e-wallets) with placeholder SVG logos, provider picker in account dialog (BANK/EWALLET/CREDIT_CARD/LOAN), provider logo on account cards. |
 
 ---
@@ -129,6 +133,7 @@ Manual changes made outside the ticket workflow:
 - CREDIT_CARD and LOAN account types added post-ticket (user request)
 - maintainingBalance is optional on Account; only shown on bank account cards
 - Reports exclude `isSystem=true` categories so adjustment transactions don't skew summaries
+- `billId` nullable on Transaction — links cron/manual-generated transactions back to their source Bill
 
 ---
 

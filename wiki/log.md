@@ -1,5 +1,11 @@
 # Wiki Log
 
+## [2026-04-07] ingest | Delta 2eca235..3e15f5c — 5 commits (bills payment flow, bills filters/sort/tabs, chat formatting, backend formatting)
+- Updated pages: [[bills]] (backend — DTOs, installment logic, `getBillProgressUpdate`), [[bills-page]] (frontend — tabs, per-tab filters, sort, pay flow)
+- Reports, transactions, chat pages unchanged (formatting-only diffs)
+- Added `wiki/.ingest-marker` → `3e15f5c`
+- Added "Wiki sync marker" convention to `CLAUDE.md`
+
 ## [2026-04-07] ingest | Full codebase — initial wiki build
 - Created 41 wiki pages (1 index, 1 log, 1 overview, 5 architecture, 8 backend modules, 10 frontend pages, 7 entities, 5 shared, 3 project)
 - Indexed `budgetwise-api/src/` (54 files) and `budgetwise-ui/src/app/` (~60 files)
