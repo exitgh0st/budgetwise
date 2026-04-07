@@ -65,7 +65,7 @@
 @if (!loading && filteredAccounts.length > 0) {
 <div class="accounts-grid">
   @for (account of filteredAccounts; track account.id) {
-  <mat-card>
+  <mat-card class="flat-card">
     <mat-card-header>
       <mat-icon mat-card-avatar class="type-icon">{{ getTypeIcon(account.type) }}</mat-icon>
       <mat-card-title>{{ account.name }}</mat-card-title>

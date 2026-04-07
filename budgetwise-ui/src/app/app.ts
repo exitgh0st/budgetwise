@@ -8,8 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ChatPanelComponent } from './shared/components/chat-panel/chat-panel.component';
 import { AuthService } from './core/services/auth.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -24,6 +26,7 @@ import { AuthService } from './core/services/auth.service';
     MatButtonModule,
     MatMenuModule,
     MatDividerModule,
+    MatTooltipModule,
     ChatPanelComponent,
   ],
   templateUrl: './app.html',
@@ -32,6 +35,7 @@ import { AuthService } from './core/services/auth.service';
 export class App {
   isMobile = false;
   auth = inject(AuthService);
+  themeService = inject(ThemeService);
 
   private breakpointObserver = inject(BreakpointObserver);
 

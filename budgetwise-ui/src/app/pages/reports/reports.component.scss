@@ -105,23 +105,23 @@
   }
 
   &.income {
-    mat-icon { color: #4CAF50; }
-    .summary-value { color: #4CAF50; }
+    mat-icon { color: var(--app-income); }
+    .summary-value { color: var(--app-income); }
   }
 
   &.expense {
-    mat-icon { color: #F44336; }
-    .summary-value { color: #F44336; }
+    mat-icon { color: var(--app-expense); }
+    .summary-value { color: var(--app-expense); }
   }
 
   &.positive {
-    mat-icon { color: #4CAF50; }
-    .summary-value { color: #4CAF50; }
+    mat-icon { color: var(--app-income); }
+    .summary-value { color: var(--app-income); }
   }
 
   &.negative {
-    mat-icon { color: #F44336; }
-    .summary-value { color: #F44336; }
+    mat-icon { color: var(--app-expense); }
+    .summary-value { color: var(--app-expense); }
   }
 }
 

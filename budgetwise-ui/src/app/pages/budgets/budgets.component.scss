@@ -27,14 +27,8 @@
 
 mat-card {
   .category-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    background: var(--mat-sys-primary-container);
-    color: var(--mat-sys-on-primary-container);
     font-size: 20px;
   }
 
@@ -44,15 +38,15 @@ mat-card {
   }
 
   .progress-green {
-    --mdc-linear-progress-active-indicator-color: #4CAF50;
+    --mdc-linear-progress-active-indicator-color: var(--app-income);
   }
 
   .progress-amber {
-    --mdc-linear-progress-active-indicator-color: #FF9800;
+    --mdc-linear-progress-active-indicator-color: var(--app-warning);
   }
 
   .progress-red {
-    --mdc-linear-progress-active-indicator-color: #F44336;
+    --mdc-linear-progress-active-indicator-color: var(--app-expense);
   }
 }
 
@@ -75,11 +69,11 @@ mat-card {
     font-size: 13px;
 
     &.ok {
-      color: #4CAF50;
+      color: var(--app-income);
     }
 
     &.over {
-      color: #F44336;
+      color: var(--app-expense);
       font-weight: 600;
     }
   }

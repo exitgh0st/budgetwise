@@ -7,7 +7,7 @@
 @if (!loading) {
   <!-- Summary Cards -->
   <div class="summary-cards">
-    <mat-card class="summary-card balance">
+    <mat-card class="summary-card balance flat-card">
       <mat-card-content>
         <mat-icon>account_balance_wallet</mat-icon>
         <div>
@@ -18,7 +18,7 @@
     </mat-card>
 
 
-    <mat-card class="summary-card expense">
+    <mat-card class="summary-card expense flat-card">
       <mat-card-content>
         <mat-icon>trending_down</mat-icon>
         <div>
@@ -28,7 +28,7 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="summary-card income">
+    <mat-card class="summary-card income flat-card">
       <mat-card-content>
         <mat-icon>trending_up</mat-icon>
         <div>
@@ -42,7 +42,7 @@
   <!-- Main Content Grid -->
   <div class="dashboard-grid">
     <!-- Budget Status -->
-    <mat-card>
+    <mat-card class="flat-card">
       <mat-card-header>
         <mat-card-title>Budget Status</mat-card-title>
       </mat-card-header>
@@ -87,7 +87,7 @@
     </mat-card>
 
     <!-- Recent Transactions -->
-    <mat-card>
+    <mat-card class="flat-card">
       <mat-card-header>
         <mat-card-title>Recent Transactions</mat-card-title>
       </mat-card-header>

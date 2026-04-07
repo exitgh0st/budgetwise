@@ -35,7 +35,7 @@
 @if (!loading && budgetStatuses.length > 0) {
   <div class="budgets-grid">
     @for (status of budgetStatuses; track status.budgetId) {
-      <mat-card>
+      <mat-card class="flat-card">
         <mat-card-header>
           @if (status.categoryIcon) {
             <span mat-card-avatar class="category-icon emoji">{{ status.categoryIcon }}</span>

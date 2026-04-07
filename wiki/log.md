@@ -1,5 +1,7 @@
 # Wiki Log
 
+## [2026-04-08] ticket | #25 completed — wiki ingest pending
+
 ## [2026-04-07] ingest | Delta 2eca235..3e15f5c — 5 commits (bills payment flow, bills filters/sort/tabs, chat formatting, backend formatting)
 - Updated pages: [[bills]] (backend — DTOs, installment logic, `getBillProgressUpdate`), [[bills-page]] (frontend — tabs, per-tab filters, sort, pay flow)
 - Reports, transactions, chat pages unchanged (formatting-only diffs)

@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #6750a4 0%, #b5179e 100%);
+  background: var(--app-auth-bg);
   padding: 16px;
 }
 
@@ -11,6 +11,7 @@
   width: 100%;
   max-width: 420px;
   border-radius: 16px !important;
+  background: var(--app-auth-card-bg);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25) !important;
 }
 
@@ -29,7 +30,6 @@
     font-size: 48px;
     height: 48px;
     width: 48px;
-    color: #6750a4;
     margin-bottom: 8px;
   }
 
@@ -37,14 +37,14 @@
     margin: 0;
     font-size: 28px;
     font-weight: 700;
-    color: #1c1b1f;
+    color: var(--app-auth-title);
     letter-spacing: -0.5px;
   }
 
   .app-subtitle {
     margin: 0;
     font-size: 14px;
-    color: #6b7280;
+    color: var(--app-auth-subtitle);
   }
 }
 
@@ -93,12 +93,12 @@ mat-card-content {
   .divider-line {
     flex: 1;
     height: 1px;
-    background: #e5e7eb;
+    background: var(--mat-sys-outline-variant);
   }
 
   .divider-text {
     font-size: 13px;
-    color: #9ca3af;
+    color: var(--mat-sys-outline);
   }
 }
 
@@ -123,10 +123,10 @@ mat-card-content {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: color-mix(in srgb, var(--app-expense) 10%, var(--app-auth-card-bg));
+  border: 1px solid color-mix(in srgb, var(--app-expense) 22%, transparent);
   border-radius: 8px;
-  color: #dc2626;
+  color: var(--app-expense);
   font-size: 14px;
 
   mat-icon {
@@ -142,10 +142,10 @@ mat-card-content {
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: color-mix(in srgb, var(--app-income) 10%, var(--app-auth-card-bg));
+  border: 1px solid color-mix(in srgb, var(--app-income) 20%, transparent);
   border-radius: 12px;
-  color: #166534;
+  color: var(--app-income);
   margin-bottom: 8px;
 
   mat-icon {
@@ -178,10 +178,10 @@ mat-card-content {
   .login-link {
     margin: 0;
     font-size: 14px;
-    color: #6b7280;
+    color: var(--app-auth-subtitle);
 
     a {
-      color: #6750a4;
+      color: var(--app-auth-link);
       text-decoration: none;
       font-weight: 600;
 

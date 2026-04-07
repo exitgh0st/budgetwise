@@ -3,22 +3,158 @@
 html {
   @include mat.theme((
     color: (
-      primary: mat.$violet-palette,
-      tertiary: mat.$rose-palette,
+      primary: mat.$orange-palette,
+      tertiary: mat.$red-palette,
     ),
-    typography: Roboto,
+    typography: Geist,
     density: 0,
   ));
+
+  color-scheme: light;
+
+  --app-page-bg: #f5efe4;
+  --app-nav-bg: rgba(255, 251, 246, 0.92);
+  --app-toolbar-bg: rgba(255, 250, 244, 0.9);
+  --app-nav-active: rgba(200, 139, 43, 0.12);
+  --app-card-bg: rgba(255, 250, 244, 0.88);
+  --app-card-border: rgba(74, 57, 32, 0.12);
+  --app-icon-bg: rgba(200, 139, 43, 0.12);
+  --app-icon-border: rgba(200, 139, 43, 0.18);
+  --app-icon-fg: #8d5b18;
+  --app-auth-bg:
+    radial-gradient(circle at top left, rgba(226, 181, 107, 0.45), transparent 35%),
+    linear-gradient(135deg, #1e1813 0%, #0f0d0b 100%);
+  --app-auth-card-bg: rgba(255, 249, 240, 0.94);
+  --app-auth-title: #1a1713;
+  --app-auth-subtitle: #6e6457;
+  --app-auth-link: #a66a1a;
+  --app-income: #4CAF50;
+  --app-expense: #F44336;
+  --app-warning: #FF9800;
+  --app-accent-1: #d2a45c;
+  --app-accent-2: #a66a1a;
+  --app-accent-3: #8b5e3c;
+  --app-accent-4: #de7d4d;
+  --app-accent-5: #6d8299;
+  --app-accent-6: #a34b42;
+  --app-chart-grid: rgba(74, 57, 32, 0.12);
+  --mat-sys-primary: #a66a1a;
+  --mat-sys-on-primary: #fffaf4;
+  --mat-sys-primary-container: #f2dfbf;
+  --mat-sys-on-primary-container: #362106;
+  --mat-sys-tertiary: #8b5e3c;
+  --mat-sys-on-tertiary: #fff9f4;
+  --mat-sys-tertiary-container: #efd7c7;
+  --mat-sys-on-tertiary-container: #301708;
+  --mat-sys-surface: #f8f2e8;
+  --mat-sys-on-surface: #1a1713;
+  --mat-sys-surface-container-low: rgba(255, 252, 247, 0.92);
+  --mat-sys-surface-container: rgba(248, 240, 229, 0.92);
+  --mat-sys-surface-container-high: rgba(241, 231, 217, 0.96);
+  --mat-sys-surface-container-highest: rgba(234, 223, 207, 0.98);
+  --mat-sys-outline: #6e6457;
+  --mat-sys-outline-variant: rgba(110, 100, 87, 0.22);
 }
 
-html, body {
+html.dark-theme {
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$orange-palette,
+      tertiary: mat.$red-palette,
+    ),
+    typography: Geist,
+    density: 0,
+  ));
+
+  color-scheme: dark;
+
+  --app-page-bg: #0a0a0a;
+  --app-nav-bg: rgba(18, 16, 14, 0.94);
+  --app-toolbar-bg: rgba(18, 16, 14, 0.9);
+  --app-nav-active: rgba(226, 181, 107, 0.16);
+  --app-card-bg: rgba(19, 17, 15, 0.9);
+  --app-card-border: rgba(244, 238, 229, 0.12);
+  --app-icon-bg: rgba(226, 181, 107, 0.14);
+  --app-icon-border: rgba(226, 181, 107, 0.22);
+  --app-icon-fg: #f0c986;
+  --app-auth-bg:
+    radial-gradient(circle at top left, rgba(226, 181, 107, 0.24), transparent 35%),
+    linear-gradient(135deg, #161311 0%, #090909 100%);
+  --app-auth-card-bg: rgba(19, 17, 15, 0.92);
+  --app-auth-title: #f7f0e7;
+  --app-auth-subtitle: #b9aea0;
+  --app-auth-link: #f0c986;
+  --app-chart-grid: rgba(244, 238, 229, 0.12);
+  --mat-sys-primary: #e2b56b;
+  --mat-sys-on-primary: #22160a;
+  --mat-sys-primary-container: #4c3311;
+  --mat-sys-on-primary-container: #f5e1ba;
+  --mat-sys-tertiary: #d1a07a;
+  --mat-sys-on-tertiary: #2e1709;
+  --mat-sys-tertiary-container: #4a2f1f;
+  --mat-sys-on-tertiary-container: #f3ddcf;
+  --mat-sys-surface: #0a0a0a;
+  --mat-sys-on-surface: #f4eee5;
+  --mat-sys-surface-container-low: rgba(19, 17, 15, 0.84);
+  --mat-sys-surface-container: rgba(22, 19, 17, 0.92);
+  --mat-sys-surface-container-high: rgba(30, 26, 23, 0.96);
+  --mat-sys-surface-container-highest: rgba(38, 33, 29, 0.98);
+  --mat-sys-outline: #b9aea0;
+  --mat-sys-outline-variant: rgba(185, 174, 160, 0.18);
+}
+
+html,
+body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: var(--app-page-bg);
+  color: var(--mat-sys-on-surface);
+  font-family: Geist, 'Helvetica Neue', sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(226, 181, 107, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 30%),
+    var(--app-page-bg);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 mat-sidenav {
   width: 240px;
+}
+
+.mat-mdc-card.flat-card {
+  background: var(--app-card-bg) !important;
+  border: 1px solid var(--app-card-border);
+  box-shadow: none !important;
+  backdrop-filter: blur(10px);
+}
+
+.icon-tile,
+mat-icon,
+.emoji {
+  --icon-tile-size: 2.25rem;
+  --icon-glyph-size: 1.125rem;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-tile-size);
+  height: var(--icon-tile-size);
+  box-sizing: border-box;
+  border-radius: 0.85rem;
+  border: 1px solid var(--app-icon-border);
+  background: var(--app-icon-bg);
+  color: var(--app-icon-fg);
+  flex-shrink: 0;
+}
+
+mat-icon,
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-size: var(--icon-glyph-size) !important;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 @media (max-width: 599px) {
@@ -44,12 +180,6 @@ mat-sidenav {
 
 // Emoji icons used in place of Material Icons for categories
 .emoji {
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
 }

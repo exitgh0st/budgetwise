@@ -42,18 +42,18 @@
   }
 
   &.balance {
-    mat-icon { color: #1976D2; }
-    .summary-value { color: #1976D2; }
+    mat-icon { color: var(--app-accent-5); }
+    .summary-value { color: var(--app-accent-5); }
   }
 
   &.income {
-    mat-icon { color: #4CAF50; }
-    .summary-value { color: #4CAF50; }
+    mat-icon { color: var(--app-income); }
+    .summary-value { color: var(--app-income); }
   }
 
   &.expense {
-    mat-icon { color: #F44336; }
-    .summary-value { color: #F44336; }
+    mat-icon { color: var(--app-expense); }
+    .summary-value { color: var(--app-expense); }
   }
 }
 
@@ -109,15 +109,15 @@
   }
 
   .progress-green {
-    --mdc-linear-progress-active-indicator-color: #4CAF50;
+    --mdc-linear-progress-active-indicator-color: var(--app-income);
   }
 
   .progress-amber {
-    --mdc-linear-progress-active-indicator-color: #FF9800;
+    --mdc-linear-progress-active-indicator-color: var(--app-warning);
   }
 
   .progress-red {
-    --mdc-linear-progress-active-indicator-color: #F44336;
+    --mdc-linear-progress-active-indicator-color: var(--app-expense);
   }
 
   .budget-amounts {
@@ -126,9 +126,9 @@
   }
 }
 
-.text-green { color: #4CAF50; }
-.text-amber { color: #FF9800; }
-.text-red { color: #F44336; }
+.text-green { color: var(--app-income); }
+.text-amber { color: var(--app-warning); }
+.text-red { color: var(--app-expense); }
 
 // Recent transactions
 .transaction-list {
@@ -191,8 +191,8 @@
   flex-shrink: 0;
   margin-left: 8px;
 
-  &.income { color: #4CAF50; }
-  &.expense { color: #F44336; }
+  &.income { color: var(--app-income); }
+  &.expense { color: var(--app-expense); }
 }
 
 .view-all {

@@ -78,11 +78,11 @@ mat-accordion {
   }
 
   &.income {
-    background: rgba(76, 175, 80, 0.12);
+    background: color-mix(in srgb, var(--app-income) 12%, var(--app-card-bg)) !important;
   }
 
   &.expense {
-    background: rgba(244, 67, 54, 0.12);
+    background: color-mix(in srgb, var(--app-expense) 12%, var(--app-card-bg)) !important;
   }
 
   &.net {
@@ -184,11 +184,11 @@ mat-accordion {
   font-weight: 500;
 
   &.completed-chip {
-    background: rgba(76, 175, 80, 0.15);
+    background: color-mix(in srgb, var(--app-income) 15%, transparent);
   }
 
   &.cancelled-chip {
-    background: rgba(0, 0, 0, 0.08);
+    background: color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
   }
 }
 
@@ -264,11 +264,11 @@ mat-accordion {
   white-space: nowrap;
 
   &.income {
-    color: #4caf50;
+    color: var(--app-income);
   }
 
   &.expense {
-    color: #f44336;
+    color: var(--app-expense);
   }
 }
 

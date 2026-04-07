@@ -3,16 +3,27 @@
 
   mat-sidenav {
     width: 240px;
+    border-right: 1px solid var(--app-card-border);
+    background: var(--app-nav-bg);
   }
+}
+
+.app-toolbar {
+  background: var(--app-toolbar-bg);
+  color: var(--mat-sys-on-surface);
+  border-bottom: 1px solid var(--app-card-border);
 }
 
 .sidenav-header {
   padding: 16px;
-  text-align: center;
+  border-bottom: 1px solid var(--app-card-border);
 
   h2 {
     margin: 0;
-    color: #6750a4;
+    color: var(--mat-sys-on-surface);
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
   }
 }
 
@@ -22,7 +33,7 @@
 }
 
 .active {
-  background-color: rgba(0, 0, 0, 0.04) !important;
+  background-color: var(--app-nav-active) !important;
 }
 
 .toolbar-spacer {
@@ -31,7 +42,7 @@
 
 .user-email-item {
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--mat-sys-outline);
   padding: 8px 16px;
   max-width: 280px;
   overflow: hidden;

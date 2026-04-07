@@ -194,7 +194,7 @@
 
       @if (!loading && expenseBills.length > 0) {
         <div class="bills-summary">
-          <mat-card class="summary-card expense">
+          <mat-card class="summary-card expense flat-card">
             <mat-card-content>
               <span class="summary-label">
                 Upcoming Bills Total
@@ -294,7 +294,7 @@
         } @else {
           <div class="mobile-list">
             @for (bill of expenseBills; track bill.id) {
-              <mat-card class="bill-card">
+              <mat-card class="bill-card flat-card">
                 <mat-card-content>
                   <div class="bill-card-row">
                     <div class="bill-card-info">
@@ -544,7 +544,7 @@
 
       @if (!loading && incomeBills.length > 0) {
         <div class="bills-summary">
-          <mat-card class="summary-card income">
+          <mat-card class="summary-card income flat-card">
             <mat-card-content>
               <span class="summary-label">
                 Upcoming Income Total
@@ -644,7 +644,7 @@
         } @else {
           <div class="mobile-list">
             @for (bill of incomeBills; track bill.id) {
-              <mat-card class="bill-card">
+              <mat-card class="bill-card flat-card">
                 <mat-card-content>
                   <div class="bill-card-row">
                     <div class="bill-card-info">

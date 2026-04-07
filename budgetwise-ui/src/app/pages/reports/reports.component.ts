@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, effect, inject, OnInit, ViewChild } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
@@ -8,11 +8,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ChartData, ChartOptions, Chart, registerables } from 'chart.js';
+import { Chart, ChartData, ChartOptions, registerables } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { forkJoin } from 'rxjs';
+import { SummaryReport, CategoryBreakdown } from '../../core/models/report.model';
 import { ReportsService } from '../../core/services/reports.service';
-import { SummaryReport, CategoryBreakdown, MonthlyTrend } from '../../core/models/report.model';
+import { ThemeService } from '../../core/services/theme.service';
 
 Chart.register(...registerables);
 
@@ -44,33 +45,26 @@ export class ReportsComponent implements OnInit {
 
   private reportsService = inject(ReportsService);
   private breakpointObserver = inject(BreakpointObserver);
+  private themeService = inject(ThemeService);
 
   isMobile = false;
   loading = true;
   loadingTrend = true;
 
-  // Month selector
   monthOptions: MonthOption[] = [];
   selectedMonth = '';
 
-  // Summary
   summary: SummaryReport | null = null;
-
-  // Category breakdown
   categoryBreakdown: CategoryBreakdown[] = [];
 
-  // Doughnut chart
   doughnutData: ChartData<'doughnut'> = {
     labels: [],
     datasets: [{
       data: [],
-      backgroundColor: [
-        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-        '#9966FF', '#FF9F40', '#E91E63', '#00BCD4',
-        '#8BC34A', '#FF5722', '#607D8B',
-      ],
+      backgroundColor: [],
     }],
   };
+
   doughnutOptions: ChartOptions<'doughnut'> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -78,13 +72,12 @@ export class ReportsComponent implements OnInit {
       legend: { position: 'right' },
       tooltip: {
         callbacks: {
-          label: (ctx) => `${ctx.label}: ₱${Number(ctx.parsed).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+          label: ctx => `${ctx.label}: ₱${Number(ctx.parsed).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         },
       },
     },
   };
 
-  // Bar chart
   barData: ChartData<'bar'> = {
     labels: [],
     datasets: [
@@ -92,53 +85,49 @@ export class ReportsComponent implements OnInit {
       { label: 'Expenses', data: [], backgroundColor: '#F44336' },
     ],
   };
+
   barOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
+      x: {
+        ticks: {},
+        grid: {},
+      },
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value) => '₱' + Number(value).toLocaleString(),
+          callback: value => '₱' + Number(value).toLocaleString(),
         },
+        grid: {},
       },
     },
     plugins: {
+      legend: {},
       tooltip: {
         callbacks: {
-          label: (ctx) => `${ctx.dataset.label}: ₱${(ctx.parsed.y ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+          label: ctx => `${ctx.dataset.label}: ₱${(ctx.parsed.y ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
         },
       },
     },
   };
 
+  constructor() {
+    effect(() => {
+      this.themeService.isDark();
+      queueMicrotask(() => this.applyChartTheme());
+    });
+  }
+
   ngOnInit() {
     this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
       this.isMobile = result.matches;
-      this.doughnutOptions = {
-        ...this.doughnutOptions,
-        plugins: {
-          ...this.doughnutOptions.plugins,
-          legend: { position: this.isMobile ? 'bottom' : 'right' },
-        },
-      };
+      this.applyChartTheme();
     });
+
     this.buildMonthOptions();
     this.loadMonthData();
     this.loadTrendData();
-  }
-
-  private buildMonthOptions() {
-    const now = new Date();
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i);
-      this.monthOptions.push({
-        month: d.getMonth() + 1,
-        year: d.getFullYear(),
-        label: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-      });
-    }
-    this.selectedMonth = `${this.monthOptions[0].month}-${this.monthOptions[0].year}`;
   }
 
   get currentMonth(): number {
@@ -153,27 +142,42 @@ export class ReportsComponent implements OnInit {
     this.loadMonthData();
   }
 
+  private buildMonthOptions() {
+    const now = new Date();
+
+    for (let index = 0; index < 12; index++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - index);
+      this.monthOptions.push({
+        month: date.getMonth() + 1,
+        year: date.getFullYear(),
+        label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      });
+    }
+
+    this.selectedMonth = `${this.monthOptions[0].month}-${this.monthOptions[0].year}`;
+  }
+
   private loadMonthData() {
     this.loading = true;
+
     forkJoin({
       summary: this.reportsService.getSummary(this.currentMonth, this.currentYear),
       breakdown: this.reportsService.getSpendingByCategory(this.currentMonth, this.currentYear),
     }).subscribe({
       next: ({ summary, breakdown }) => {
         this.summary = summary;
-        this.categoryBreakdown = breakdown.sort((a, b) => b.totalSpent - a.totalSpent);
-
-        // Update doughnut chart
+        this.categoryBreakdown = breakdown.sort((left, right) => right.totalSpent - left.totalSpent);
         this.doughnutData = {
           ...this.doughnutData,
-          labels: breakdown.map(b => b.categoryName),
+          labels: breakdown.map(item => item.categoryName),
           datasets: [{
             ...this.doughnutData.datasets[0],
-            data: breakdown.map(b => Number(b.totalSpent)),
+            data: breakdown.map(item => Number(item.totalSpent)),
+            backgroundColor: this.buildChartPalette(),
           }],
         };
-
         this.loading = false;
+        this.applyChartTheme();
       },
       error: () => {
         this.loading = false;
@@ -183,21 +187,144 @@ export class ReportsComponent implements OnInit {
 
   private loadTrendData() {
     this.loadingTrend = true;
+
     this.reportsService.getMonthlyTrend(6).subscribe({
-      next: (trends) => {
+      next: trends => {
         this.barData = {
           ...this.barData,
-          labels: trends.map(t => t.label),
+          labels: trends.map(item => item.label),
           datasets: [
-            { label: 'Income', data: trends.map(t => Number(t.income)), backgroundColor: '#4CAF50' },
-            { label: 'Expenses', data: trends.map(t => Number(t.expenses)), backgroundColor: '#F44336' },
+            {
+              label: 'Income',
+              data: trends.map(item => Number(item.income)),
+              backgroundColor: this.readCssVar('--app-income', '#4CAF50'),
+            },
+            {
+              label: 'Expenses',
+              data: trends.map(item => Number(item.expenses)),
+              backgroundColor: this.readCssVar('--app-expense', '#F44336'),
+            },
           ],
         };
         this.loadingTrend = false;
+        this.applyChartTheme();
       },
       error: () => {
         this.loadingTrend = false;
       },
     });
+  }
+
+  private applyChartTheme() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const textColor = this.readCssVar('--mat-sys-on-surface', '#1c1b1f');
+    const mutedColor = this.readCssVar('--mat-sys-outline', '#6b7280');
+    const gridColor = this.readCssVar('--app-chart-grid', 'rgba(0, 0, 0, 0.12)');
+    const tooltipBackground = this.readCssVar('--mat-sys-surface-container-high', '#ffffff');
+
+    this.doughnutData = {
+      ...this.doughnutData,
+      datasets: [{
+        ...this.doughnutData.datasets[0],
+        backgroundColor: this.buildChartPalette(),
+      }],
+    };
+
+    this.doughnutOptions = {
+      ...this.doughnutOptions,
+      plugins: {
+        ...this.doughnutOptions.plugins,
+        legend: {
+          position: this.isMobile ? 'bottom' : 'right',
+          labels: {
+            color: textColor,
+          },
+        },
+        tooltip: {
+          ...this.doughnutOptions.plugins?.tooltip,
+          backgroundColor: tooltipBackground,
+          borderColor: gridColor,
+          borderWidth: 1,
+          titleColor: textColor,
+          bodyColor: textColor,
+        },
+      },
+    };
+
+    this.barData = {
+      ...this.barData,
+      datasets: [
+        {
+          label: 'Income',
+          data: this.barData.datasets[0]?.data ?? [],
+          backgroundColor: this.readCssVar('--app-income', '#4CAF50'),
+        },
+        {
+          label: 'Expenses',
+          data: this.barData.datasets[1]?.data ?? [],
+          backgroundColor: this.readCssVar('--app-expense', '#F44336'),
+        },
+      ],
+    };
+
+    this.barOptions = {
+      ...this.barOptions,
+      scales: {
+        x: {
+          ticks: { color: mutedColor },
+          grid: { color: gridColor },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: mutedColor,
+            callback: value => '₱' + Number(value).toLocaleString(),
+          },
+          grid: { color: gridColor },
+        },
+      },
+      plugins: {
+        ...this.barOptions.plugins,
+        legend: {
+          labels: {
+            color: textColor,
+          },
+        },
+        tooltip: {
+          ...this.barOptions.plugins?.tooltip,
+          backgroundColor: tooltipBackground,
+          borderColor: gridColor,
+          borderWidth: 1,
+          titleColor: textColor,
+          bodyColor: textColor,
+        },
+      },
+    };
+
+    this.doughnutChart?.update();
+  }
+
+  private buildChartPalette(): string[] {
+    return [
+      this.readCssVar('--mat-sys-primary', '#a66a1a'),
+      this.readCssVar('--mat-sys-tertiary', '#8b5e3c'),
+      this.readCssVar('--app-income', '#4CAF50'),
+      this.readCssVar('--app-expense', '#F44336'),
+      this.readCssVar('--app-accent-1', '#d2a45c'),
+      this.readCssVar('--app-accent-2', '#a66a1a'),
+      this.readCssVar('--app-accent-3', '#8b5e3c'),
+      this.readCssVar('--app-accent-4', '#de7d4d'),
+      this.readCssVar('--app-accent-5', '#6d8299'),
+      this.readCssVar('--app-accent-6', '#a34b42'),
+      this.readCssVar('--mat-sys-primary-container', '#f2dfbf'),
+    ];
+  }
+
+  private readCssVar(name: string, fallback: string): string {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
   }
 }

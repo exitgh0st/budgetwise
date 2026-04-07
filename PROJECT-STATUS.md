@@ -6,10 +6,10 @@
 
 ## Current Progress
 
-**Last completed ticket:** `tickets/30-bills-page.md`
-**Next ticket to implement:** `tickets/31-account-providers.md` (or `tickets/23-csv-export.md` / `tickets/25-dark-mode.md`)
+**Last completed ticket:** `tickets/25-dark-mode.md`
+**Next ticket to implement:** `tickets/31-account-providers.md` (or `tickets/23-csv-export.md`)
 **Phase:** Post-Phase 3 (Enhancements)
-**Total progress:** 24 / 23 core tickets complete — 3 enhancement tickets remaining (23, 25, 31)
+**Total progress:** 25 / 23 core tickets complete — 2 enhancement tickets remaining (23, 31)
 
 ---
 
@@ -73,6 +73,7 @@ Manual changes made outside the ticket workflow:
 | **Fix: destructive tool calls** — resolved tool call error for delete operations | `tool-executor.ts` |
 | **Bills page filters + sorting** — client-side search, account/category/frequency/status/due-date range filters, sortable columns, dynamic filter summary | `bills.component.ts/html/scss` |
 | **AGENTS.md** — top-level agent guidance file added to project root | `AGENTS.md` |
+| **Theme refresh + dark mode** — persisted M3 light/dark toggle, Geist typography, Material Symbols Outlined, ClawBotPro-inspired palette, flat main-page cards, global icon tiles | `styles.scss`, `index.html`, `app.ts/html/scss`, `app.config.ts`, `theme.service.ts`, main page SCSS/HTML, auth page SCSS, `reports.component.ts`, `chat-panel.component.scss`, `angular.json` |
 
 ---
 
@@ -105,7 +106,7 @@ Manual changes made outside the ticket workflow:
 | Ticket | Description |
 |--------|-------------|
 | 23 — CSV Export | Client-side CSV export button on Transactions page matching active filters. No new backend endpoints. |
-| 25 — Dark Mode | Toolbar toggle for M3 dark/light theme. Persist to localStorage, default to OS preference. |
+| 25 — Dark Mode | Toolbar toggle for M3 dark/light theme. Persist to localStorage, default to OS preference. — COMPLETE |
 | 31 — Account Providers | Add nullable `Account.providerId`, static PH provider registry (17 providers: banks + e-wallets) with placeholder SVG logos, provider picker in account dialog (BANK/EWALLET/CREDIT_CARD/LOAN), provider logo on account cards. |
 
 ---

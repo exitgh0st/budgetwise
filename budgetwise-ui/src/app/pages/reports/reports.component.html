@@ -18,7 +18,7 @@
   <!-- Top section: Doughnut + Summary side by side on desktop -->
   <div class="top-section">
     <!-- Spending by Category -->
-    <mat-card class="chart-card">
+    <mat-card class="chart-card flat-card">
       <mat-card-header>
         <mat-card-title>Spending by Category</mat-card-title>
       </mat-card-header>
@@ -53,7 +53,7 @@
 
     <!-- Income vs Expenses Summary -->
     <div class="summary-cards">
-      <mat-card class="summary-card income">
+      <mat-card class="summary-card income flat-card">
         <mat-card-content>
           <mat-icon>trending_up</mat-icon>
           <div>
@@ -63,7 +63,7 @@
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="summary-card expense">
+      <mat-card class="summary-card expense flat-card">
         <mat-card-content>
           <mat-icon>trending_down</mat-icon>
           <div>
@@ -73,7 +73,7 @@
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="summary-card" [class.positive]="(summary?.netBalance || 0) >= 0" [class.negative]="(summary?.netBalance || 0) < 0">
+      <mat-card class="summary-card flat-card" [class.positive]="(summary?.netBalance || 0) >= 0" [class.negative]="(summary?.netBalance || 0) < 0">
         <mat-card-content>
           <mat-icon>account_balance</mat-icon>
           <div>
@@ -88,7 +88,7 @@
   </div>
 
   <!-- Monthly Trend Bar Chart -->
-  <mat-card class="trend-card">
+  <mat-card class="trend-card flat-card">
     <mat-card-header>
       <mat-card-title>Monthly Trend (Last 6 Months)</mat-card-title>
     </mat-card-header>
