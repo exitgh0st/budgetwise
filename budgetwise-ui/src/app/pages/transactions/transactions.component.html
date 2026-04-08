@@ -172,7 +172,7 @@
                     <span class="type-badge" [class.transfer]="t.type === 'TRANSFER'">
                       {{ getTypeLabel(t.type) }}
                     </span>
-                    @if (t.category?.isSystem) {
+                    @if (t.category?.name === 'Adjustment') {
                       <span class="system-badge">adjustment</span>
                     }
                   </span>

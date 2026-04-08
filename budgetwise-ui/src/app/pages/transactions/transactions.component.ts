@@ -85,7 +85,11 @@ export class TransactionsComponent implements OnInit {
 
   loadDropdowns() {
     this.accountsService.getAll().subscribe(a => this.accounts = a);
-    this.categoriesService.getAll().subscribe(c => this.categories = c.filter(cat => !cat.isSystem));
+    this.categoriesService.getAll().subscribe(c => {
+      this.categories = c.filter(
+        cat => !cat.isSystem || ['Savings', 'Debt'].includes(cat.name),
+      );
+    });
   }
 
   loadTransactions() {
@@ -231,9 +235,9 @@ export class TransactionsComponent implements OnInit {
   }
 
   getCategoryLabel(transaction: Transaction): string {
-    return transaction.type === 'TRANSFER'
+    return transaction.category?.name || (transaction.type === 'TRANSFER'
       ? 'Transfer'
-      : transaction.category?.name || 'Uncategorized';
+      : 'Uncategorized');
   }
 
   getDescriptionLabel(transaction: Transaction): string {

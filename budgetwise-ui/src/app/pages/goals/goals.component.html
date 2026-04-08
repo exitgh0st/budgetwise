@@ -1,1 +1,229 @@
-<p>goals works!</p>
+<section class="goals-page">
+  <div class="page-header">
+    <div>
+      <h1>Financial Goals</h1>
+      <p>Track savings milestones and debt payoff targets from linked transactions.</p>
+    </div>
+
+    @if (!isMobile) {
+      <button mat-flat-button color="primary" type="button" (click)="openAddDialog()">
+        <mat-icon>add</mat-icon>
+        Add Financial Goal
+      </button>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="state-card">
+      <mat-icon>progress_activity</mat-icon>
+      <p>Loading your financial goals...</p>
+    </div>
+  } @else if (goals.length === 0) {
+    <div class="state-card">
+      <mat-icon>savings</mat-icon>
+      <h2>No financial goals yet</h2>
+      <p>Create a savings or debt payoff goal to start tracking progress.</p>
+      <button mat-flat-button color="primary" type="button" (click)="openAddDialog()">
+        Create Financial Goal
+      </button>
+    </div>
+  } @else {
+    <div class="goals-grid">
+      @for (goal of goals; track trackByGoalId($index, goal)) {
+        <mat-card
+          class="goal-card"
+          [class.goal-card-savings]="goal.type === 'SAVINGS'"
+          [class.goal-card-debt]="goal.type === 'DEBT_PAYOFF'"
+        >
+          <mat-card-header>
+            <div
+              mat-card-avatar
+              class="goal-avatar"
+              [class.goal-avatar-savings]="goal.type === 'SAVINGS'"
+              [class.goal-avatar-debt]="goal.type === 'DEBT_PAYOFF'"
+            >
+              <mat-icon>{{ goalIcon(goal) }}</mat-icon>
+            </div>
+            <div class="goal-header-content">
+              <div class="goal-header-copy">
+                <div class="goal-title-row">
+                  <mat-card-title>{{ goal.name }}</mat-card-title>
+                  <div
+                    class="goal-chip"
+                    [class.goal-chip-savings]="goal.type === 'SAVINGS'"
+                    [class.goal-chip-debt]="goal.type === 'DEBT_PAYOFF'"
+                  >
+                    <span class="goal-chip-dot" aria-hidden="true"></span>
+                    {{ goalTypeLabel(goal) }}
+                  </div>
+                </div>
+                <mat-card-subtitle>
+                  {{ goal.currentAmount | currency:'PHP':'symbol':'1.2-2' }}
+                  of
+                  {{ goal.targetAmount | currency:'PHP':'symbol':'1.2-2' }}
+                </mat-card-subtitle>
+              </div>
+            </div>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="goal-progress-row">
+              <span>{{ percentComplete(goal) | number:'1.0-0' }}%</span>
+              @if (goal.targetDate) {
+                <span>Target {{ goal.targetDate | date:'MMM d, y' }}</span>
+              } @else {
+                <span>No target date</span>
+              }
+            </div>
+
+            <mat-progress-bar
+              mode="determinate"
+              [value]="progressBarValue(goal)"
+            ></mat-progress-bar>
+
+            <div class="goal-meta">
+              <div class="meta-pill">
+                <mat-icon>{{ goal.type === 'SAVINGS' ? 'account_balance_wallet' : 'receipt_long' }}</mat-icon>
+                <span>
+                  {{
+                    goal.type === 'SAVINGS'
+                      ? (goal.account?.name || 'Account required')
+                      : 'Category set per contribution'
+                  }}
+                </span>
+              </div>
+
+              <div class="meta-pill">
+                <mat-icon>link</mat-icon>
+                <span>{{ goal.contributionCount }} linked {{ goal.contributionCount === 1 ? 'transaction' : 'transactions' }}</span>
+              </div>
+
+              @if (percentComplete(goal) > 100) {
+                <div class="meta-pill overfunded">
+                  <mat-icon>emoji_events</mat-icon>
+                  <span>Overfunded</span>
+                </div>
+              }
+            </div>
+
+            @if (!canContribute(goal)) {
+              <p class="helper-text">
+                Link an account before adding savings contributions.
+              </p>
+            } @else {
+              <p class="helper-text">
+                {{
+                  goal.type === 'SAVINGS'
+                    ? 'Progress is based on linked transfer transactions.'
+                    : 'Progress is based on linked expense transactions using the default Debt category.'
+                }}
+              </p>
+            }
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button
+              mat-button
+              type="button"
+              (click)="toggleLinkedTransactions(goal.id)"
+              [disabled]="goal.linkedTransactions.length === 0"
+            >
+              {{ isTransactionsExpanded(goal.id) ? 'Hide Linked Transactions' : 'View Linked Transactions' }}
+            </button>
+            <button
+              mat-button
+              type="button"
+              (click)="openContributionDialog(goal)"
+              [disabled]="!canContribute(goal)"
+            >
+              Add Contribution
+            </button>
+            <button mat-icon-button type="button" aria-label="Edit goal" (click)="openEditDialog(goal)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button type="button" aria-label="Delete goal" (click)="confirmDelete(goal)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-card-actions>
+
+          @if (isTransactionsExpanded(goal.id)) {
+            <div class="linked-transactions">
+              <div class="linked-transactions-header">
+                <h3>Linked Transactions</h3>
+                <span>{{ goal.linkedTransactions.length }} total</span>
+              </div>
+
+              <div class="linked-transactions-table">
+                <table mat-table [dataSource]="goal.linkedTransactions">
+                  <ng-container matColumnDef="date">
+                    <th mat-header-cell *matHeaderCellDef>Date</th>
+                    <td mat-cell *matCellDef="let transaction">
+                      {{ transaction.date | date:'MMM d, y' }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef>Type</th>
+                    <td mat-cell *matCellDef="let transaction">
+                      {{ transactionTypeLabel(transaction) }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="details">
+                    <th mat-header-cell *matHeaderCellDef>Details</th>
+                    <td mat-cell *matCellDef="let transaction">
+                      <div class="transaction-detail-cell">
+                        <strong>{{ transaction.description || transactionTypeLabel(transaction) }}</strong>
+                        <span>{{ transactionDetails(transaction) }}</span>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="amount">
+                    <th mat-header-cell *matHeaderCellDef>Amount</th>
+                    <td mat-cell *matCellDef="let transaction">
+                      {{ transaction.amount | currency:'PHP':'symbol':'1.2-2' }}
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Actions</th>
+                    <td mat-cell *matCellDef="let transaction">
+                      <div class="transaction-actions">
+                        <button
+                          mat-icon-button
+                          type="button"
+                          aria-label="Edit linked transaction"
+                          (click)="editLinkedTransaction(goal, transaction)"
+                        >
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          type="button"
+                          aria-label="Delete linked transaction"
+                          (click)="confirmDeleteLinkedTransaction(goal, transaction)"
+                        >
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="transactionColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: transactionColumns"></tr>
+                </table>
+              </div>
+            </div>
+          }
+        </mat-card>
+      }
+    </div>
+  }
+
+  @if (isMobile) {
+    <button class="fab-add" mat-fab color="primary" type="button" (click)="openAddDialog()">
+      <mat-icon>add</mat-icon>
+    </button>
+  }
+</section>

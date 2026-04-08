@@ -12,6 +12,7 @@ import { BudgetsModule } from './budgets/budgets.module';
 import { ReportsModule } from './reports/reports.module';
 import { ChatModule } from './chat/chat.module';
 import { BillsModule } from './bills/bills.module';
+import { GoalsModule } from './goals/goals.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { BillsModule } from './bills/bills.module';
     ReportsModule,
     ChatModule,
     BillsModule,
+    GoalsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })

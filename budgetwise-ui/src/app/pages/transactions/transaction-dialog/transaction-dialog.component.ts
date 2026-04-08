@@ -96,6 +96,15 @@ interface NonTransferSnapshot {
               <mat-error>Source and destination accounts must be different.</mat-error>
             }
           </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="categoryId">
+              @for (category of data.categories; track category.id) {
+                <mat-option [value]="category.id">{{ category.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
         } @else {
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
@@ -185,7 +194,7 @@ export class TransactionDialogComponent implements OnInit {
       accountId: [!isTransfer ? (t?.accountId || initialValue?.accountId || '') : '', Validators.required],
       fromAccountId: [isTransfer ? t?.fromAccountId || '' : ''],
       toAccountId: [isTransfer ? t?.toAccountId || '' : ''],
-      categoryId: [!isTransfer ? (t?.categoryId || initialValue?.categoryId || '') : '', Validators.required],
+      categoryId: [t?.categoryId || initialValue?.categoryId || ''],
       date: [t ? new Date(t.date) : new Date()],
     }, { validators: this.transferAccountsMustDiffer() });
 
@@ -211,9 +220,12 @@ export class TransactionDialogComponent implements OnInit {
     if (this.form.invalid) return;
 
     const value = { ...this.form.getRawValue() };
+    if (!value.categoryId) {
+      delete value.categoryId;
+    }
+
     if (value.type === 'TRANSFER') {
       delete value.accountId;
-      delete value.categoryId;
     } else {
       delete value.fromAccountId;
       delete value.toAccountId;

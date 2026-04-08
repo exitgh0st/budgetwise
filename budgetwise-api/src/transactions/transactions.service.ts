@@ -29,34 +29,42 @@ export class TransactionsService {
     userId: string,
   ): Promise<TransactionWithRelations> {
     return this.prisma.$transaction(async (tx) => {
-      const normalized = await this.resolveTransactionShape(tx, dto, userId);
-      const date = dto.date ? new Date(dto.date) : new Date();
+      return this.createInTransaction(tx, dto, userId);
+    });
+  }
 
-      const transaction = await tx.transaction.create({
-        data: {
-          type: normalized.type,
-          amount: dto.amount,
-          description: dto.description,
-          date,
-          accountId: normalized.accountId,
-          fromAccountId: normalized.fromAccountId,
-          toAccountId: normalized.toAccountId,
-          categoryId: normalized.categoryId,
-          userId,
-        },
-        include: transactionInclude,
-      });
+  async createInTransaction(
+    tx: Prisma.TransactionClient,
+    dto: CreateTransactionDto,
+    userId: string,
+  ): Promise<TransactionWithRelations> {
+    const normalized = await this.resolveTransactionShape(tx, dto, userId);
+    const date = dto.date ? new Date(dto.date) : new Date();
 
-      await this.applyBalanceEffect(tx, {
+    const transaction = await tx.transaction.create({
+      data: {
         type: normalized.type,
         amount: dto.amount,
+        description: dto.description,
+        date,
         accountId: normalized.accountId,
         fromAccountId: normalized.fromAccountId,
         toAccountId: normalized.toAccountId,
-      });
-
-      return transaction;
+        categoryId: normalized.categoryId,
+        userId,
+      },
+      include: transactionInclude,
     });
+
+    await this.applyBalanceEffect(tx, {
+      type: normalized.type,
+      amount: dto.amount,
+      accountId: normalized.accountId,
+      fromAccountId: normalized.fromAccountId,
+      toAccountId: normalized.toAccountId,
+    });
+
+    return transaction;
   }
 
   async findAll(filters: FilterTransactionsDto, userId: string) {
@@ -111,6 +119,24 @@ export class TransactionsService {
         where: { id, userId },
       });
       if (!existing) throw new NotFoundException(`Transaction ${id} not found`);
+
+      const linkedContribution = await tx.goalContribution.findUnique({
+        where: { transactionId: id },
+        include: { goal: true },
+      });
+      if (linkedContribution) {
+        const nextType = dto.type ?? existing.type;
+        const requiredType =
+          linkedContribution.goal.type === 'SAVINGS'
+            ? TransactionType.TRANSFER
+            : TransactionType.EXPENSE;
+
+        if (nextType !== requiredType) {
+          throw new BadRequestException(
+            'Linked contribution transactions cannot change to an invalid transaction type',
+          );
+        }
+      }
 
       const newDate = dto.date ? new Date(dto.date) : existing.date;
       const newType = dto.type ?? existing.type;
@@ -194,13 +220,16 @@ export class TransactionsService {
 
       await this.ensureOwnedAccount(tx, dto.fromAccountId, userId);
       await this.ensureOwnedAccount(tx, dto.toAccountId, userId);
+      if (dto.categoryId) {
+        await this.ensureAccessibleCategory(tx, dto.categoryId, userId);
+      }
 
       return {
         type: TransactionType.TRANSFER,
         accountId: null,
         fromAccountId: dto.fromAccountId,
         toAccountId: dto.toAccountId,
-        categoryId: null,
+        categoryId: dto.categoryId ?? null,
       };
     }
 

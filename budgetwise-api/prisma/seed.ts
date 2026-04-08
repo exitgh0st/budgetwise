@@ -16,6 +16,7 @@ async function main() {
     { name: 'Health', icon: '💊' },
     { name: 'Education', icon: '📚' },
     { name: 'Savings', icon: '💰' },
+    { name: 'Debt', icon: '💳' },
     { name: 'Salary', icon: '💼' },
     { name: 'Freelance', icon: '💻' },
     { name: 'Other', icon: '📌' },
@@ -27,6 +28,19 @@ async function main() {
     });
     if (!existing) {
       await prisma.category.create({ data: { ...cat, userId: null } });
+    }
+  }
+
+  for (const name of ['Savings', 'Debt']) {
+    const category = await prisma.category.findFirst({
+      where: { name, userId: null },
+    });
+
+    if (category) {
+      await prisma.category.update({
+        where: { id: category.id },
+        data: { isSystem: true },
+      });
     }
   }
 
