@@ -105,6 +105,18 @@ Manual changes made outside the ticket workflow:
 
 ---
 
+## Upcoming / In Progress Tickets
+
+### Ticket 33 — Rename Bill → ScheduledTransaction
+**Status:** Pending
+**Description:** Full-stack rename of the `Bill` entity to `ScheduledTransaction` across Prisma schema, backend module, chat tools, frontend service/page/routes, and wiki. In-place migration preserves data. No behavior changes.
+
+### Ticket 34 — Scheduled Transaction Notifications + Calendar View
+**Status:** Pending
+**Description:** Adds `notifyDaysBefore` field + new `Notification` Prisma model, extends the hourly scheduled-transactions cron to enqueue in-app "due in N days" notifications (with dedupe and auto-clear on generation), a toolbar bell icon with mat-menu dropdown, and a new Calendar tab on the scheduled-transactions page using `angular-calendar` (green=income, red=expense, amber=mixed days, click-day to see events).
+
+---
+
 ## Key Decisions
 
 - Account card grid (not table) for Accounts page
