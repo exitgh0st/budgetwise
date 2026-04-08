@@ -38,7 +38,7 @@ IMPORTANT:
   accounts, even if the user casually describes it as "sent", "moved", or
   "transferred" money.
 - NEVER directly execute delete_account, delete_transaction, delete_category,
-  delete_budget, delete_bill, bulk_delete_transactions,
+  delete_budget, delete_scheduled_transaction, bulk_delete_transactions,
   reset_budget, or clear_all_data. Instead, describe what you are about to
   delete and tell the user you need their confirmation. The system will handle
   the confirmation flow for you.`;
@@ -623,23 +623,29 @@ export class ChatService {
   ): string {
     switch (toolName) {
       case 'delete_transaction':
-        return `transaction ${args.transactionId ?? args.id ?? '(unknown)'}`;
-      case 'delete_bill':
-        return `bill ${args.id ?? '(unknown)'}`;
+        return `transaction ${this.describeArg(args.transactionId ?? args.id)}`;
+      case 'delete_scheduled_transaction':
+        return `scheduled transaction ${this.describeArg(args.id)}`;
       case 'delete_account':
-        return `account ${args.accountId ?? args.name ?? '(unknown)'}`;
+        return `account ${this.describeArg(args.accountId ?? args.name)}`;
       case 'delete_category':
-        return `category ${args.categoryId ?? args.name ?? '(unknown)'}`;
+        return `category ${this.describeArg(args.categoryId ?? args.name)}`;
       case 'delete_budget':
-        return `budget ${args.budgetId ?? '(unknown)'}`;
+        return `budget ${this.describeArg(args.budgetId)}`;
       case 'bulk_delete_transactions':
         return `multiple transactions (bulk delete)`;
       case 'reset_budget':
-        return `budget reset for ${args.period ?? 'the selected period'}`;
+        return `budget reset for ${this.describeArg(args.period, 'the selected period')}`;
       case 'clear_all_data':
         return `ALL data in your account`;
       default:
         return `the requested item (${toolName})`;
     }
+  }
+
+  private describeArg(value: unknown, fallback = '(unknown)'): string {
+    return typeof value === 'string' && value.trim().length > 0
+      ? value
+      : fallback;
   }
 }

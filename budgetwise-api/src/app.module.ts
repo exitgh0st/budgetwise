@@ -11,7 +11,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { BudgetsModule } from './budgets/budgets.module';
 import { ReportsModule } from './reports/reports.module';
 import { ChatModule } from './chat/chat.module';
-import { BillsModule } from './bills/bills.module';
+import { ScheduledTransactionsModule } from './scheduled-transactions/scheduled-transactions.module';
 import { GoalsModule } from './goals/goals.module';
 
 @Module({
@@ -26,7 +26,7 @@ import { GoalsModule } from './goals/goals.module';
     BudgetsModule,
     ReportsModule,
     ChatModule,
-    BillsModule,
+    ScheduledTransactionsModule,
     GoalsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],

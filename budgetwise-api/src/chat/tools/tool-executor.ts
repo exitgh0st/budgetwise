@@ -4,7 +4,7 @@ import { CategoriesService } from '../../categories/categories.service';
 import { TransactionsService } from '../../transactions/transactions.service';
 import { BudgetsService } from '../../budgets/budgets.service';
 import { ReportsService } from '../../reports/reports.service';
-import { BillsService } from '../../bills/bills.service';
+import { ScheduledTransactionsService } from '../../scheduled-transactions/scheduled-transactions.service';
 
 @Injectable()
 export class ToolExecutor {
@@ -16,7 +16,7 @@ export class ToolExecutor {
     private transactions: TransactionsService,
     private budgets: BudgetsService,
     private reports: ReportsService,
-    private bills: BillsService,
+    private scheduledTransactions: ScheduledTransactionsService,
   ) {}
 
   async execute(toolName: string, args: any, userId: string): Promise<any> {
@@ -79,13 +79,19 @@ export class ToolExecutor {
       get_monthly_trend: () =>
         this.reports.getMonthlyTrend(args.months, userId),
 
-      // Bills
-      create_bill: () => this.bills.create(args, userId),
-      list_bills: () => this.bills.findAll(userId, args.status),
-      get_bill: () => this.bills.findOne(id, userId),
-      update_bill: () => this.bills.update(id, data, userId),
-      delete_bill: () => this.bills.remove(id, userId),
-      generate_bill: () => this.bills.generate(id, userId),
+      // Scheduled transactions
+      create_scheduled_transaction: () =>
+        this.scheduledTransactions.create(args, userId),
+      list_scheduled_transactions: () =>
+        this.scheduledTransactions.findAll(userId, args.status),
+      get_scheduled_transaction: () =>
+        this.scheduledTransactions.findOne(id, userId),
+      update_scheduled_transaction: () =>
+        this.scheduledTransactions.update(id, data, userId),
+      delete_scheduled_transaction: () =>
+        this.scheduledTransactions.remove(id, userId),
+      generate_scheduled_transaction: () =>
+        this.scheduledTransactions.generate(id, userId),
     };
 
     const handler = handlers[toolName];

@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { BillsService } from './bills.service';
+import { ScheduledTransactionsService } from './scheduled-transactions.service';
 
 @Injectable()
-export class BillsCronService {
-  private readonly logger = new Logger(BillsCronService.name);
+export class ScheduledTransactionsCronService {
+  private readonly logger = new Logger(ScheduledTransactionsCronService.name);
 
-  constructor(private readonly billsService: BillsService) {}
+  constructor(
+    private readonly scheduledTransactionsService: ScheduledTransactionsService,
+  ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async runHourly(): Promise<void> {
@@ -18,7 +20,7 @@ export class BillsCronService {
     failed: number;
     iterations: number;
   }> {
-    this.logger.log('Bills cron job started');
+    this.logger.log('Scheduled transactions cron job started');
 
     let totalProcessed = 0;
     let totalFailed = 0;
@@ -26,7 +28,7 @@ export class BillsCronService {
     const MAX_ITERATIONS = 100;
 
     while (iterations < MAX_ITERATIONS) {
-      const dueRecords = await this.billsService.findAllDue();
+      const dueRecords = await this.scheduledTransactionsService.findAllDue();
 
       if (dueRecords.length === 0) break;
 
@@ -36,12 +38,12 @@ export class BillsCronService {
 
       for (const record of dueRecords) {
         try {
-          await this.billsService.generateFromRecord(record);
+          await this.scheduledTransactionsService.generateFromRecord(record);
           totalProcessed++;
         } catch (err) {
           totalFailed++;
           this.logger.error(
-            `Failed to generate transaction for bill ID=${record.id} userId=${record.userId}: ${err instanceof Error ? err.message : String(err)}`,
+            `Failed to generate transaction for scheduled transaction ID=${record.id} userId=${record.userId}: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }

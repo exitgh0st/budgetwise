@@ -19,7 +19,7 @@ model Account {
   transactions       Transaction[]  @relation("TransactionAccount")
   outgoingTransfers  Transaction[]  @relation("TransferFromAccount")
   incomingTransfers  Transaction[]  @relation("TransferToAccount")
-  bills              Bill[]
+  scheduledTransactions ScheduledTransaction[]
   goals              Goal[]
 
   @@index([userId])
@@ -34,7 +34,7 @@ model Category {
   createdAt    DateTime      @default(now())
   transactions Transaction[]
   budgets      Budget[]
-  bills        Bill[]
+  scheduledTransactions ScheduledTransaction[]
 
   @@unique([name, userId])
   @@index([userId])
@@ -50,7 +50,7 @@ model Transaction {
   fromAccountId String?
   toAccountId   String?
   categoryId    String?
-  billId        String?
+  scheduledTransactionId String?       @map("scheduled_transaction_id")
   userId        String?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -59,11 +59,11 @@ model Transaction {
   fromAccount   Account?        @relation("TransferFromAccount", fields: [fromAccountId], references: [id], onDelete: Cascade)
   toAccount     Account?        @relation("TransferToAccount", fields: [toAccountId], references: [id], onDelete: Cascade)
   category      Category?       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  bill          Bill?           @relation(fields: [billId], references: [id], onDelete: SetNull)
+  scheduledTransaction ScheduledTransaction? @relation(fields: [scheduledTransactionId], references: [id], onDelete: SetNull)
   goalContribution GoalContribution?
 
   @@index([userId])
-  @@index([billId])
+  @@index([scheduledTransactionId])
   @@index([fromAccountId])
   @@index([toAccountId])
 }
@@ -100,25 +100,26 @@ model GoalContribution {
   @@index([transactionId])
 }
 
-model Bill {
-  id                    String              @id @default(uuid())
+model ScheduledTransaction {
+  id                    String                      @id @default(uuid())
   type                  TransactionType
-  amount                Decimal             @db.Decimal(12, 2)
+  amount                Decimal                     @db.Decimal(12, 2)
   description           String?
   frequency             RecurringFrequency
   nextDueDate           DateTime
-  status                BillStatus          @default(ACTIVE)
+  status                ScheduledTransactionStatus @default(ACTIVE)
   totalInstallments     Int?
-  completedInstallments Int                 @default(0)
+  completedInstallments Int                         @default(0)
   accountId             String
-  account               Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account               Account                     @relation(fields: [accountId], references: [id], onDelete: Cascade)
   categoryId            String
-  category              Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category              Category                    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   userId                String?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
   transactions          Transaction[]
 
+  @@map("scheduled_transactions")
   @@index([userId])
   @@index([nextDueDate])
   @@index([status])
@@ -184,7 +185,7 @@ enum RecurringFrequency {
   YEARLY
 }
 
-enum BillStatus {
+enum ScheduledTransactionStatus {
   ACTIVE
   COMPLETED
   CANCELLED

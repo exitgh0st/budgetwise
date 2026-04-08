@@ -522,13 +522,13 @@ export const toolDefinitions: ChatCompletionTool[] = [
     },
   },
 
-  // ============ BILLS ============
+  // ============ SCHEDULED TRANSACTIONS ============
   {
     type: 'function',
     function: {
-      name: 'create_bill',
+      name: 'create_scheduled_transaction',
       description:
-        'Create a bill (one-time or recurring expense/income template). Use when the user wants to schedule a future expense like rent, subscriptions, or a one-off payment. Does NOT immediately create a transaction � call generate_bill to post the actual entry.',
+        'Create a scheduled transaction (one-time or recurring expense/income template). Use when the user wants to schedule a future expense like rent, subscriptions, or a one-off payment. Does NOT immediately create a transaction; call generate_scheduled_transaction to post the actual entry.',
       parameters: {
         type: 'object',
         properties: {
@@ -582,7 +582,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'list_bills',
+      name: 'list_scheduled_transactions',
       description:
         'List all bills, sorted by next due date. Use to show upcoming bills or scheduled income, or to find a bill ID.',
       parameters: {
@@ -600,7 +600,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'get_bill',
+      name: 'get_scheduled_transaction',
       description: 'Get details of a specific bill by ID.',
       parameters: {
         type: 'object',
@@ -614,7 +614,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'update_bill',
+      name: 'update_scheduled_transaction',
       description:
         'Update a bill (amount, frequency, next due date, status, etc.). Does not affect already-generated transactions.',
       parameters: {
@@ -649,7 +649,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'delete_bill',
+      name: 'delete_scheduled_transaction',
       description:
         'Delete a bill. Does not delete already-generated transactions. Confirm with user first.',
       parameters: {
@@ -664,7 +664,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'generate_bill',
+      name: 'generate_scheduled_transaction',
       description:
         'Post a real transaction from a bill for its current due date, then automatically advance the next due date by one frequency period when applicable. Use when the user says a bill or scheduled income has come in, or when manually triggering a scheduled entry. Returns the newly created transaction.',
       parameters: {

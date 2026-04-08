@@ -9,24 +9,27 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { BillsService } from './bills.service';
-import { BillsCronService } from './bills-cron.service';
-import { CreateBillDto } from './dto/create-bill.dto';
-import { UpdateBillDto } from './dto/update-bill.dto';
+import { ScheduledTransactionsService } from './scheduled-transactions.service';
+import { ScheduledTransactionsCronService } from './scheduled-transactions-cron.service';
+import { CreateScheduledTransactionDto } from './dto/create-scheduled-transaction.dto';
+import { UpdateScheduledTransactionDto } from './dto/update-scheduled-transaction.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
 
-@ApiTags('Bills')
+@ApiTags('Scheduled Transactions')
 @ApiBearerAuth()
-@Controller('bills')
-export class BillsController {
+@Controller('scheduled-transactions')
+export class ScheduledTransactionsController {
   constructor(
-    private readonly service: BillsService,
-    private readonly cronService: BillsCronService,
+    private readonly service: ScheduledTransactionsService,
+    private readonly cronService: ScheduledTransactionsCronService,
   ) {}
 
   @Post()
-  create(@CurrentUser() user: { userId: string }, @Body() dto: CreateBillDto) {
+  create(
+    @CurrentUser() user: { userId: string },
+    @Body() dto: CreateScheduledTransactionDto,
+  ) {
     return this.service.create(dto, user.userId);
   }
 
@@ -44,7 +47,7 @@ export class BillsController {
   update(
     @CurrentUser() user: { userId: string },
     @Param('id') id: string,
-    @Body() dto: UpdateBillDto,
+    @Body() dto: UpdateScheduledTransactionDto,
   ) {
     return this.service.update(id, dto, user.userId);
   }

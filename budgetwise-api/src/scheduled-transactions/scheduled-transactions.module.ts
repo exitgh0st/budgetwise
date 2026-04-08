@@ -1,0 +1,13 @@
+import { Module } from '@nestjs/common';
+import { ScheduledTransactionsService } from './scheduled-transactions.service';
+import { ScheduledTransactionsCronService } from './scheduled-transactions-cron.service';
+import { ScheduledTransactionsController } from './scheduled-transactions.controller';
+import { TransactionsModule } from '../transactions/transactions.module';
+
+@Module({
+  imports: [TransactionsModule],
+  controllers: [ScheduledTransactionsController],
+  providers: [ScheduledTransactionsService, ScheduledTransactionsCronService],
+  exports: [ScheduledTransactionsService],
+})
+export class ScheduledTransactionsModule {}

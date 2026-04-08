@@ -3,27 +3,30 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Bill, RecurringFrequency } from '@prisma/client';
+import { RecurringFrequency, ScheduledTransaction } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
-import { CreateBillDto } from './dto/create-bill.dto';
-import { UpdateBillDto } from './dto/update-bill.dto';
+import { CreateScheduledTransactionDto } from './dto/create-scheduled-transaction.dto';
+import { UpdateScheduledTransactionDto } from './dto/update-scheduled-transaction.dto';
 
 @Injectable()
-export class BillsService {
+export class ScheduledTransactionsService {
   constructor(
     private prisma: PrismaService,
     private transactionsService: TransactionsService,
   ) {}
 
-  async create(dto: CreateBillDto, userId: string): Promise<Bill> {
+  async create(
+    dto: CreateScheduledTransactionDto,
+    userId: string,
+  ): Promise<ScheduledTransaction> {
     const totalInstallments =
       dto.frequency === 'ONCE' ? 1 : (dto.totalInstallments ?? null);
     const completedInstallments = dto.completedInstallments ?? 0;
 
     this.validateInstallments(completedInstallments, totalInstallments);
 
-    return this.prisma.bill.create({
+    return this.prisma.scheduledTransaction.create({
       data: {
         type: dto.type,
         amount: dto.amount,
@@ -40,8 +43,11 @@ export class BillsService {
     });
   }
 
-  async findAll(userId: string, status?: Bill['status']): Promise<Bill[]> {
-    return this.prisma.bill.findMany({
+  async findAll(
+    userId: string,
+    status?: ScheduledTransaction['status'],
+  ): Promise<ScheduledTransaction[]> {
+    return this.prisma.scheduledTransaction.findMany({
       where: {
         userId,
         ...(status !== undefined && { status }),
@@ -51,16 +57,23 @@ export class BillsService {
     });
   }
 
-  async findOne(id: string, userId: string): Promise<Bill> {
-    const item = await this.prisma.bill.findFirst({
-      where: { id, userId },
-      include: { account: true, category: true },
-    });
-    if (!item) throw new NotFoundException(`Bill ${id} not found`);
-    return item;
+  async findOne(id: string, userId: string): Promise<ScheduledTransaction> {
+    const scheduledTransaction =
+      await this.prisma.scheduledTransaction.findFirst({
+        where: { id, userId },
+        include: { account: true, category: true },
+      });
+    if (!scheduledTransaction) {
+      throw new NotFoundException(`Scheduled transaction ${id} not found`);
+    }
+    return scheduledTransaction;
   }
 
-  async update(id: string, dto: UpdateBillDto, userId: string): Promise<Bill> {
+  async update(
+    id: string,
+    dto: UpdateScheduledTransactionDto,
+    userId: string,
+  ): Promise<ScheduledTransaction> {
     const existing = await this.findOne(id, userId);
     const nextFrequency = dto.frequency ?? existing.frequency;
     const totalInstallments =
@@ -72,7 +85,7 @@ export class BillsService {
 
     this.validateInstallments(completedInstallments, totalInstallments);
 
-    return this.prisma.bill.update({
+    return this.prisma.scheduledTransaction.update({
       where: { id },
       data: {
         ...(dto.type !== undefined && { type: dto.type }),
@@ -97,23 +110,25 @@ export class BillsService {
 
   async remove(id: string, userId: string): Promise<void> {
     await this.findOne(id, userId);
-    await this.prisma.bill.delete({ where: { id } });
+    await this.prisma.scheduledTransaction.delete({ where: { id } });
   }
 
   async generate(id: string, userId: string): Promise<object> {
-    const bill = await this.findOne(id, userId);
+    const scheduledTransaction = await this.findOne(id, userId);
 
-    if (bill.status !== 'ACTIVE') {
-      throw new BadRequestException('Cannot generate from a non-active bill');
+    if (scheduledTransaction.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'Cannot generate from a non-active scheduled transaction',
+      );
     }
 
     const transaction = await this.transactionsService.create(
       {
-        type: bill.type,
-        amount: Number(bill.amount),
-        description: bill.description ?? undefined,
-        accountId: bill.accountId,
-        categoryId: bill.categoryId,
+        type: scheduledTransaction.type,
+        amount: Number(scheduledTransaction.amount),
+        description: scheduledTransaction.description ?? undefined,
+        accountId: scheduledTransaction.accountId,
+        categoryId: scheduledTransaction.categoryId,
         // Manual generation should create a settled transaction now, not a future-dated one.
         date: new Date().toISOString(),
       },
@@ -122,19 +137,19 @@ export class BillsService {
 
     await this.prisma.transaction.update({
       where: { id: transaction.id },
-      data: { billId: bill.id },
+      data: { scheduledTransactionId: scheduledTransaction.id },
     });
 
-    await this.prisma.bill.update({
+    await this.prisma.scheduledTransaction.update({
       where: { id },
-      data: this.getBillProgressUpdate(bill),
+      data: this.getProgressUpdate(scheduledTransaction),
     });
 
     return transaction;
   }
 
-  async findAllDue(): Promise<Bill[]> {
-    return this.prisma.bill.findMany({
+  async findAllDue(): Promise<ScheduledTransaction[]> {
+    return this.prisma.scheduledTransaction.findMany({
       where: {
         nextDueDate: { lte: new Date() },
         status: 'ACTIVE',
@@ -144,30 +159,32 @@ export class BillsService {
     });
   }
 
-  async generateFromRecord(bill: Bill): Promise<void> {
-    const userId = bill.userId;
+  async generateFromRecord(
+    scheduledTransaction: ScheduledTransaction,
+  ): Promise<void> {
+    const userId = scheduledTransaction.userId;
     if (!userId) return;
 
     const transaction = await this.transactionsService.create(
       {
-        type: bill.type,
-        amount: Number(bill.amount),
-        description: bill.description ?? undefined,
-        accountId: bill.accountId,
-        categoryId: bill.categoryId,
-        date: bill.nextDueDate.toISOString(),
+        type: scheduledTransaction.type,
+        amount: Number(scheduledTransaction.amount),
+        description: scheduledTransaction.description ?? undefined,
+        accountId: scheduledTransaction.accountId,
+        categoryId: scheduledTransaction.categoryId,
+        date: scheduledTransaction.nextDueDate.toISOString(),
       },
       userId,
     );
 
     await this.prisma.transaction.update({
       where: { id: transaction.id },
-      data: { billId: bill.id },
+      data: { scheduledTransactionId: scheduledTransaction.id },
     });
 
-    await this.prisma.bill.update({
-      where: { id: bill.id },
-      data: this.getBillProgressUpdate(bill),
+    await this.prisma.scheduledTransaction.update({
+      where: { id: scheduledTransaction.id },
+      data: this.getProgressUpdate(scheduledTransaction),
     });
   }
 
@@ -220,24 +237,27 @@ export class BillsService {
     }
   }
 
-  private getBillProgressUpdate(bill: Bill) {
-    const nextDueDate = this.advanceDate(bill.nextDueDate, bill.frequency);
+  private getProgressUpdate(scheduledTransaction: ScheduledTransaction) {
+    const nextDueDate = this.advanceDate(
+      scheduledTransaction.nextDueDate,
+      scheduledTransaction.frequency,
+    );
 
-    if (bill.frequency === 'ONCE') {
+    if (scheduledTransaction.frequency === 'ONCE') {
       return {
-        completedInstallments: bill.completedInstallments + 1,
+        completedInstallments: scheduledTransaction.completedInstallments + 1,
         status: 'COMPLETED' as const,
       };
     }
 
-    if (bill.totalInstallments === null) {
+    if (scheduledTransaction.totalInstallments === null) {
       return {
         nextDueDate,
       };
     }
 
-    const newCompleted = bill.completedInstallments + 1;
-    if (newCompleted >= bill.totalInstallments) {
+    const newCompleted = scheduledTransaction.completedInstallments + 1;
+    if (newCompleted >= scheduledTransaction.totalInstallments) {
       return {
         completedInstallments: newCompleted,
         status: 'COMPLETED' as const,

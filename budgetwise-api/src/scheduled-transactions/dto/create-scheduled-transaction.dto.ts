@@ -8,46 +8,32 @@ import {
   IsDateString,
   IsInt,
 } from 'class-validator';
-import {
-  TransactionType,
-  RecurringFrequency,
-  BillStatus,
-} from '@prisma/client';
+import { TransactionType, RecurringFrequency } from '@prisma/client';
 
-export class UpdateBillDto {
-  @IsOptional()
+export class CreateScheduledTransactionDto {
   @IsEnum(TransactionType)
   @IsIn([TransactionType.INCOME, TransactionType.EXPENSE])
-  type?: TransactionType;
+  type!: TransactionType;
 
-  @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
-  amount?: number;
+  amount!: number;
 
   @IsOptional()
   @IsString()
   description?: string;
 
-  @IsOptional()
   @IsEnum(RecurringFrequency)
-  frequency?: RecurringFrequency;
+  frequency!: RecurringFrequency;
 
-  @IsOptional()
   @IsDateString()
-  nextDueDate?: string;
+  nextDueDate!: string;
 
-  @IsOptional()
   @IsString()
-  accountId?: string;
+  accountId!: string;
 
-  @IsOptional()
   @IsString()
-  categoryId?: string;
-
-  @IsOptional()
-  @IsEnum(BillStatus)
-  status?: BillStatus;
+  categoryId!: string;
 
   @IsOptional()
   @IsInt()
