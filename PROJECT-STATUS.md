@@ -36,6 +36,7 @@
 | 28 — Frontend Auth | SupabaseService + signal AuthService, JWT interceptor, authGuard + guestGuard, Login/Register/ForgotPw/ResetPw/Callback pages. App shell hidden for unauthenticated users. |
 | 29 — Recurring Cron | `@nestjs/schedule` hourly cron auto-generates due recurring transactions. `POST /api/recurring-transactions/process-due` (@Public) manual trigger. `@@index([nextDueDate])` migration. |
 | 30 — Bills Page | Migrated `RecurringTransaction` → `Bill` model. `BillStatus` (ACTIVE/COMPLETED/CANCELLED), `ONCE` frequency added. Full CRUD + `POST :id/generate` + hourly cron (`BillsCronService`). `billId` on Transaction links generated transactions to source bill. Bills frontend: dual-tab (expense/income), search/filter/sort, installment tracking (X/Y), pay action. Recurring tab removed from Transactions page. |
+| 31 — Account Providers | Nullable `Account.providerId`, Prisma migration, static PH provider registry (17 providers), placeholder SVG logos, provider picker in account dialog, provider logo/subtitle on account cards. |
 
 ---
 
@@ -74,7 +75,7 @@ Manual changes made outside the ticket workflow:
 - **Modules:** Auth, Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat, Bills
 - **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via `SUPABASE_JWT_SECRET`. `@Public()` exempts routes. All endpoints require Bearer JWT.
 - **Multi-tenancy:** Every query scoped to `userId` from JWT `sub`. Categories return own + global (userId=null) templates. Ownership violations → 404.
-- **Database models:** Account (+ maintainingBalance, CREDIT_CARD/LOAN types, userId), Category (isSystem, userId), Transaction (isSettled, billId, userId), Budget (userId), ChatSession (userId), ChatMessage, Bill (BillStatus, RecurringFrequency incl. ONCE, totalInstallments, completedInstallments, userId, `@@index([nextDueDate])`)
+- **Database models:** Account (+ maintainingBalance, providerId, CREDIT_CARD/LOAN types, userId), Category (isSystem, userId), Transaction (isSettled, billId, userId), Budget (userId), ChatSession (userId), ChatMessage, Bill (BillStatus, RecurringFrequency incl. ONCE, totalInstallments, completedInstallments, userId, `@@index([nextDueDate])`)
 - **Seed:** 11 global template categories (userId=null) + Adjustment system category. No accounts (created by onboard).
 - **CORS:** `ORIGIN` env var
 - **Chat:** DeepSeek V3 via OpenAI SDK, tool call loop max=50, GuardrailsService (injection filter + scope LLM check), PendingConfirmationService for destructive tools, 31 tools total (accounts×6, categories×5, transactions×5, budgets×5, reports×4, bills×6)
@@ -83,7 +84,8 @@ Manual changes made outside the ticket workflow:
 ### Frontend (`budgetwise-ui/`)
 - **Auth:** SupabaseService + signal-based AuthService, JWT interceptor, authGuard + guestGuard, full auth pages, user menu + logout in toolbar
 - **Pages:** Dashboard, Accounts, Transactions, Bills (expense + income tabs, search/filter/sort, installment tracking, pay action), Budgets, Reports, Categories — all lazy-loaded, auth-protected
-- **Account types:** SAVINGS, CHECKING, CREDIT_CARD, LOAN, E_WALLET, CASH
+- **Accounts:** provider picker for BANK/EWALLET/CREDIT_CARD/LOAN, static PH provider registry, placeholder logos on cards when `providerId` is set
+- **Account types:** CASH, BANK, EWALLET, CREDIT_CARD, LOAN
 - **Shared:** ConfirmDialogComponent, ChatPanelComponent, MarkdownPipe
 - **Production:** `environment.prod.ts` → `https://budgetwise-api-k9z9.onrender.com/api`
 
@@ -98,7 +100,6 @@ Manual changes made outside the ticket workflow:
 |--------|-------------|
 | 23 — CSV Export | Client-side CSV export button on Transactions page matching active filters. No new backend endpoints. |
 | 25 — Dark Mode | Toolbar toggle for M3 dark/light theme. Persist to localStorage, default to OS preference. — COMPLETE |
-| 31 — Account Providers | Add nullable `Account.providerId`, static PH provider registry (17 providers: banks + e-wallets) with placeholder SVG logos, provider picker in account dialog (BANK/EWALLET/CREDIT_CARD/LOAN), provider logo on account cards. |
 
 ---
 

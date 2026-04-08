@@ -15,3 +15,4 @@
 - Mapped 7 Prisma models, 5 enums (`AccountType`, `TransactionType`, `RecurringFrequency`, `BillStatus`, plus inline)
 - Mapped 25 AI chat tools (5 accounts inc. adjust_balance, 5 categories, 5 transactions, 5 budgets, 4 reports, 6 bills) — see [[chat-agent-flow]]
 - NOTE: PROJECT-STATUS.md still references the old `RecurringTransaction` model and module — that has been replaced by [[bill]] / [[bills]] in code (Ticket 30, commit 53c0eb5). Status doc is stale; wiki reflects current code.
+## [2026-04-08] ticket | #31 completed — wiki ingest pending
