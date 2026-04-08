@@ -37,6 +37,7 @@ export class ScheduledTransactionsService {
         categoryId: dto.categoryId,
         totalInstallments,
         completedInstallments,
+        notifyDaysBefore: dto.notifyDaysBefore,
         userId,
       },
       include: { account: true, category: true },
@@ -100,6 +101,9 @@ export class ScheduledTransactionsService {
         ...(dto.status !== undefined && { status: dto.status }),
         ...(dto.completedInstallments !== undefined && {
           completedInstallments: dto.completedInstallments,
+        }),
+        ...(dto.notifyDaysBefore !== undefined && {
+          notifyDaysBefore: dto.notifyDaysBefore,
         }),
         ...((dto.totalInstallments !== undefined ||
           dto.frequency !== undefined) && { totalInstallments }),

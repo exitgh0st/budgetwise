@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ScheduledTransaction } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ScheduledTransactionsService } from './scheduled-transactions.service';
 
 @Injectable()
@@ -8,11 +11,14 @@ export class ScheduledTransactionsCronService {
 
   constructor(
     private readonly scheduledTransactionsService: ScheduledTransactionsService,
+    private readonly notificationsService: NotificationsService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async runHourly(): Promise<void> {
     await this.processDueTransactions();
+    await this.enqueueUpcomingNotifications();
   }
 
   async processDueTransactions(): Promise<{
@@ -39,6 +45,7 @@ export class ScheduledTransactionsCronService {
       for (const record of dueRecords) {
         try {
           await this.scheduledTransactionsService.generateFromRecord(record);
+          await this.notificationsService.markReadByScheduledTx(record.id);
           totalProcessed++;
         } catch (err) {
           totalFailed++;
@@ -56,5 +63,39 @@ export class ScheduledTransactionsCronService {
     );
 
     return { processed: totalProcessed, failed: totalFailed, iterations };
+  }
+
+  private async enqueueUpcomingNotifications(): Promise<void> {
+    const now = new Date();
+    const records = await this.prisma.scheduledTransaction.findMany({
+      where: {
+        status: 'ACTIVE',
+        notifyDaysBefore: { not: null },
+        nextDueDate: { gte: now },
+        userId: { not: null },
+      },
+    });
+
+    for (const record of records) {
+      if (record.notifyDaysBefore === null) {
+        continue;
+      }
+
+      const leadMs = record.notifyDaysBefore * 86400000;
+      if (record.nextDueDate.getTime() - now.getTime() <= leadMs) {
+        await this.notificationsService.createForScheduledTx(
+          record as Pick<
+            ScheduledTransaction,
+            | 'id'
+            | 'userId'
+            | 'description'
+            | 'amount'
+            | 'nextDueDate'
+            | 'type'
+            | 'notifyDaysBefore'
+          >,
+        );
+      }
+    }
   }
 }

@@ -107,6 +107,7 @@ model ScheduledTransaction {
   description           String?
   frequency             RecurringFrequency
   nextDueDate           DateTime
+  notifyDaysBefore      Int?
   status                ScheduledTransactionStatus @default(ACTIVE)
   totalInstallments     Int?
   completedInstallments Int                         @default(0)
@@ -118,6 +119,7 @@ model ScheduledTransaction {
   createdAt             DateTime                    @default(now())
   updatedAt             DateTime                    @updatedAt
   transactions          Transaction[]
+  notifications         Notification[]
 
   @@map("scheduled_transactions")
   @@index([userId])
@@ -164,6 +166,23 @@ model ChatMessage {
   createdAt  DateTime    @default(now())
 }
 
+model Notification {
+  id                     String           @id @default(uuid())
+  userId                 String
+  scheduledTransactionId String?
+  type                   NotificationType
+  title                  String
+  body                   String
+  isRead                 Boolean          @default(false)
+  readAt                 DateTime?
+  createdAt              DateTime         @default(now())
+
+  scheduledTransaction   ScheduledTransaction? @relation(fields: [scheduledTransactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
 enum AccountType {
   CASH
   BANK
@@ -189,6 +208,10 @@ enum ScheduledTransactionStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+}
+
+enum NotificationType {
+  SCHEDULED_TX_DUE
 }
 
 enum GoalType {

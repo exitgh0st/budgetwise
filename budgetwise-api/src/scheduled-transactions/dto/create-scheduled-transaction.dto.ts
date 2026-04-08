@@ -7,6 +7,7 @@ import {
   IsString,
   IsDateString,
   IsInt,
+  Max,
 } from 'class-validator';
 import { TransactionType, RecurringFrequency } from '@prisma/client';
 
@@ -44,4 +45,10 @@ export class CreateScheduledTransactionDto {
   @IsInt()
   @Min(0)
   completedInstallments?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(365)
+  notifyDaysBefore?: number;
 }

@@ -7,6 +7,7 @@ import {
   IsString,
   IsDateString,
   IsInt,
+  Max,
 } from 'class-validator';
 import {
   TransactionType,
@@ -58,4 +59,10 @@ export class UpdateScheduledTransactionDto {
   @IsInt()
   @Min(0)
   completedInstallments?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(365)
+  notifyDaysBefore?: number;
 }

@@ -11,6 +11,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { BudgetsModule } from './budgets/budgets.module';
 import { ReportsModule } from './reports/reports.module';
 import { ChatModule } from './chat/chat.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { ScheduledTransactionsModule } from './scheduled-transactions/scheduled-transactions.module';
 import { GoalsModule } from './goals/goals.module';
 
@@ -26,6 +27,7 @@ import { GoalsModule } from './goals/goals.module';
     BudgetsModule,
     ReportsModule,
     ChatModule,
+    NotificationsModule,
     ScheduledTransactionsModule,
     GoalsModule,
   ],
