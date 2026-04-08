@@ -20,4 +20,9 @@ export class CreateAccountDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   maintainingBalance?: number;
+
+  @ApiPropertyOptional({ example: 'bdo' })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
 }

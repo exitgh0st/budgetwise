@@ -12,6 +12,7 @@ model Account {
   type               AccountType
   balance            Decimal       @default(0) @db.Decimal(12, 2)
   maintainingBalance Decimal?      @db.Decimal(12, 2)
+  providerId         String?
   userId             String?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt

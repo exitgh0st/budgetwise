@@ -19,6 +19,7 @@ export class AccountsService {
         type: dto.type,
         balance: dto.balance ?? 0,
         maintainingBalance: dto.maintainingBalance ?? null,
+        providerId: dto.providerId ?? null,
         userId,
       },
     });

@@ -21,7 +21,13 @@ export class UpdateAccountDto {
 
   @ApiPropertyOptional({ example: 5000, nullable: true })
   @IsOptional()
-  @ValidateIf((o) => o.maintainingBalance !== null)
+  @ValidateIf((dto: UpdateAccountDto) => dto.maintainingBalance !== null)
   @IsNumber({ maxDecimalPlaces: 2 })
   maintainingBalance?: number | null;
+
+  @ApiPropertyOptional({ example: 'bdo', nullable: true })
+  @IsOptional()
+  @ValidateIf((dto: UpdateAccountDto) => dto.providerId !== null)
+  @IsString()
+  providerId?: string | null;
 }

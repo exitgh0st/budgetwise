@@ -10,8 +10,18 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatInputModule } from '@angular/material/input';
 import { AccountsService } from '../../core/services/accounts.service';
 import { Account, AccountType } from '../../core/models/account.model';
-import { AccountDialogComponent, AccountDialogData } from './account-dialog/account-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import {
+  AccountProvider,
+  getProviderById,
+} from '../../core/constants/providers.constants';
+import {
+  AccountDialogComponent,
+  AccountDialogData,
+} from './account-dialog/account-dialog.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
@@ -55,20 +65,21 @@ export class AccountsComponent implements OnInit {
   // Totals always computed from full accounts list, not filtered
   get totalCreditCardDebt(): number {
     return this.accounts
-      .filter(a => a.type === 'CREDIT_CARD')
+      .filter((a) => a.type === 'CREDIT_CARD')
       .reduce((sum, a) => sum + Number(a.balance), 0);
   }
 
   get totalLiquidBalance(): number {
     return this.accounts
-      .filter(a => a.type === 'CASH' || a.type === 'BANK')
+      .filter((a) => a.type === 'CASH' || a.type === 'BANK')
       .reduce((sum, a) => sum + Number(a.balance), 0);
   }
 
   get totalMaintainingBalance(): number {
     return this.accounts.reduce(
-      (sum, a) => sum + (a.maintainingBalance != null ? Number(a.maintainingBalance) : 0),
-      0
+      (sum, a) =>
+        sum + (a.maintainingBalance != null ? Number(a.maintainingBalance) : 0),
+      0,
     );
   }
 
@@ -77,7 +88,9 @@ export class AccountsComponent implements OnInit {
   }
 
   get hasMaintainingBalances(): boolean {
-    return this.accounts.some(a => a.maintainingBalance != null && Number(a.maintainingBalance) > 0);
+    return this.accounts.some(
+      (a) => a.maintainingBalance != null && Number(a.maintainingBalance) > 0,
+    );
   }
 
   isBelowMaintaining(account: Account): boolean {
@@ -88,9 +101,11 @@ export class AccountsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
-      this.isMobile = result.matches;
-    });
+    this.breakpointObserver
+      .observe([Breakpoints.Handset])
+      .subscribe((result) => {
+        this.isMobile = result.matches;
+      });
     this.loadAccounts();
   }
 
@@ -103,7 +118,9 @@ export class AccountsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.snackBar.open('Failed to load accounts', 'Dismiss', { duration: 3000 });
+        this.snackBar.open('Failed to load accounts', 'Dismiss', {
+          duration: 3000,
+        });
         this.loading = false;
       },
     });
@@ -123,33 +140,46 @@ export class AccountsComponent implements OnInit {
     const search = this.filterSearch.trim().toLowerCase();
     const type = this.filterType;
 
-    this.filteredAccounts = this.accounts.filter(account => {
+    this.filteredAccounts = this.accounts.filter((account) => {
       const matchesSearch =
         !search || account.name.toLowerCase().includes(search);
-      const matchesType =
-        !type || account.type === type;
+      const matchesType = !type || account.type === type;
       return matchesSearch && matchesType;
     });
   }
 
   getTypeIcon(type: AccountType): string {
     switch (type) {
-      case 'CASH': return 'payments';
-      case 'BANK': return 'account_balance';
-      case 'EWALLET': return 'phone_android';
-      case 'CREDIT_CARD': return 'credit_card';
-      case 'LOAN': return 'account_balance_wallet';
+      case 'CASH':
+        return 'payments';
+      case 'BANK':
+        return 'account_balance';
+      case 'EWALLET':
+        return 'phone_android';
+      case 'CREDIT_CARD':
+        return 'credit_card';
+      case 'LOAN':
+        return 'account_balance_wallet';
     }
   }
 
   getTypeLabel(type: AccountType): string {
     switch (type) {
-      case 'CASH': return 'Cash';
-      case 'BANK': return 'Bank';
-      case 'EWALLET': return 'E-Wallet';
-      case 'CREDIT_CARD': return 'Credit Card';
-      case 'LOAN': return 'Loan';
+      case 'CASH':
+        return 'Cash';
+      case 'BANK':
+        return 'Bank';
+      case 'EWALLET':
+        return 'E-Wallet';
+      case 'CREDIT_CARD':
+        return 'Credit Card';
+      case 'LOAN':
+        return 'Loan';
     }
+  }
+
+  getProvider(account: Account): AccountProvider | undefined {
+    return getProviderById(account.providerId);
   }
 
   openAddDialog() {
@@ -158,15 +188,21 @@ export class AccountsComponent implements OnInit {
       data: {} as AccountDialogData,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.accountsService.create(result).subscribe({
           next: () => {
-            this.snackBar.open('Account created', 'Dismiss', { duration: 3000 });
+            this.snackBar.open('Account created', 'Dismiss', {
+              duration: 3000,
+            });
             this.loadAccounts();
           },
           error: (err) => {
-            this.snackBar.open(err.error?.message || 'Failed to create account', 'Dismiss', { duration: 3000 });
+            this.snackBar.open(
+              err.error?.message || 'Failed to create account',
+              'Dismiss',
+              { duration: 3000 },
+            );
           },
         });
       }
@@ -179,24 +215,34 @@ export class AccountsComponent implements OnInit {
       data: { account } as AccountDialogData,
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (!result) return;
 
       const { balance, ...updateData } = result;
       const newBalance = Number(balance);
-      const balanceChanged = !isNaN(newBalance) && newBalance !== Number(account.balance);
+      const balanceChanged =
+        !isNaN(newBalance) && newBalance !== Number(account.balance);
       const maintainingChanged =
-        (result.maintainingBalance ?? null) !== (account.maintainingBalance ?? null) &&
-        !(result.maintainingBalance == null && account.maintainingBalance == null);
+        (result.maintainingBalance ?? null) !==
+          (account.maintainingBalance ?? null) &&
+        !(
+          result.maintainingBalance == null &&
+          account.maintainingBalance == null
+        );
       const propsChanged =
         updateData.name !== account.name ||
         updateData.type !== account.type ||
-        maintainingChanged;
+        maintainingChanged ||
+        (updateData.providerId ?? null) !== (account.providerId ?? null);
 
       if (!balanceChanged && !propsChanged) return;
 
       const onError = (err: any) => {
-        this.snackBar.open(err.error?.message || 'Failed to update account', 'Dismiss', { duration: 3000 });
+        this.snackBar.open(
+          err.error?.message || 'Failed to update account',
+          'Dismiss',
+          { duration: 3000 },
+        );
         this.loadAccounts();
       };
 
@@ -208,7 +254,9 @@ export class AccountsComponent implements OnInit {
         }
         this.accountsService.update(account.id, updateData).subscribe({
           next: () => {
-            this.snackBar.open('Account updated', 'Dismiss', { duration: 3000 });
+            this.snackBar.open('Account updated', 'Dismiss', {
+              duration: 3000,
+            });
             this.loadAccounts();
           },
           error: onError,
@@ -235,15 +283,21 @@ export class AccountsComponent implements OnInit {
       } as ConfirmDialogData,
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
+    dialogRef.afterClosed().subscribe((confirmed) => {
       if (confirmed) {
         this.accountsService.delete(account.id).subscribe({
           next: () => {
-            this.snackBar.open('Account deleted', 'Dismiss', { duration: 3000 });
+            this.snackBar.open('Account deleted', 'Dismiss', {
+              duration: 3000,
+            });
             this.loadAccounts();
           },
           error: (err) => {
-            this.snackBar.open(err.error?.message || 'Failed to delete account', 'Dismiss', { duration: 3000 });
+            this.snackBar.open(
+              err.error?.message || 'Failed to delete account',
+              'Dismiss',
+              { duration: 3000 },
+            );
           },
         });
       }

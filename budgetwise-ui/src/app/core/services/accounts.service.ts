@@ -17,11 +17,25 @@ export class AccountsService {
     return this.http.get<Account>(`${this.url}/${id}`);
   }
 
-  create(data: { name: string; type: AccountType; balance?: number }): Observable<Account> {
+  create(data: {
+    name: string;
+    type: AccountType;
+    balance?: number;
+    maintainingBalance?: number | null;
+    providerId?: string | null;
+  }): Observable<Account> {
     return this.http.post<Account>(this.url, data);
   }
 
-  update(id: string, data: { name?: string; type?: AccountType }): Observable<Account> {
+  update(
+    id: string,
+    data: {
+      name?: string;
+      type?: AccountType;
+      maintainingBalance?: number | null;
+      providerId?: string | null;
+    },
+  ): Observable<Account> {
     return this.http.patch<Account>(`${this.url}/${id}`, data);
   }
 
@@ -30,6 +44,8 @@ export class AccountsService {
   }
 
   adjustBalance(id: string, newBalance: number): Observable<Account> {
-    return this.http.post<Account>(`${this.url}/${id}/adjust-balance`, { newBalance });
+    return this.http.post<Account>(`${this.url}/${id}/adjust-balance`, {
+      newBalance,
+    });
   }
 }

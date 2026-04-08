@@ -6,6 +6,7 @@ export interface Account {
   type: AccountType;
   balance: number;
   maintainingBalance: number | null;
+  providerId: string | null;
   createdAt: string;
   updatedAt: string;
 }
