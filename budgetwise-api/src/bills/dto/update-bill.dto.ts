@@ -1,5 +1,6 @@
 import {
   IsEnum,
+  IsIn,
   IsNumber,
   Min,
   IsOptional,
@@ -16,6 +17,7 @@ import {
 export class UpdateBillDto {
   @IsOptional()
   @IsEnum(TransactionType)
+  @IsIn([TransactionType.INCOME, TransactionType.EXPENSE])
   type?: TransactionType;
 
   @IsOptional()

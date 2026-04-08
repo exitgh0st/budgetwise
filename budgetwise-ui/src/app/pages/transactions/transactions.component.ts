@@ -178,7 +178,7 @@ export class TransactionsComponent implements OnInit {
   }
 
   confirmDelete(transaction: Transaction) {
-    const label = transaction.description || transaction.category?.name || 'this transaction';
+    const label = transaction.description || this.getCategoryLabel(transaction) || 'this transaction';
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
@@ -217,5 +217,53 @@ export class TransactionsComponent implements OnInit {
         }),
         transactions: txns,
       }));
+  }
+
+  getTypeLabel(type: TransactionType): string {
+    switch (type) {
+      case 'INCOME':
+        return 'Income';
+      case 'EXPENSE':
+        return 'Expense';
+      case 'TRANSFER':
+        return 'Transfer';
+    }
+  }
+
+  getCategoryLabel(transaction: Transaction): string {
+    return transaction.type === 'TRANSFER'
+      ? 'Transfer'
+      : transaction.category?.name || 'Uncategorized';
+  }
+
+  getDescriptionLabel(transaction: Transaction): string {
+    return (
+      transaction.description ||
+      (transaction.type === 'TRANSFER'
+        ? 'Account transfer'
+        : transaction.category?.name || 'Transaction')
+    );
+  }
+
+  getAccountLabel(transaction: Transaction): string {
+    if (transaction.type === 'TRANSFER') {
+      const fromName = transaction.fromAccount?.name || 'Unknown account';
+      const toName = transaction.toAccount?.name || 'Unknown account';
+      return `${fromName} -> ${toName}`;
+    }
+
+    return transaction.account?.name || 'Unknown account';
+  }
+
+  getAmountPrefix(type: TransactionType): string {
+    if (type === 'INCOME') {
+      return '+';
+    }
+
+    if (type === 'EXPENSE') {
+      return '-';
+    }
+
+    return '';
   }
 }

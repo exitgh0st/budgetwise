@@ -14,6 +14,17 @@ export interface TransactionFilters {
   offset?: number;
 }
 
+export interface TransactionPayload {
+  type: TransactionType;
+  amount: number;
+  description?: string;
+  accountId?: string;
+  fromAccountId?: string;
+  toAccountId?: string;
+  categoryId?: string;
+  date?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TransactionsService {
   private http = inject(HttpClient);
@@ -33,25 +44,11 @@ export class TransactionsService {
     return this.http.get<Transaction>(`${this.url}/${id}`);
   }
 
-  create(data: {
-    type: TransactionType;
-    amount: number;
-    description?: string;
-    accountId: string;
-    categoryId: string;
-    date?: string;
-  }): Observable<Transaction> {
+  create(data: TransactionPayload): Observable<Transaction> {
     return this.http.post<Transaction>(this.url, data);
   }
 
-  update(id: string, data: Partial<{
-    type: TransactionType;
-    amount: number;
-    description: string;
-    accountId: string;
-    categoryId: string;
-    date: string;
-  }>): Observable<Transaction> {
+  update(id: string, data: Partial<TransactionPayload>): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.url}/${id}`, data);
   }
 

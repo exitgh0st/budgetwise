@@ -195,14 +195,14 @@ export const toolDefinitions: ChatCompletionTool[] = [
     function: {
       name: 'create_transaction',
       description:
-        'Log a new transaction (income or expense). Use whenever the user mentions spending money or receiving income. Automatically updates the account balance.',
+        "Log a new transaction (income or expense). Use for real spending or real income only. Do not use this for money moved between the user's own accounts; use record_transfer instead. Automatically updates the account balance.",
       parameters: {
         type: 'object',
         properties: {
           type: {
             type: 'string',
             enum: ['INCOME', 'EXPENSE'],
-            description: 'Whether this is income or an expense',
+            description: 'Whether this is real income or a real expense',
           },
           amount: {
             type: 'number',
@@ -234,6 +234,40 @@ export const toolDefinitions: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'record_transfer',
+      description:
+        "Record a transfer between two of the user's accounts. Use this instead of create_transaction whenever money is moved from one owned account to another owned account.",
+      parameters: {
+        type: 'object',
+        properties: {
+          amount: {
+            type: 'number',
+            description: 'Transfer amount in PHP. Must be positive.',
+          },
+          fromAccountId: {
+            type: 'string',
+            description: 'The source account ID to debit.',
+          },
+          toAccountId: {
+            type: 'string',
+            description: 'The destination account ID to credit.',
+          },
+          description: {
+            type: 'string',
+            description: 'Optional note such as "Moved money to savings".',
+          },
+          date: {
+            type: 'string',
+            description: 'Optional ISO date string. Defaults to now.',
+          },
+        },
+        required: ['amount', 'fromAccountId', 'toAccountId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'list_transactions',
       description:
         'List transactions with optional filters. Use to show recent spending or search for specific transactions.',
@@ -244,7 +278,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           categoryId: { type: 'string', description: 'Filter by category ID' },
           type: {
             type: 'string',
-            enum: ['INCOME', 'EXPENSE'],
+            enum: ['INCOME', 'EXPENSE', 'TRANSFER'],
             description: 'Filter by type',
           },
           startDate: {
@@ -288,10 +322,12 @@ export const toolDefinitions: ChatCompletionTool[] = [
         type: 'object',
         properties: {
           id: { type: 'string', description: 'The transaction ID to update' },
-          type: { type: 'string', enum: ['INCOME', 'EXPENSE'] },
+          type: { type: 'string', enum: ['INCOME', 'EXPENSE', 'TRANSFER'] },
           amount: { type: 'number' },
           description: { type: 'string' },
           accountId: { type: 'string' },
+          fromAccountId: { type: 'string' },
+          toAccountId: { type: 'string' },
           categoryId: { type: 'string' },
           date: { type: 'string' },
         },

@@ -34,6 +34,16 @@ export class UpdateTransactionDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
+  fromAccountId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  toAccountId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
   categoryId?: string;
 
   @ApiPropertyOptional({ example: '2026-03-24T00:00:00.000Z' })

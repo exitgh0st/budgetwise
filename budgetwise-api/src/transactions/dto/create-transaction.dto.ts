@@ -24,13 +24,25 @@ export class CreateTransactionDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ example: 'uuid-of-account' })
+  @ApiPropertyOptional({ example: 'uuid-of-account' })
+  @IsOptional()
   @IsString()
-  accountId!: string;
+  accountId?: string;
 
-  @ApiProperty({ example: 'uuid-of-category' })
+  @ApiPropertyOptional({ example: 'uuid-of-from-account' })
+  @IsOptional()
   @IsString()
-  categoryId!: string;
+  fromAccountId?: string;
+
+  @ApiPropertyOptional({ example: 'uuid-of-to-account' })
+  @IsOptional()
+  @IsString()
+  toAccountId?: string;
+
+  @ApiPropertyOptional({ example: 'uuid-of-category' })
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 
   @ApiPropertyOptional({ example: '2026-03-24T00:00:00.000Z' })
   @IsOptional()

@@ -46,6 +46,18 @@ export class ToolExecutor {
 
       // Transactions
       create_transaction: () => this.transactions.create(args, userId),
+      record_transfer: () =>
+        this.transactions.create(
+          {
+            type: 'TRANSFER',
+            amount: args.amount,
+            fromAccountId: args.fromAccountId,
+            toAccountId: args.toAccountId,
+            description: args.description,
+            date: args.date,
+          },
+          userId,
+        ),
       list_transactions: () => this.transactions.findAll(args, userId),
       get_transaction: () => this.transactions.findOne(id, userId),
       update_transaction: () => this.transactions.update(id, data, userId),

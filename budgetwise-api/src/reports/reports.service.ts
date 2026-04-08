@@ -32,7 +32,10 @@ export class ReportsService {
     const endDate = new Date(y, m, 0, 23, 59, 59);
 
     const systemCategoryIds = await this.getSystemCategoryIds();
-    const where: any = { date: { gte: startDate, lte: endDate } };
+    const where: any = {
+      date: { gte: startDate, lte: endDate },
+      type: { in: ['INCOME', 'EXPENSE'] },
+    };
     if (userId) where.userId = userId;
     if (systemCategoryIds.length > 0)
       where.categoryId = { notIn: systemCategoryIds };
@@ -87,18 +90,26 @@ export class ReportsService {
       _count: true,
     });
 
-    const categoryIds = results.map((r) => r.categoryId);
+    const groupedResults = results.filter(
+      (
+        result,
+      ): result is typeof result & {
+        categoryId: string;
+      } => result.categoryId !== null,
+    );
+
+    const categoryIds = groupedResults.map((r) => r.categoryId);
     const categories = await this.prisma.category.findMany({
       where: { id: { in: categoryIds } },
     });
     const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
-    const totalSpending = results.reduce(
+    const totalSpending = groupedResults.reduce(
       (sum, r) => sum + Number(r._sum.amount ?? 0),
       0,
     );
 
-    return results
+    return groupedResults
       .map((r) => {
         const cat = categoryMap.get(r.categoryId);
         const spent = Number(r._sum.amount ?? 0);
@@ -205,6 +216,7 @@ export class ReportsService {
       const endDate = new Date(y, m, 0, 23, 59, 59);
 
       const where: any = { date: { gte: startDate, lte: endDate } };
+      where.type = { in: ['INCOME', 'EXPENSE'] };
       if (userId) where.userId = userId;
       if (systemCategoryIds.length > 0)
         where.categoryId = { notIn: systemCategoryIds };

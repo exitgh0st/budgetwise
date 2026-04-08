@@ -99,6 +99,10 @@ mat-accordion {
   flex-shrink: 0;
 }
 
+.transfer-icon {
+  color: #ff9800;
+}
+
 .transaction-details {
   display: flex;
   flex-direction: column;
@@ -114,6 +118,29 @@ mat-accordion {
   .account-name {
     font-size: 12px;
     color: var(--mat-sys-outline);
+  }
+
+  .category-name {
+    font-size: 12px;
+    color: var(--mat-sys-outline);
+  }
+
+  .type-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+
+    &.transfer {
+      background: rgba(255, 152, 0, 0.16);
+      color: #c66900;
+    }
   }
 
   .system-badge {
@@ -149,6 +176,10 @@ mat-accordion {
 
   &.expense {
     color: #f44336;
+  }
+
+  &.transfer {
+    color: #ff9800;
   }
 }
 

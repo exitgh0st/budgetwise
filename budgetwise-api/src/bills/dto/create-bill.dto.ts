@@ -1,5 +1,6 @@
 import {
   IsEnum,
+  IsIn,
   IsNumber,
   Min,
   IsOptional,
@@ -11,6 +12,7 @@ import { TransactionType, RecurringFrequency } from '@prisma/client';
 
 export class CreateBillDto {
   @IsEnum(TransactionType)
+  @IsIn([TransactionType.INCOME, TransactionType.EXPENSE])
   type!: TransactionType;
 
   @IsNumber({ maxDecimalPlaces: 2 })
