@@ -1,5 +1,7 @@
 # Wiki Log
 
+## [2026-04-08] ticket | #34 completed — wiki ingest pending
+
 ## [2026-04-08] ingest | Delta 3e15f5c..9711872 - account providers, transfers, theme refresh, financial goals
 - Created pages: [[goals]], [[goal]], [[goal-contribution]]
 - Updated pages: [[index]], [[overview]], [[project-structure]], [[database-schema]], [[api-routes]], [[chat-agent-flow]], [[accounts]], [[transactions]], [[reports]], [[chat]], [[accounts-page]], [[transactions-page]], [[goals-page]], [[core-models]], [[core-services]], [[tickets-overview]], [[decisions]], [[known-issues]]

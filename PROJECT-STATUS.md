@@ -40,6 +40,8 @@
 | 32 — Transfer Transaction Type | `TransactionType.TRANSFER`, `fromAccountId`/`toAccountId`, atomic dual-account balance sync, transfer-aware transaction dialog/listing, reports exclude transfers, chat `record_transfer` tool. |
 | 33 — Financial Goals | Typed goals (`SAVINGS` / `DEBT_PAYOFF`), `GoalContribution` link model, `/api/goals` CRUD/contribute endpoints. Goal progress is derived from linked transactions, savings contributions create transfers, debt-payoff contributions create expenses, and `/goals` is now a Financial Goals page with a two-step creation flow. |
 
+| 34 â€” Scheduled Transaction Notifications + Calendar | Added `notifyDaysBefore` to scheduled transactions plus a new `Notification` model and `/api/notifications` module. The hourly scheduled-transactions cron now enqueues deduped in-app reminders and auto-marks them read when a real transaction is generated. Frontend adds a toolbar bell with unread polling + mark-read actions and a responsive calendar tab using `angular-calendar` with inline desktop details / mobile bottom sheet. |
+
 ---
 
 ## Post-Ticket Changes
@@ -74,6 +76,7 @@ Manual changes made outside the ticket workflow:
 ## What Exists
 
 ### Backend (`budgetwise-api/`)
+- **Scheduled transaction notifications:** `notifyDaysBefore` on scheduled transactions plus `Notification` rows for due reminders. `NotificationsModule` exposes list / unread-count / mark-read / mark-all / dismiss endpoints, and the scheduled-transactions cron dedupes reminders to one unread notification per scheduled transaction per day before auto-clearing them on generation.
 - **Modules:** Auth, Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat, Bills, Goals
 - **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via `SUPABASE_JWT_SECRET`. `@Public()` exempts routes. All endpoints require Bearer JWT.
 - **Multi-tenancy:** Every query scoped to `userId` from JWT `sub`. Categories return own + global (userId=null) templates. Ownership violations → 404.
@@ -84,6 +87,8 @@ Manual changes made outside the ticket workflow:
 - **Bills cron:** Hourly `@Cron(EVERY_HOUR)` via `BillsCronService`, processes due bills, per-record error isolation
 
 ### Frontend (`budgetwise-ui/`)
+- **Notifications:** Toolbar bell between theme toggle and user menu, unread badge polling every 60s, recent notification menu with mark-read / mark-all-read actions and deep-link navigation to `/scheduled-transactions`
+- **Scheduled transactions calendar:** New Calendar tab on the scheduled-transactions page using `angular-calendar`, client-side recurrence projection for the visible month, color-coded day states (income / expense / mixed), inline desktop day details, and mobile bottom-sheet day details with Edit actions
 - **Auth:** SupabaseService + signal-based AuthService, JWT interceptor, authGuard + guestGuard, full auth pages, user menu + logout in toolbar
 - **Pages:** Dashboard, Accounts, Transactions, Bills (expense + income tabs, search/filter/sort, installment tracking, pay action), Budgets, Reports, Categories, Goals — all lazy-loaded, auth-protected
 - **Goals:** Financial Goals page with typed Savings vs Debt Payoff goals, two-step creation flow, derived progress from linked transactions, progress bars, goal-type badges, and contribution dialogs that create transfer or expense transactions based on goal type
