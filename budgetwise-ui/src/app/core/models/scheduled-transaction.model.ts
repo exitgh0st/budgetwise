@@ -15,6 +15,7 @@ export interface ScheduledTransaction {
   description: string | null;
   frequency: RecurringFrequency;
   nextDueDate: string;
+  notifyDaysBefore: number | null;
   status: ScheduledTransactionStatus;
   totalInstallments: number | null;
   completedInstallments: number;

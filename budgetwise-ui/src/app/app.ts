@@ -10,6 +10,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ChatPanelComponent } from './shared/components/chat-panel/chat-panel.component';
+import { NotificationBellComponent } from './shared/components/notification-bell/notification-bell.component';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './core/services/theme.service';
 
@@ -28,6 +29,7 @@ import { ThemeService } from './core/services/theme.service';
     MatDividerModule,
     MatTooltipModule,
     ChatPanelComponent,
+    NotificationBellComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

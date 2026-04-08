@@ -8,7 +8,7 @@
       @if (!isMobile) {
         <div class="tab-actions-bar">
           <mat-form-field appearance="outline" class="search-bar search-bar-inline">
-            <mat-label>Search scheduled transactions</mat-label>
+            <mat-label>Search scheduled expenses</mat-label>
             <mat-icon matPrefix>search</mat-icon>
             <input matInput [(ngModel)]="expenseFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
             @if (expenseFilters.searchQuery) {
@@ -20,7 +20,7 @@
 
           <button mat-flat-button color="primary" (click)="openAddDialog('EXPENSE')">
             <mat-icon>add</mat-icon>
-            Add Scheduled Transaction
+            Add Scheduled Expense
           </button>
         </div>
       } @else {
@@ -186,7 +186,7 @@
             <p>Add your first scheduled transaction to start tracking upcoming expenses.</p>
             <button mat-flat-button color="primary" type="button" (click)="openAddDialog('EXPENSE')">
               <mat-icon>add</mat-icon>
-              Add Scheduled Transaction
+              Add Scheduled Expense
             </button>
           }
         </div>
@@ -358,7 +358,7 @@
       @if (!isMobile) {
         <div class="tab-actions-bar">
           <mat-form-field appearance="outline" class="search-bar search-bar-inline">
-            <mat-label>Search income</mat-label>
+            <mat-label>Search scheduled income</mat-label>
             <mat-icon matPrefix>search</mat-icon>
             <input matInput [(ngModel)]="incomeFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
             @if (incomeFilters.searchQuery) {
@@ -370,7 +370,7 @@
 
           <button mat-flat-button color="primary" (click)="openAddDialog('INCOME')">
             <mat-icon>add</mat-icon>
-            Add Income
+            Add Scheduled Income
           </button>
         </div>
       } @else {
@@ -700,6 +700,12 @@
           <mat-icon>add</mat-icon>
         </button>
       }
+    </div>
+  </mat-tab>
+
+  <mat-tab label="Calendar">
+    <div class="tab-content">
+      <app-scheduled-transactions-calendar></app-scheduled-transactions-calendar>
     </div>
   </mat-tab>
 </mat-tab-group>

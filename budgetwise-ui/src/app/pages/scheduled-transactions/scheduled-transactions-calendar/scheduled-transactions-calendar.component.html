@@ -1,0 +1,138 @@
+<div class="calendar-shell">
+  <div class="calendar-toolbar">
+    <div class="calendar-title-group">
+      <h2>{{ viewDate() | date: 'MMMM yyyy' }}</h2>
+      <span>Track upcoming scheduled income and expenses by month.</span>
+    </div>
+
+    <div class="calendar-actions">
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Previous month"
+        (click)="goToPreviousMonth()"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-button type="button" (click)="goToToday()">Today</button>
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Next month"
+        (click)="goToNextMonth()"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  @if (!loading() && events().length === 0) {
+    <div class="calendar-empty">
+      <mat-icon>event_busy</mat-icon>
+      <h3>No scheduled transactions this month</h3>
+      <p>
+        Move between months or add a scheduled transaction to populate the
+        calendar.
+      </p>
+    </div>
+  } @else {
+    <div class="calendar-legend">
+      <span class="legend-item income">Income</span>
+      <span class="legend-item expense">Expense</span>
+      <span class="legend-item mixed">Mixed day</span>
+      <span class="legend-item selected">Selected day</span>
+    </div>
+
+    <div class="calendar-content">
+      <div class="calendar-view">
+        <mwl-calendar-month-view
+          [viewDate]="viewDate()"
+          [events]="events()"
+          [refresh]="refresh"
+          [activeDayIsOpen]="false"
+          (dayClicked)="dayClicked($event.day)"
+          (beforeViewRender)="beforeMonthViewRender($event)"
+        >
+        </mwl-calendar-month-view>
+      </div>
+
+      @if (!isMobile()) {
+        <mat-card class="day-panel flat-card">
+          <mat-card-content>
+            <div class="day-panel-header">
+              <div>
+                @if (selectedDayLabel(); as day) {
+                  <h3>{{ day | date: 'fullDate' }}</h3>
+                  <p>{{ selectedDayRecords().length }} scheduled transaction(s)</p>
+                } @else {
+                  <h3>Select a day</h3>
+                  <p>Choose a highlighted day in the calendar to inspect its scheduled transactions.</p>
+                }
+              </div>
+
+              @if (selectedDayLabel()) {
+                <button mat-button type="button" (click)="clearSelectedDay()">
+                  Clear
+                </button>
+              }
+            </div>
+
+            @if (selectedDayLabel() && selectedDayRecords().length > 0) {
+              <mat-list>
+                @for (record of selectedDayRecords(); track record.id) {
+                  <mat-list-item class="day-panel-item">
+                    <span matListItemTitle class="day-panel-title">
+                      {{ record.description || record.category.name }}
+                    </span>
+                    <span matListItemLine class="day-panel-meta">
+                      {{
+                        record.amount
+                          | currency: 'PHP': 'symbol-narrow': '1.2-2'
+                      }}
+                      · {{ record.account.name }}
+                      · {{ record.category.name }}
+                    </span>
+                    <div matListItemMeta class="day-panel-actions">
+                      <button
+                        mat-icon-button
+                        type="button"
+                        aria-label="Edit scheduled transaction"
+                        (click)="openEditDialog(record)"
+                      >
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button
+                        mat-icon-button
+                        color="warn"
+                        type="button"
+                        aria-label="Delete scheduled transaction"
+                        (click)="confirmDelete(record)"
+                      >
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </mat-list-item>
+                }
+              </mat-list>
+            } @else {
+              <div class="day-panel-empty">
+                <mat-icon>event_note</mat-icon>
+                <p>
+                  @if (selectedDayLabel()) {
+                    No scheduled transactions remain for this day.
+                  } @else {
+                    The selected day details will appear here.
+                  }
+                </p>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

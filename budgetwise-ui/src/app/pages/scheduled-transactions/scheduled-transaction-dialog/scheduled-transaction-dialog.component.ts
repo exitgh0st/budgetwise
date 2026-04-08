@@ -125,6 +125,19 @@ export interface ScheduledTransactionDialogData {
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>Notify me days before</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0"
+            max="365"
+            step="1"
+            formControlName="notifyDaysBefore"
+          />
+          <mat-hint>Leave blank to disable reminders</mat-hint>
+        </mat-form-field>
+
         @if (showInstallments) {
           <mat-form-field appearance="outline">
             <mat-label>Completed Installments</mat-label>
@@ -252,6 +265,10 @@ export class ScheduledTransactionDialogComponent implements OnInit {
             : new Date(),
           Validators.required,
         ],
+        notifyDaysBefore: [
+          scheduledTransaction?.notifyDaysBefore ?? null,
+          [Validators.min(0), Validators.max(365)],
+        ],
         completedInstallments: [
           scheduledTransaction?.completedInstallments ?? 0,
           [Validators.required, Validators.min(0)],
@@ -280,6 +297,10 @@ export class ScheduledTransactionDialogComponent implements OnInit {
     const value = { ...this.form.getRawValue() };
     value.nextDueDate = new Date(value.nextDueDate).toISOString();
     value.amount = Number(value.amount);
+    value.notifyDaysBefore =
+      value.notifyDaysBefore === null || value.notifyDaysBefore === ''
+        ? null
+        : Number(value.notifyDaysBefore);
     value.completedInstallments = Number(value.completedInstallments ?? 0);
     value.totalInstallments = value.totalInstallments
       ? Number(value.totalInstallments)

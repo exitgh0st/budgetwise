@@ -36,6 +36,7 @@ import {
   ScheduledTransactionDialogComponent,
   ScheduledTransactionDialogData,
 } from './scheduled-transaction-dialog/scheduled-transaction-dialog.component';
+import { ScheduledTransactionsCalendarComponent } from './scheduled-transactions-calendar/scheduled-transactions-calendar.component';
 
 @Component({
   selector: 'app-scheduled-transactions',
@@ -58,6 +59,7 @@ import {
     MatTabsModule,
     CurrencyPipe,
     DatePipe,
+    ScheduledTransactionsCalendarComponent,
   ],
   templateUrl: './scheduled-transactions.component.html',
   styleUrl: './scheduled-transactions.component.scss',
