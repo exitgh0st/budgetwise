@@ -48,11 +48,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/accounts/accounts.component').then(m => m.AccountsComponent),
   },
   {
-    path: 'bills',
-    title: 'Bills | BudgetWise',
+    path: 'scheduled-transactions',
+    title: 'Upcoming | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/bills/bills.component').then(m => m.BillsComponent),
+    loadComponent: () =>
+      import('./pages/scheduled-transactions/scheduled-transactions.component').then(
+        m => m.ScheduledTransactionsComponent,
+      ),
   },
+  { path: 'bills', redirectTo: 'scheduled-transactions', pathMatch: 'full' },
   {
     path: 'goals',
     title: 'Goals | BudgetWise',

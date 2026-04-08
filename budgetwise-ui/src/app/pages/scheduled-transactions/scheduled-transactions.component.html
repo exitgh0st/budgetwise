@@ -3,12 +3,12 @@
 </div>
 
 <mat-tab-group animationDuration="200ms" (selectedTabChange)="onTabChange($event.index)">
-  <mat-tab label="Bills">
+  <mat-tab label="Expenses">
     <div class="tab-content">
       @if (!isMobile) {
         <div class="tab-actions-bar">
           <mat-form-field appearance="outline" class="search-bar search-bar-inline">
-            <mat-label>Search bills</mat-label>
+            <mat-label>Search scheduled transactions</mat-label>
             <mat-icon matPrefix>search</mat-icon>
             <input matInput [(ngModel)]="expenseFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
             @if (expenseFilters.searchQuery) {
@@ -20,12 +20,12 @@
 
           <button mat-flat-button color="primary" (click)="openAddDialog('EXPENSE')">
             <mat-icon>add</mat-icon>
-            Add Bill
+            Add Scheduled Transaction
           </button>
         </div>
       } @else {
         <mat-form-field appearance="outline" class="search-bar">
-          <mat-label>Search bills</mat-label>
+          <mat-label>Search scheduled transactions</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input matInput [(ngModel)]="expenseFilters.searchQuery" (ngModelChange)="onFilterChange()" placeholder="Search description, account, or category" />
           @if (expenseFilters.searchQuery) {
@@ -175,29 +175,29 @@
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       }
 
-      @if (!loading && expenseBills.length === 0) {
+      @if (!loading && expenseScheduledTransactions.length === 0) {
         <div class="empty-state">
           <mat-icon class="empty-icon">receipt_long</mat-icon>
-          <h2>No bills found</h2>
+          <h2>No scheduled transactions found</h2>
           @if (hasFiltersFor('EXPENSE')) {
             <p>Try adjusting your filters or clearing them.</p>
             <button mat-flat-button color="primary" type="button" (click)="clearFilters('EXPENSE')">Clear Filters</button>
           } @else {
-            <p>Add your first bill to start tracking scheduled expenses.</p>
+            <p>Add your first scheduled transaction to start tracking upcoming expenses.</p>
             <button mat-flat-button color="primary" type="button" (click)="openAddDialog('EXPENSE')">
               <mat-icon>add</mat-icon>
-              Add Bill
+              Add Scheduled Transaction
             </button>
           }
         </div>
       }
 
-      @if (!loading && expenseBills.length > 0) {
+      @if (!loading && expenseScheduledTransactions.length > 0) {
         <div class="bills-summary">
           <mat-card class="summary-card expense flat-card">
             <mat-card-content>
               <span class="summary-label">
-                Upcoming Bills Total
+                Upcoming Expense Total
                 @if (getSummaryFilterSuffix('EXPENSE')) {
                   <span class="summary-filter-suffix">{{ getSummaryFilterSuffix('EXPENSE') }}</span>
                 }
@@ -209,7 +209,7 @@
 
         @if (!isMobile) {
           <mat-table
-            [dataSource]="expenseBills"
+            [dataSource]="expenseScheduledTransactions"
             class="bills-table"
             matSort
             [matSortActive]="sortState.active"
@@ -271,17 +271,17 @@
               <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <div class="row-actions">
-                  <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
-                    @if (isPaying(bill.id)) {
+                  <button mat-flat-button color="primary" type="button" (click)="generateScheduledTransaction(bill)" [disabled]="bill.status !== 'ACTIVE' || isProcessing(bill.id)">
+                    @if (isProcessing(bill.id)) {
                       <span class="button-spinner" aria-hidden="true"></span>
                     }
                     <mat-icon>payment</mat-icon>
                     Pay
                   </button>
-                  <button mat-icon-button type="button" aria-label="Edit bill" (click)="openEditDialog(bill)">
+                  <button mat-icon-button type="button" aria-label="Edit scheduled transaction" (click)="openEditDialog(bill)">
                     <mat-icon>edit</mat-icon>
                   </button>
-                  <button mat-icon-button color="warn" type="button" aria-label="Delete bill" (click)="confirmDelete(bill)">
+                  <button mat-icon-button color="warn" type="button" aria-label="Delete scheduled transaction" (click)="confirmDelete(bill)">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </div>
@@ -293,7 +293,7 @@
           </mat-table>
         } @else {
           <div class="mobile-list">
-            @for (bill of expenseBills; track bill.id) {
+            @for (bill of expenseScheduledTransactions; track bill.id) {
               <mat-card class="bill-card flat-card">
                 <mat-card-content>
                   <div class="bill-card-row">
@@ -324,17 +324,17 @@
                   </div>
 
                   <div class="bill-card-actions">
-                    <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
-                      @if (isPaying(bill.id)) {
+                    <button mat-flat-button color="primary" type="button" (click)="generateScheduledTransaction(bill)" [disabled]="bill.status !== 'ACTIVE' || isProcessing(bill.id)">
+                      @if (isProcessing(bill.id)) {
                         <span class="button-spinner" aria-hidden="true"></span>
                       }
                       <mat-icon>payment</mat-icon>
                     Pay
                     </button>
-                    <button mat-icon-button type="button" aria-label="Edit bill" (click)="openEditDialog(bill)">
+                    <button mat-icon-button type="button" aria-label="Edit scheduled transaction" (click)="openEditDialog(bill)">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" type="button" aria-label="Delete bill" (click)="confirmDelete(bill)">
+                    <button mat-icon-button color="warn" type="button" aria-label="Delete scheduled transaction" (click)="confirmDelete(bill)">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -346,7 +346,7 @@
       }
 
       @if (isMobile) {
-        <button mat-fab class="fab-add" color="primary" type="button" aria-label="Add bill" (click)="openAddDialog('EXPENSE')">
+        <button mat-fab class="fab-add" color="primary" type="button" aria-label="Add scheduled transaction" (click)="openAddDialog('EXPENSE')">
           <mat-icon>add</mat-icon>
         </button>
       }
@@ -525,7 +525,7 @@
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       }
 
-      @if (!loading && incomeBills.length === 0) {
+      @if (!loading && incomeScheduledTransactions.length === 0) {
         <div class="empty-state">
           <mat-icon class="empty-icon">payments</mat-icon>
           <h2>No income found</h2>
@@ -542,7 +542,7 @@
         </div>
       }
 
-      @if (!loading && incomeBills.length > 0) {
+      @if (!loading && incomeScheduledTransactions.length > 0) {
         <div class="bills-summary">
           <mat-card class="summary-card income flat-card">
             <mat-card-content>
@@ -559,7 +559,7 @@
 
         @if (!isMobile) {
           <mat-table
-            [dataSource]="incomeBills"
+            [dataSource]="incomeScheduledTransactions"
             class="bills-table"
             matSort
             [matSortActive]="sortState.active"
@@ -621,8 +621,8 @@
               <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
               <mat-cell *matCellDef="let bill">
                 <div class="row-actions">
-                  <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
-                    @if (isPaying(bill.id)) {
+                  <button mat-flat-button color="primary" type="button" (click)="generateScheduledTransaction(bill)" [disabled]="bill.status !== 'ACTIVE' || isProcessing(bill.id)">
+                    @if (isProcessing(bill.id)) {
                       <span class="button-spinner" aria-hidden="true"></span>
                     }
                     <mat-icon>payment</mat-icon>
@@ -643,7 +643,7 @@
           </mat-table>
         } @else {
           <div class="mobile-list">
-            @for (bill of incomeBills; track bill.id) {
+            @for (bill of incomeScheduledTransactions; track bill.id) {
               <mat-card class="bill-card flat-card">
                 <mat-card-content>
                   <div class="bill-card-row">
@@ -674,8 +674,8 @@
                   </div>
 
                   <div class="bill-card-actions">
-                    <button mat-flat-button color="primary" type="button" (click)="payBill(bill)" [disabled]="bill.status !== 'ACTIVE' || isPaying(bill.id)">
-                      @if (isPaying(bill.id)) {
+                    <button mat-flat-button color="primary" type="button" (click)="generateScheduledTransaction(bill)" [disabled]="bill.status !== 'ACTIVE' || isProcessing(bill.id)">
+                      @if (isProcessing(bill.id)) {
                         <span class="button-spinner" aria-hidden="true"></span>
                       }
                       <mat-icon>payment</mat-icon>

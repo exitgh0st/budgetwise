@@ -3,16 +3,19 @@ import { Category } from './category.model';
 import { TransactionType } from './transaction.model';
 
 export type RecurringFrequency = 'ONCE' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
-export type BillStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+export type ScheduledTransactionStatus =
+  | 'ACTIVE'
+  | 'COMPLETED'
+  | 'CANCELLED';
 
-export interface Bill {
+export interface ScheduledTransaction {
   id: string;
   type: TransactionType;
   amount: number;
   description: string | null;
   frequency: RecurringFrequency;
   nextDueDate: string;
-  status: BillStatus;
+  status: ScheduledTransactionStatus;
   totalInstallments: number | null;
   completedInstallments: number;
   accountId: string;
