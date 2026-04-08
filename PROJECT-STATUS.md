@@ -2,7 +2,7 @@
 
 > Read this file FIRST at the start of every session. Use `/resume` to do this automatically.
 
-**Last updated at commit:** `d324078` — feat: add transfer transaction type support (2026-04-08)
+**Last updated at commit:** `8f5af62` — docs(wiki): ingest delta 3e15f5c..9711872 (2026-04-08)
 
 ## Completed Tickets (summary)
 
@@ -93,7 +93,7 @@ Manual changes made outside the ticket workflow:
 - **Production:** `environment.prod.ts` → `https://budgetwise-api-k9z9.onrender.com/api`
 
 ### Chat Agent
-- Full end-to-end: 25 tools, guardrails, destructive confirmation, history pagination, session management
+- Full end-to-end: 32 tools, guardrails, destructive confirmation, history pagination, session management
 
 ---
 
@@ -102,7 +102,6 @@ Manual changes made outside the ticket workflow:
 | Ticket | Description |
 |--------|-------------|
 | 23 — CSV Export | Client-side CSV export button on Transactions page matching active filters. No new backend endpoints. |
-| 25 — Dark Mode | Toolbar toggle for M3 dark/light theme. Persist to localStorage, default to OS preference. — COMPLETE |
 
 ---
 
