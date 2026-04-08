@@ -12,10 +12,14 @@ import { forkJoin } from 'rxjs';
 import { ReportsService } from '../../core/services/reports.service';
 import { BudgetsService } from '../../core/services/budgets.service';
 import { CategoriesService } from '../../core/services/categories.service';
+import { AccountsService } from '../../core/services/accounts.service';
+import { TransactionsService } from '../../core/services/transactions.service';
 import { BudgetStatus } from '../../core/models/report.model';
 import { Category } from '../../core/models/category.model';
+import { Account } from '../../core/models/account.model';
 import { BudgetDialogComponent, BudgetDialogData } from './budget-dialog/budget-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TransactionDialogComponent, TransactionDialogData } from '../transactions/transaction-dialog/transaction-dialog.component';
 
 @Component({
   selector: 'app-budgets',
@@ -36,11 +40,14 @@ export class BudgetsComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private budgetsService = inject(BudgetsService);
   private categoriesService = inject(CategoriesService);
+  private accountsService = inject(AccountsService);
+  private transactionsService = inject(TransactionsService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
 
   budgetStatuses: BudgetStatus[] = [];
+  accounts: Account[] = [];
   allCategories: Category[] = [];
   unbudgetedCategories: Category[] = [];
   loading = true;
@@ -64,6 +71,7 @@ export class BudgetsComponent implements OnInit {
     this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
       this.isMobile = result.matches;
     });
+    this.loadAccounts();
     this.loadData();
   }
 
@@ -77,12 +85,23 @@ export class BudgetsComponent implements OnInit {
         this.budgetStatuses = statuses;
         this.allCategories = categories.filter(c => !c.isSystem);
         const budgetedIds = new Set(statuses.map(s => s.categoryId));
-        this.unbudgetedCategories = categories.filter(c => !budgetedIds.has(c.id));
+        this.unbudgetedCategories = this.allCategories.filter(c => !budgetedIds.has(c.id));
         this.loading = false;
       },
       error: () => {
         this.snackBar.open('Failed to load budgets', 'Dismiss', { duration: 3000 });
         this.loading = false;
+      },
+    });
+  }
+
+  loadAccounts() {
+    this.accountsService.getAll().subscribe({
+      next: accounts => {
+        this.accounts = accounts;
+      },
+      error: () => {
+        this.accounts = [];
       },
     });
   }
@@ -165,6 +184,41 @@ export class BudgetsComponent implements OnInit {
           },
           error: (err) => {
             this.snackBar.open(err.error?.message || 'Failed to update budget', 'Dismiss', { duration: 3000 });
+          },
+        });
+      }
+    });
+  }
+
+  openAddTransactionDialog(status: BudgetStatus) {
+    if (this.accounts.length === 0) {
+      this.snackBar.open('Add an account before creating a transaction', 'Dismiss', { duration: 3000 });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(TransactionDialogComponent, {
+      width: '440px',
+      data: {
+        accounts: this.accounts,
+        categories: this.allCategories,
+        initialValue: {
+          type: 'EXPENSE',
+          categoryId: status.categoryId,
+        },
+        lockType: true,
+        lockCategory: true,
+      } as TransactionDialogData,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.transactionsService.create(result).subscribe({
+          next: () => {
+            this.snackBar.open('Transaction created', 'Dismiss', { duration: 3000 });
+            this.loadData();
+          },
+          error: err => {
+            this.snackBar.open(err.error?.message || 'Failed to create transaction', 'Dismiss', { duration: 3000 });
           },
         });
       }

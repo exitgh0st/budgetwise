@@ -68,6 +68,9 @@
           </div>
         </mat-card-content>
         <mat-card-actions align="end">
+          <button mat-icon-button color="primary" (click)="openAddTransactionDialog(status)" aria-label="Add transaction">
+            <mat-icon>add</mat-icon>
+          </button>
           <button mat-icon-button (click)="openEditDialog(status)" aria-label="Edit budget">
             <mat-icon>edit</mat-icon>
           </button>

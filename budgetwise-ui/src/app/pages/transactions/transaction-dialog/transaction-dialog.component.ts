@@ -16,6 +16,12 @@ export interface TransactionDialogData {
   transaction?: Transaction;
   accounts: Account[];
   categories: Category[];
+  initialValue?: Partial<{
+    type: TransactionType;
+    categoryId: string;
+  }>;
+  lockType?: boolean;
+  lockCategory?: boolean;
 }
 
 @Component({
@@ -116,20 +122,29 @@ export class TransactionDialogComponent implements OnInit {
 
   ngOnInit() {
     const t = this.data.transaction;
+    const initialValue = this.data.initialValue;
     this.form = this.fb.group({
-      type: [t?.type || 'EXPENSE', Validators.required],
+      type: [t?.type || initialValue?.type || 'EXPENSE', Validators.required],
       amount: [t ? Number(t.amount) : null, [Validators.required, Validators.min(0.01)]],
       description: [t?.description || ''],
       accountId: [t?.accountId || '', Validators.required],
-      categoryId: [t?.categoryId || '', Validators.required],
+      categoryId: [t?.categoryId || initialValue?.categoryId || '', Validators.required],
       date: [t ? new Date(t.date) : new Date()],
     });
+
+    if (this.data.lockType) {
+      this.form.get('type')?.disable();
+    }
+
+    if (this.data.lockCategory) {
+      this.form.get('categoryId')?.disable();
+    }
   }
 
   save() {
     if (this.form.invalid) return;
 
-    const value = { ...this.form.value };
+    const value = { ...this.form.getRawValue() };
     // Format date as ISO string for the API
     if (value.date instanceof Date) {
       value.date = value.date.toISOString();

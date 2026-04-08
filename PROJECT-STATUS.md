@@ -4,15 +4,6 @@
 
 **Last updated at commit:** `3e15f5c` — feat: improve bills page filters and sorting (2026-04-08)
 
-## Current Progress
-
-**Last completed ticket:** `tickets/25-dark-mode.md`
-**Next ticket to implement:** `tickets/31-account-providers.md` (or `tickets/23-csv-export.md`)
-**Phase:** Post-Phase 3 (Enhancements)
-**Total progress:** 25 / 23 core tickets complete — 2 enhancement tickets remaining (23, 31)
-
----
-
 ## Completed Tickets (summary)
 
 | Ticket | What was built |
