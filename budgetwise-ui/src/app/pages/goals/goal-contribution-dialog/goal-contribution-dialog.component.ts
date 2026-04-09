@@ -3,11 +3,13 @@ import { Component, inject } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
+  FormControl,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
   Validators,
 } from '@angular/forms';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
@@ -38,6 +40,7 @@ export interface GoalContributionDialogData {
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    NgxMatSelectSearchModule,
   ],
   template: `
     <h2 mat-dialog-title>Add Contribution</h2>
@@ -69,7 +72,10 @@ export interface GoalContributionDialogData {
         <mat-form-field appearance="outline">
           <mat-label>Funding Account</mat-label>
           <mat-select formControlName="fromAccountId">
-            @for (account of fundingAccounts; track account.id) {
+            <mat-option>
+              <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+            </mat-option>
+            @for (account of filteredFundingAccounts; track account.id) {
               <mat-option [value]="account.id">{{ account.name }}</mat-option>
             }
           </mat-select>
@@ -81,7 +87,10 @@ export interface GoalContributionDialogData {
         <mat-form-field appearance="outline">
           <mat-label>Category</mat-label>
           <mat-select formControlName="categoryId">
-            @for (category of data.categories; track category.id) {
+            <mat-option>
+              <ngx-mat-select-search [formControl]="categorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+            </mat-option>
+            @for (category of filteredCategories; track category.id) {
               <mat-option [value]="category.id">{{ category.name }}</mat-option>
             }
           </mat-select>
@@ -132,6 +141,18 @@ export class GoalContributionDialogComponent {
   readonly fundingAccounts = this.data.accounts.filter(
     (account) => account.id !== this.data.goal.accountId,
   );
+  accountSearchCtrl = new FormControl('');
+  categorySearchCtrl = new FormControl('');
+
+  get filteredFundingAccounts() {
+    const s = (this.accountSearchCtrl.value || '').toLowerCase();
+    return s ? this.fundingAccounts.filter(a => a.name.toLowerCase().includes(s)) : this.fundingAccounts;
+  }
+
+  get filteredCategories() {
+    const s = (this.categorySearchCtrl.value || '').toLowerCase();
+    return s ? this.data.categories.filter(c => c.name.toLowerCase().includes(s)) : this.data.categories;
+  }
   readonly defaultCategoryId =
     this.data.categories.find((category) =>
       category.name === (this.data.goal.type === 'SAVINGS' ? 'Savings' : 'Debt'),

@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -49,6 +50,8 @@ export interface DateGroup {
     MatProgressBarModule,
     MatExpansionModule,
     MatTooltipModule,
+    ReactiveFormsModule,
+    NgxMatSelectSearchModule,
   ],
   templateUrl: './transactions.component.html',
   styleUrl: './transactions.component.scss',
@@ -76,6 +79,19 @@ export class TransactionsComponent implements OnInit {
   filterType = '';
   filterStartDate: Date | null = null;
   filterEndDate: Date | null = null;
+
+  accountSearchCtrl = new FormControl('');
+  categorySearchCtrl = new FormControl('');
+
+  get filteredAccounts(): Account[] {
+    const s = (this.accountSearchCtrl.value || '').toLowerCase();
+    return s ? this.accounts.filter(a => a.name.toLowerCase().includes(s)) : this.accounts;
+  }
+
+  get filteredCategories(): Category[] {
+    const s = (this.categorySearchCtrl.value || '').toLowerCase();
+    return s ? this.categories.filter(c => c.name.toLowerCase().includes(s)) : this.categories;
+  }
 
   ngOnInit() {
     this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {

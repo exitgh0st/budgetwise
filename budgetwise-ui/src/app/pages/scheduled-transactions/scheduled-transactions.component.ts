@@ -1,7 +1,8 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -60,6 +61,8 @@ import { ScheduledTransactionsCalendarComponent } from './scheduled-transactions
     CurrencyPipe,
     DatePipe,
     ScheduledTransactionsCalendarComponent,
+    ReactiveFormsModule,
+    NgxMatSelectSearchModule,
   ],
   templateUrl: './scheduled-transactions.component.html',
   styleUrl: './scheduled-transactions.component.scss',
@@ -90,6 +93,31 @@ export class ScheduledTransactionsComponent implements OnInit {
   accounts: Account[] = [];
   categories: Category[] = [];
   sortState: Sort = { active: 'nextDueDate', direction: 'asc' };
+
+  expenseAccountSearchCtrl = new FormControl('');
+  expenseCategorySearchCtrl = new FormControl('');
+  incomeAccountSearchCtrl = new FormControl('');
+  incomeCategorySearchCtrl = new FormControl('');
+
+  get expenseFilteredAccounts(): Account[] {
+    const s = (this.expenseAccountSearchCtrl.value || '').toLowerCase();
+    return s ? this.accounts.filter(a => a.name.toLowerCase().includes(s)) : this.accounts;
+  }
+
+  get expenseFilteredCategories(): Category[] {
+    const s = (this.expenseCategorySearchCtrl.value || '').toLowerCase();
+    return s ? this.categories.filter(c => c.name.toLowerCase().includes(s)) : this.categories;
+  }
+
+  get incomeFilteredAccounts(): Account[] {
+    const s = (this.incomeAccountSearchCtrl.value || '').toLowerCase();
+    return s ? this.accounts.filter(a => a.name.toLowerCase().includes(s)) : this.accounts;
+  }
+
+  get incomeFilteredCategories(): Category[] {
+    const s = (this.incomeCategorySearchCtrl.value || '').toLowerCase();
+    return s ? this.categories.filter(c => c.name.toLowerCase().includes(s)) : this.categories;
+  }
 
   displayedColumns = [
     'description',

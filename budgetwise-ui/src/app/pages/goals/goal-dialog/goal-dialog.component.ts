@@ -2,9 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
+  FormControl,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { MatButtonModule } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
@@ -36,6 +38,7 @@ export interface GoalDialogData {
     MatSelectModule,
     MatDatepickerModule,
     MatButtonModule,
+    NgxMatSelectSearchModule,
   ],
   template: `
     <h2 mat-dialog-title>{{ data.goal ? 'Edit Financial Goal' : dialogTitle }}</h2>
@@ -76,7 +79,10 @@ export interface GoalDialogData {
           <mat-form-field appearance="outline">
             <mat-label>Linked Account</mat-label>
             <mat-select formControlName="accountId">
-              @for (account of data.accounts; track account.id) {
+              <mat-option>
+                <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+              </mat-option>
+              @for (account of filteredAccounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
               }
             </mat-select>
@@ -117,6 +123,13 @@ export class GoalDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<GoalDialogComponent>);
   data = inject<GoalDialogData>(MAT_DIALOG_DATA);
+
+  accountSearchCtrl = new FormControl('');
+
+  get filteredAccounts() {
+    const s = (this.accountSearchCtrl.value || '').toLowerCase();
+    return s ? this.data.accounts.filter(a => a.name.toLowerCase().includes(s)) : this.data.accounts;
+  }
 
   readonly form = this.fb.group({
     name: ['', Validators.required],

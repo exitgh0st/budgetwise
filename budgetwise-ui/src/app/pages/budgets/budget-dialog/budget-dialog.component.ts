@@ -1,10 +1,12 @@
 ﻿import { Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import {
   MAT_DIALOG_DATA,
   MatDialogModule,
@@ -37,6 +39,7 @@ export interface BudgetDialogData {
     MatSelectModule,
     MatButtonModule,
     MatSlideToggleModule,
+    NgxMatSelectSearchModule,
   ],
   template: `
     <h2 mat-dialog-title>{{ data.isEdit ? 'Edit Budget' : 'Set Budget' }}</h2>
@@ -53,7 +56,10 @@ export interface BudgetDialogData {
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <mat-select formControlName="categoryId">
-              @for (cat of data.categories; track cat.id) {
+              <mat-option>
+                <ngx-mat-select-search [formControl]="categorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+              </mat-option>
+              @for (cat of filteredCategories; track cat.id) {
                 <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
               }
             </mat-select>
@@ -121,6 +127,12 @@ export class BudgetDialogComponent implements OnInit {
   data = inject<BudgetDialogData>(MAT_DIALOG_DATA);
 
   form!: FormGroup;
+  categorySearchCtrl = new FormControl('');
+
+  get filteredCategories() {
+    const s = (this.categorySearchCtrl.value || '').toLowerCase();
+    return s ? this.data.categories.filter(c => c.name.toLowerCase().includes(s)) : this.data.categories;
+  }
 
   ngOnInit() {
     this.form = this.fb.group({

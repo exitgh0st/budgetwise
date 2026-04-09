@@ -41,8 +41,11 @@
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
             <mat-select [(ngModel)]="expenseFilters.filterAccountId" (selectionChange)="onFilterChange()">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="expenseAccountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+              </mat-option>
               <mat-option value="">All</mat-option>
-              @for (account of accounts; track account.id) {
+              @for (account of expenseFilteredAccounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
               }
             </mat-select>
@@ -51,8 +54,11 @@
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <mat-select [(ngModel)]="expenseFilters.filterCategoryId" (selectionChange)="onFilterChange()">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="expenseCategorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+              </mat-option>
               <mat-option value="">All</mat-option>
-              @for (category of categories; track category.id) {
+              @for (category of expenseFilteredCategories; track category.id) {
                 <mat-option [value]="category.id">{{ category.name }}</mat-option>
               }
             </mat-select>
@@ -111,8 +117,11 @@
               <mat-form-field appearance="outline">
                 <mat-label>Account</mat-label>
                 <mat-select [(ngModel)]="expenseFilters.filterAccountId" (selectionChange)="onFilterChange()">
+                  <mat-option>
+                    <ngx-mat-select-search [formControl]="expenseAccountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+                  </mat-option>
                   <mat-option value="">All</mat-option>
-                  @for (account of accounts; track account.id) {
+                  @for (account of expenseFilteredAccounts; track account.id) {
                     <mat-option [value]="account.id">{{ account.name }}</mat-option>
                   }
                 </mat-select>
@@ -121,8 +130,11 @@
               <mat-form-field appearance="outline">
                 <mat-label>Category</mat-label>
                 <mat-select [(ngModel)]="expenseFilters.filterCategoryId" (selectionChange)="onFilterChange()">
+                  <mat-option>
+                    <ngx-mat-select-search [formControl]="expenseCategorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+                  </mat-option>
                   <mat-option value="">All</mat-option>
-                  @for (category of categories; track category.id) {
+                  @for (category of expenseFilteredCategories; track category.id) {
                     <mat-option [value]="category.id">{{ category.name }}</mat-option>
                   }
                 </mat-select>
@@ -391,8 +403,11 @@
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
             <mat-select [(ngModel)]="incomeFilters.filterAccountId" (selectionChange)="onFilterChange()">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="incomeAccountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+              </mat-option>
               <mat-option value="">All</mat-option>
-              @for (account of accounts; track account.id) {
+              @for (account of incomeFilteredAccounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
               }
             </mat-select>
@@ -401,8 +416,11 @@
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <mat-select [(ngModel)]="incomeFilters.filterCategoryId" (selectionChange)="onFilterChange()">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="incomeCategorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+              </mat-option>
               <mat-option value="">All</mat-option>
-              @for (category of categories; track category.id) {
+              @for (category of incomeFilteredCategories; track category.id) {
                 <mat-option [value]="category.id">{{ category.name }}</mat-option>
               }
             </mat-select>
@@ -461,8 +479,11 @@
               <mat-form-field appearance="outline">
                 <mat-label>Account</mat-label>
                 <mat-select [(ngModel)]="incomeFilters.filterAccountId" (selectionChange)="onFilterChange()">
+                  <mat-option>
+                    <ngx-mat-select-search [formControl]="incomeAccountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+                  </mat-option>
                   <mat-option value="">All</mat-option>
-                  @for (account of accounts; track account.id) {
+                  @for (account of incomeFilteredAccounts; track account.id) {
                     <mat-option [value]="account.id">{{ account.name }}</mat-option>
                   }
                 </mat-select>
@@ -471,8 +492,11 @@
               <mat-form-field appearance="outline">
                 <mat-label>Category</mat-label>
                 <mat-select [(ngModel)]="incomeFilters.filterCategoryId" (selectionChange)="onFilterChange()">
+                  <mat-option>
+                    <ngx-mat-select-search [formControl]="incomeCategorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+                  </mat-option>
                   <mat-option value="">All</mat-option>
-                  @for (category of categories; track category.id) {
+                  @for (category of incomeFilteredCategories; track category.id) {
                     <mat-option [value]="category.id">{{ category.name }}</mat-option>
                   }
                 </mat-select>

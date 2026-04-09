@@ -39,8 +39,11 @@
       <mat-form-field appearance="outline">
         <mat-label>Account</mat-label>
         <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+          <mat-option>
+            <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+          </mat-option>
           <mat-option value="">All</mat-option>
-          @for (account of accounts; track account.id) {
+          @for (account of filteredAccounts; track account.id) {
             <mat-option [value]="account.id">{{ account.name }}</mat-option>
           }
         </mat-select>
@@ -49,8 +52,11 @@
       <mat-form-field appearance="outline">
         <mat-label>Category</mat-label>
         <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+          <mat-option>
+            <ngx-mat-select-search [formControl]="categorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+          </mat-option>
           <mat-option value="">All</mat-option>
-          @for (category of categories; track category.id) {
+          @for (category of filteredCategories; track category.id) {
             <mat-option [value]="category.id">{{ category.name }}</mat-option>
           }
         </mat-select>
@@ -104,8 +110,11 @@
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
             <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+              </mat-option>
               <mat-option value="">All</mat-option>
-              @for (account of accounts; track account.id) {
+              @for (account of filteredAccounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
               }
             </mat-select>
@@ -114,8 +123,11 @@
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFilterChange()">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="categorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+              </mat-option>
               <mat-option value="">All</mat-option>
-              @for (category of categories; track category.id) {
+              @for (category of filteredCategories; track category.id) {
                 <mat-option [value]="category.id">{{ category.name }}</mat-option>
               }
             </mat-select>

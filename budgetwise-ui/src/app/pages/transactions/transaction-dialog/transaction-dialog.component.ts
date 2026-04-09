@@ -2,12 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
   Validators,
 } from '@angular/forms';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -51,6 +53,7 @@ interface NonTransferSnapshot {
     MatButtonToggleModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    NgxMatSelectSearchModule,
   ],
   template: `
     <h2 mat-dialog-title>{{ data.transaction ? 'Edit Transaction' : 'Add Transaction' }}</h2>
@@ -79,7 +82,10 @@ interface NonTransferSnapshot {
           <mat-form-field appearance="outline">
             <mat-label>From account</mat-label>
             <mat-select formControlName="fromAccountId">
-              @for (account of data.accounts; track account.id) {
+              <mat-option>
+                <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+              </mat-option>
+              @for (account of filteredAccounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
               }
             </mat-select>
@@ -88,7 +94,10 @@ interface NonTransferSnapshot {
           <mat-form-field appearance="outline">
             <mat-label>To account</mat-label>
             <mat-select formControlName="toAccountId">
-              @for (account of data.accounts; track account.id) {
+              <mat-option>
+                <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+              </mat-option>
+              @for (account of filteredAccounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
               }
             </mat-select>
@@ -100,7 +109,10 @@ interface NonTransferSnapshot {
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <mat-select formControlName="categoryId">
-              @for (category of data.categories; track category.id) {
+              <mat-option>
+                <ngx-mat-select-search [formControl]="categorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+              </mat-option>
+              @for (category of filteredCategories; track category.id) {
                 <mat-option [value]="category.id">{{ category.name }}</mat-option>
               }
             </mat-select>
@@ -109,7 +121,10 @@ interface NonTransferSnapshot {
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
             <mat-select formControlName="accountId">
-              @for (account of data.accounts; track account.id) {
+              <mat-option>
+                <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+              </mat-option>
+              @for (account of filteredAccounts; track account.id) {
                 <mat-option [value]="account.id">{{ account.name }}</mat-option>
               }
             </mat-select>
@@ -118,7 +133,10 @@ interface NonTransferSnapshot {
           <mat-form-field appearance="outline">
             <mat-label>Category</mat-label>
             <mat-select formControlName="categoryId">
-              @for (category of data.categories; track category.id) {
+              <mat-option>
+                <ngx-mat-select-search [formControl]="categorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+              </mat-option>
+              @for (category of filteredCategories; track category.id) {
                 <mat-option [value]="category.id">{{ category.name }}</mat-option>
               }
             </mat-select>
@@ -166,6 +184,19 @@ export class TransactionDialogComponent implements OnInit {
   data = inject<TransactionDialogData>(MAT_DIALOG_DATA);
 
   form!: FormGroup;
+  accountSearchCtrl = new FormControl('');
+  categorySearchCtrl = new FormControl('');
+
+  get filteredAccounts(): Account[] {
+    const s = (this.accountSearchCtrl.value || '').toLowerCase();
+    return s ? this.data.accounts.filter(a => a.name.toLowerCase().includes(s)) : this.data.accounts;
+  }
+
+  get filteredCategories(): Category[] {
+    const s = (this.categorySearchCtrl.value || '').toLowerCase();
+    return s ? this.data.categories.filter(c => c.name.toLowerCase().includes(s)) : this.data.categories;
+  }
+
   private preservedNonTransfer: NonTransferSnapshot = {
     accountId: '',
     categoryId: '',

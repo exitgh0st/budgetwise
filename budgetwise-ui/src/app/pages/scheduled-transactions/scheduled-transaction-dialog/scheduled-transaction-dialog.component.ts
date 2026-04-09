@@ -2,12 +2,14 @@ import { Component, OnInit, inject } from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   ValidationErrors,
   ValidatorFn,
   Validators,
 } from '@angular/forms';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -44,6 +46,7 @@ export interface ScheduledTransactionDialogData {
     MatButtonToggleModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    NgxMatSelectSearchModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -86,7 +89,10 @@ export interface ScheduledTransactionDialogData {
         <mat-form-field appearance="outline">
           <mat-label>Account</mat-label>
           <mat-select formControlName="accountId">
-            @for (account of data.accounts; track account.id) {
+            <mat-option>
+              <ngx-mat-select-search [formControl]="accountSearchCtrl" placeholderLabel="Search accounts..." noEntriesFoundLabel="No accounts found"></ngx-mat-select-search>
+            </mat-option>
+            @for (account of filteredAccounts; track account.id) {
               <mat-option [value]="account.id">{{ account.name }}</mat-option>
             }
           </mat-select>
@@ -95,7 +101,10 @@ export interface ScheduledTransactionDialogData {
         <mat-form-field appearance="outline">
           <mat-label>Category</mat-label>
           <mat-select formControlName="categoryId">
-            @for (category of data.categories; track category.id) {
+            <mat-option>
+              <ngx-mat-select-search [formControl]="categorySearchCtrl" placeholderLabel="Search categories..." noEntriesFoundLabel="No categories found"></ngx-mat-select-search>
+            </mat-option>
+            @for (category of filteredCategories; track category.id) {
               <mat-option [value]="category.id">{{ category.name }}</mat-option>
             }
           </mat-select>
@@ -232,6 +241,18 @@ export class ScheduledTransactionDialogComponent implements OnInit {
   data = inject<ScheduledTransactionDialogData>(MAT_DIALOG_DATA);
 
   form!: FormGroup;
+  accountSearchCtrl = new FormControl('');
+  categorySearchCtrl = new FormControl('');
+
+  get filteredAccounts() {
+    const s = (this.accountSearchCtrl.value || '').toLowerCase();
+    return s ? this.data.accounts.filter(a => a.name.toLowerCase().includes(s)) : this.data.accounts;
+  }
+
+  get filteredCategories() {
+    const s = (this.categorySearchCtrl.value || '').toLowerCase();
+    return s ? this.data.categories.filter(c => c.name.toLowerCase().includes(s)) : this.data.categories;
+  }
 
   get showInstallments(): boolean {
     return this.form?.get('frequency')?.value !== 'ONCE';
