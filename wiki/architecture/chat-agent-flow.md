@@ -1,7 +1,7 @@
 ---
 type: architecture
 source_files: [budgetwise-api/src/chat/chat.service.ts, budgetwise-api/src/chat/guardrails.service.ts, budgetwise-api/src/chat/pending-confirmation.service.ts, budgetwise-api/src/chat/tools/tool-definitions.ts, budgetwise-api/src/chat/tools/tool-executor.ts]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [architecture, chat, ai]
 ---
 
@@ -25,7 +25,7 @@ tags: [architecture, chat, ai]
 
 ## Destructive tool list
 Defined in `DESTRUCTIVE_TOOLS` (guardrails.service.ts):
-`delete_account`, `delete_transaction`, `delete_category`, `delete_budget`, `delete_bill`, `bulk_delete_transactions`, `reset_budget`, `clear_all_data`.
+`delete_account`, `delete_transaction`, `delete_category`, `delete_budget`, `delete_scheduled_transaction`, `bulk_delete_transactions`, `reset_budget`, `clear_all_data`.
 
 Pending actions live in-memory in `PendingConfirmationService` (`Map<userId, PendingAction>`) with a 2-minute TTL. Confirm/cancel intent is matched against keyword sets (`yes/yeah/sure/confirm/...` vs `no/cancel/abort/...`).
 
@@ -39,7 +39,7 @@ Defined in [budgetwise-api/src/chat/tools/tool-definitions.ts](../../budgetwise-
 | Transactions | `create_transaction`, `record_transfer`, `list_transactions`, `get_transaction`, `update_transaction`, `delete_transaction` |
 | Budgets | `create_budget`, `list_budgets`, `get_budget`, `update_budget`, `delete_budget` |
 | Reports | `get_summary`, `get_spending_by_category`, `get_budget_status`, `get_monthly_trend` |
-| Bills | `create_bill`, `list_bills`, `get_bill`, `update_bill`, `delete_bill`, `generate_bill` |
+| Scheduled transactions | `create_scheduled_transaction`, `list_scheduled_transactions`, `get_scheduled_transaction`, `update_scheduled_transaction`, `delete_scheduled_transaction`, `generate_scheduled_transaction` |
 
 `ToolExecutor.execute` strips `id` from args before forwarding to update calls (so it does not leak into Prisma's data payload). It catches all errors and returns `{ error: message }` instead of throwing - the LLM sees the error and recovers.
 

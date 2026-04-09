@@ -1,7 +1,7 @@
 ---
 type: architecture
 source_files: [budgetwise-api/src, budgetwise-ui/src/app]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [architecture, structure]
 ---
 
@@ -20,7 +20,8 @@ budgetwise/
 |       |-- accounts/              -> [[accounts]]
 |       |-- categories/            -> [[categories]]
 |       |-- transactions/          -> [[transactions]]
-|       |-- bills/                 -> [[bills]] (incl. bills-cron.service.ts)
+|       |-- scheduled-transactions/ -> [[scheduled-transactions]] (incl. hourly cron)
+|       |-- notifications/         -> [[notifications]]
 |       |-- budgets/               -> [[budgets]]
 |       |-- reports/               -> [[reports]]
 |       |-- goals/                 -> [[goals]]
@@ -28,9 +29,9 @@ budgetwise/
 |
 '-- budgetwise-ui/                 Angular frontend
     '-- src/app/
-        |-- app.ts / app.html / app.scss   Root shell - sidenav + toolbar + theme toggle + chat panel
+        |-- app.ts / app.html / app.scss   Root shell - sidenav + toolbar + theme toggle + notification bell + chat panel
         |-- app.routes.ts          Lazy routes, all guarded by authGuard except /login,/register,/forgot-password,/auth/*
-        |-- app.config.ts          Providers - router, HTTP w/ authInterceptor, animations, MatNativeDateModule, Material Symbols
+        |-- app.config.ts          Providers - router, HTTP w/ authInterceptor, animations, MatNativeDateModule, Material Symbols, angular-calendar
         |-- core/
         |   |-- constants/         Provider registry for account issuers
         |   |-- guards/            -> [[guards]]
@@ -42,7 +43,7 @@ budgetwise/
         |   |-- dashboard/         -> [[dashboard]]
         |   |-- accounts/          -> [[accounts-page]] (+ account-dialog)
         |   |-- transactions/      -> [[transactions-page]] (+ transaction-dialog)
-        |   |-- bills/             -> [[bills-page]] (+ bill-dialog)
+        |   |-- scheduled-transactions/ -> [[scheduled-transactions-page]] (+ dialog + calendar + day sheet)
         |   |-- budgets/           -> [[budgets-page]] (+ budget-dialog)
         |   |-- reports/           -> [[reports-page]]
         |   |-- categories/        -> [[categories-page]] (+ category-dialog)
@@ -50,6 +51,7 @@ budgetwise/
         '-- shared/
             |-- components/
             |   |-- chat-panel/    -> [[chat-panel]]
+            |   '-- notification-bell/
             |   '-- confirm-dialog/
             '-- pipes/             -> [[pipes]] (markdown.pipe.ts)
 ```

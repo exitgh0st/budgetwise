@@ -1,7 +1,7 @@
----
+﻿---
 type: project
 source_files: [PROJECT-STATUS.md]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [project, issues]
 ---
 

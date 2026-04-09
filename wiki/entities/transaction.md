@@ -1,7 +1,7 @@
 ---
 type: entity
 source_files: [budgetwise-api/prisma/schema.prisma]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [entity, transaction]
 ---
 
@@ -19,22 +19,22 @@ tags: [entity, transaction]
 | fromAccountId | String? | FK -> [[account]] (Cascade); transfer source |
 | toAccountId | String? | FK -> [[account]] (Cascade); transfer destination |
 | categoryId | String? | FK -> [[category]] (Restrict); optional for transfers |
-| billId | String? | FK -> [[bill]] (SetNull) - present if generated from a bill |
+| scheduledTransactionId | String? | FK -> [[scheduled-transaction]] (SetNull) |
 | userId | String? | |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
-| goalContribution | GoalContribution? | one-to-one back-link when a transaction is attached to a goal |
+| goalContribution | GoalContribution? | one-to-one back-link when attached to a goal |
 
 ## Indexes
 - `@@index([userId])`
-- `@@index([billId])`
+- `@@index([scheduledTransactionId])`
 - `@@index([fromAccountId])`
 - `@@index([toAccountId])`
 
 ## Used By
 - [[transactions]] - CRUD with atomic balance sync and transfer validation
-- [[accounts]] - adjustment flow creates a system-category transaction
-- [[bills]] - `generate` / `generateFromRecord` create transactions and set `billId`
-- [[goals]] - contributions link to transactions through [[goal-contribution]]
+- [[accounts]] - balance adjustment flow creates a system-category transaction
+- [[scheduled-transactions]] - generation paths create transactions and set `scheduledTransactionId`
+- [[goals]] - contributions link through [[goal-contribution]]
 - [[reports]] - income/expense aggregations
 - [[dashboard]], [[transactions-page]], [[chat-panel]]

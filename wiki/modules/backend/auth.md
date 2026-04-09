@@ -1,7 +1,7 @@
 ---
 type: module-backend
 source_files: [budgetwise-api/src/auth/auth.module.ts, budgetwise-api/src/auth/auth.controller.ts, budgetwise-api/src/auth/jwt.strategy.ts, budgetwise-api/src/auth/jwt-auth.guard.ts, budgetwise-api/src/auth/current-user.decorator.ts, budgetwise-api/src/auth/public.decorator.ts]
-last_ingested: 2026-04-07
+last_ingested: 2026-04-09
 tags: [backend, auth, security]
 ---
 
@@ -13,24 +13,24 @@ Validates Supabase-issued JWTs (ES256) on every request and exposes a one-shot o
 ## Files
 | File | Role |
 |------|------|
-| `budgetwise-api/src/auth/auth.module.ts` | Module — registers PassportModule + JwtModule, exports JwtStrategy |
-| `budgetwise-api/src/auth/jwt.strategy.ts` | `PassportStrategy('jwt')`. Pulls Supabase JWKS via `jwks-rsa`. `algorithms: ['ES256']`. `validate()` returns `{ userId: payload.sub, email }`. |
-| `budgetwise-api/src/auth/jwt-auth.guard.ts` | Global guard wired in `AppModule` via `APP_GUARD`. Honors `@Public()` to bypass. |
-| `budgetwise-api/src/auth/current-user.decorator.ts` | Param decorator returning `req.user` |
-| `budgetwise-api/src/auth/public.decorator.ts` | Sets `IS_PUBLIC_KEY` metadata |
-| `budgetwise-api/src/auth/auth.controller.ts` | `POST /api/auth/onboard` |
+| `auth.module.ts` | Registers PassportModule + JwtModule, exports JwtStrategy |
+| `jwt.strategy.ts` | Pulls Supabase JWKS and returns `{ userId, email }` from the JWT payload |
+| `jwt-auth.guard.ts` | Global guard wired in `AppModule` via `APP_GUARD` |
+| `current-user.decorator.ts` | Param decorator returning `req.user` |
+| `public.decorator.ts` | Sets `IS_PUBLIC_KEY` metadata |
+| `auth.controller.ts` | `POST /api/auth/onboard` |
 
 ## Endpoints
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/auth/onboard` | Idempotent. If the user has any accounts, returns `{status:'already_onboarded'}`. Otherwise clones every template category (`userId=null, isSystem=false`) for this user and creates 3 starter accounts (Cash, Bank Account, E-Wallet). |
+| POST | `/api/auth/onboard` | Idempotently clones template categories and creates starter accounts on first sign-in |
 
 ## Key Logic
-- Required env vars: `SUPABASE_URL` (used to build JWKS URL).
-- Globally applied via `APP_GUARD` in [budgetwise-api/src/app.module.ts](../../../budgetwise-api/src/app.module.ts) — every controller is protected by default.
-- To open a route: decorate with `@Public()` (used by `BillsController.processDue`).
-- Frontend calls onboard automatically after `signInWithEmail` succeeds — see [[core-services]] `AuthService.onboard`.
+- Required env var: `SUPABASE_URL` for the JWKS endpoint.
+- Every controller is protected by default through the global guard.
+- `@Public()` is used for the scheduled-transactions manual cron trigger.
+- The frontend calls onboard automatically after sign-in.
 
 ## Relations
-- Used everywhere — `@CurrentUser()` is the source of `userId` in [[accounts]], [[bills]], [[budgets]], [[categories]], [[chat]], [[reports]], [[transactions]].
-- Reads/writes [[account]] and [[category]] during onboarding.
+- `@CurrentUser()` supplies `userId` across [[accounts]], [[scheduled-transactions]], [[notifications]], [[budgets]], [[categories]], [[chat]], [[reports]], and [[transactions]]
+- Reads/writes [[account]] and [[category]] during onboarding

@@ -1,7 +1,7 @@
 ---
 type: entity
 source_files: [budgetwise-api/prisma/schema.prisma]
-last_ingested: 2026-04-07
+last_ingested: 2026-04-09
 tags: [entity, budget]
 ---
 
@@ -12,18 +12,19 @@ tags: [entity, budget]
 |-------|------|-------|
 | id | String | uuid |
 | amount | Decimal(12,2) | monthly cap |
-| month | Int | 1–12 |
+| spillover | Boolean | default `false`; opt-in carry behavior |
+| month | Int | 1-12 |
 | year | Int | |
-| categoryId | String | FK → [[category]] (Cascade) |
+| categoryId | String | FK -> [[category]] (Cascade) |
 | userId | String? | |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
 ## Constraints
-- `@@unique([categoryId, month, year, userId])` — drives the upsert in `BudgetsService.create`
+- `@@unique([categoryId, month, year, userId])` drives the upsert in `BudgetsService.create`
 - `@@index([userId])`
 
 ## Used By
-- [[budgets]] — CRUD (upsert on create)
+- [[budgets]] - CRUD (upsert on create) + spillover toggle
 - [[reports]] `getBudgetStatus`
-- [[budgets-page]], [[dashboard]]
+- [[budgets-page]], [[dashboard]], [[reports-page]]

@@ -1,7 +1,7 @@
 ---
 type: architecture
 source_files: [CLAUDE.md, budgetwise-api/src/main.ts, budgetwise-api/src/app.module.ts, budgetwise-ui/src/app/app.config.ts]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [overview, architecture]
 ---
 
@@ -32,5 +32,7 @@ See [[data-flow]] for the request lifecycle and [[project-structure]] for the di
 - Every query is scoped to `userId` (from JWT `sub`); ownership violations return 404 (not 403).
 - Every Prisma `Decimal` is converted to `Number()` before crossing the API boundary.
 - Frontend lazy-loads each page; `authInterceptor` injects the Supabase access token into every HTTP call.
-- Accounts support provider metadata and logos, transactions support first-class transfers, and goals support typed savings/debt payoff workflows with linked transactions.
+- Accounts support provider metadata with refreshed local logo assets, transactions support first-class transfers plus client-side CSV export, and goals support typed savings/debt payoff workflows with linked transactions.
+- Scheduled transactions unify the old bills/recurring flows under `/api/scheduled-transactions`, with optional `notifyDaysBefore` reminders and a calendar view in the frontend.
+- Budget reporting supports opt-in spillover chains via `baseBudget`, `carriedAmount`, and `effectiveBudget`.
 - Chat agent reads/writes through the same services as the REST API via [[chat-agent-flow]].

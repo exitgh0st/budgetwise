@@ -1,7 +1,7 @@
 ---
 type: architecture
 source_files: [budgetwise-api/src/**/*.controller.ts]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [architecture, api, routes]
 ---
 
@@ -52,21 +52,30 @@ All routes are prefixed `/api` (set in `main.ts`). All require Bearer JWT unless
 | DELETE | `/api/goals/:id` | `remove` | 204 |
 | POST | `/api/goals/:id/contribute` | `contribute` | `ContributeGoalDto` (creates a linked `TRANSFER` for savings or `EXPENSE` for debt payoff) |
 
-## Bills - [[bills]]
+## Scheduled Transactions - [[scheduled-transactions]]
 | Method | Path | Handler | DTO |
 |--------|------|---------|-----|
-| POST | `/api/bills` | `create` | `CreateBillDto` |
-| GET | `/api/bills` | `findAll` | - |
-| GET | `/api/bills/:id` | `findOne` | - |
-| PATCH | `/api/bills/:id` | `update` | `UpdateBillDto` |
-| DELETE | `/api/bills/:id` | `remove` | 204 |
-| POST | `/api/bills/:id/generate` | `generate` | Posts a real transaction now, advances `nextDueDate` or marks COMPLETED |
-| POST | `/api/bills/process-due` | `processDue` (`@Public`) | Manual cron trigger |
+| POST | `/api/scheduled-transactions` | `create` | `CreateScheduledTransactionDto` (`notifyDaysBefore` optional) |
+| GET | `/api/scheduled-transactions` | `findAll` | Optional `status` filter |
+| GET | `/api/scheduled-transactions/:id` | `findOne` | - |
+| PATCH | `/api/scheduled-transactions/:id` | `update` | `UpdateScheduledTransactionDto` |
+| DELETE | `/api/scheduled-transactions/:id` | `remove` | 204 |
+| POST | `/api/scheduled-transactions/:id/generate` | `generate` | Posts a real transaction now, advances `nextDueDate` or marks COMPLETED |
+| POST | `/api/scheduled-transactions/process-due` | `processDue` (`@Public`) | Manual cron trigger |
+
+## Notifications - [[notifications]]
+| Method | Path | Handler | DTO |
+|--------|------|---------|-----|
+| GET | `/api/notifications` | `list` | `ListNotificationsDto` (`skip`, `take`) |
+| GET | `/api/notifications/unread-count` | `unreadCount` | - |
+| PATCH | `/api/notifications/:id/read` | `markRead` | - |
+| PATCH | `/api/notifications/read-all` | `markAllRead` | - |
+| DELETE | `/api/notifications/:id` | `dismiss` | 204 |
 
 ## Budgets - [[budgets]]
 | Method | Path | Handler | DTO |
 |--------|------|---------|-----|
-| POST | `/api/budgets` | `create` | `CreateBudgetDto` (upsert by `categoryId+month+year+userId`) |
+| POST | `/api/budgets` | `create` | `CreateBudgetDto` (upsert by `categoryId+month+year+userId`, `spillover` optional) |
 | GET | `/api/budgets` | `findAll` | `FilterBudgetsDto` (month, year) |
 | GET | `/api/budgets/:id` | `findOne` | - |
 | PATCH | `/api/budgets/:id` | `update` | `UpdateBudgetDto` |
@@ -82,6 +91,7 @@ All routes are prefixed `/api` (set in `main.ts`). All require Bearer JWT unless
 
 > All report queries exclude `isSystem=true` categories so adjustment and goal helper categories do not skew totals.
 > They also only aggregate `INCOME` and `EXPENSE`, so account-to-account transfers never affect report totals.
+> `GET /api/reports/budget-status` now returns `baseBudget`, `carriedAmount`, `effectiveBudget`, and `spillover`; `budgetAmount` remains as the compatibility alias of `baseBudget`.
 
 ## Chat - [[chat]] / [[chat-agent-flow]]
 | Method | Path | Handler |

@@ -1,7 +1,7 @@
 ---
 type: architecture
 source_files: [budgetwise-api/prisma/schema.prisma]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [architecture, prisma, schema]
 ---
 
@@ -15,8 +15,9 @@ PostgreSQL via Prisma. Source: `budgetwise-api/prisma/schema.prisma`.
 - [[transaction]] - Transaction
 - [[goal]] - Goal
 - [[goal-contribution]] - GoalContribution
-- [[bill]] - Bill (recurring/one-time templates)
-- [[budget]] - Budget (per category x month x year x user)
+- [[scheduled-transaction]] - ScheduledTransaction (recurring/one-time templates)
+- [[notification]] - Notification (scheduled transaction reminders)
+- [[budget]] - Budget (per category x month x year x user, with optional spillover)
 - [[chat-session]] - ChatSession
 - [[chat-message]] - ChatMessage
 
@@ -26,7 +27,8 @@ PostgreSQL via Prisma. Source: `budgetwise-api/prisma/schema.prisma`.
 | `AccountType` | `CASH`, `BANK`, `EWALLET`, `CREDIT_CARD`, `LOAN` |
 | `TransactionType` | `INCOME`, `EXPENSE`, `TRANSFER` |
 | `RecurringFrequency` | `ONCE`, `WEEKLY`, `MONTHLY`, `YEARLY` |
-| `BillStatus` | `ACTIVE`, `COMPLETED`, `CANCELLED` |
+| `ScheduledTransactionStatus` | `ACTIVE`, `COMPLETED`, `CANCELLED` |
+| `NotificationType` | `SCHEDULED_TX_DUE` |
 | `GoalType` | `SAVINGS`, `DEBT_PAYOFF` |
 
 ## Relations at a glance
@@ -36,16 +38,17 @@ User (Supabase, no Prisma model - userId stored on every owned model)
   |   |-< Transaction (accountId)
   |   |-< Transaction (fromAccountId)
   |   |-< Transaction (toAccountId)
-  |   |-< Bill
+  |   '-< ScheduledTransaction
   |   '-< Goal
   |-< Goal -< GoalContribution >- Transaction
   |-< Budget >- Category
+  |-< ScheduledTransaction -< Notification
   '-< ChatSession -< ChatMessage
 
 Transaction >- Category
-Transaction >- Bill (optional)
-Bill >- Account
-Bill >- Category
+Transaction >- ScheduledTransaction (optional)
+ScheduledTransaction >- Account
+ScheduledTransaction >- Category
 Goal >- Account (optional)
 ```
 
@@ -53,22 +56,24 @@ Goal >- Account (optional)
 - `Transaction.fromAccountId -> Account?` (Cascade)
 - `Transaction.toAccountId -> Account?` (Cascade)
 - `Transaction.categoryId -> Category?` (Restrict)
-- `Transaction.billId -> Bill?` (SetNull)
+- `Transaction.scheduledTransactionId -> ScheduledTransaction?` (SetNull)
 - `Goal.accountId -> Account?` (SetNull)
 - `GoalContribution.goalId -> Goal` (Cascade)
 - `GoalContribution.transactionId -> Transaction` (Cascade, unique)
-- `Bill.accountId -> Account` (Cascade)
-- `Bill.categoryId -> Category` (Restrict)
+- `ScheduledTransaction.accountId -> Account` (Cascade)
+- `ScheduledTransaction.categoryId -> Category` (Restrict)
+- `Notification.scheduledTransactionId -> ScheduledTransaction?` (SetNull)
 - `Budget.categoryId -> Category` (Cascade)
 - `ChatMessage.sessionId -> ChatSession` (Cascade)
 
 ## Indexes
 - `Account@@index([userId])`
 - `Category@@index([userId])` + `@@unique([name, userId])`
-- `Transaction@@index([userId])`, `@@index([billId])`, `@@index([fromAccountId])`, `@@index([toAccountId])`
+- `Transaction@@index([userId])`, `@@index([scheduledTransactionId])`, `@@index([fromAccountId])`, `@@index([toAccountId])`
 - `Goal@@index([userId])`, `@@index([accountId])`
 - `GoalContribution@@index([goalId])`, `@@index([transactionId])`
-- `Bill@@index([userId])`, `@@index([nextDueDate])`, `@@index([status])`
+- `ScheduledTransaction@@index([userId])`, `@@index([nextDueDate])`, `@@index([status])`
+- `Notification@@index([userId, isRead])`, `@@index([userId, createdAt])`
 - `Budget@@index([userId])` + `@@unique([categoryId, month, year, userId])`
 - `ChatSession@@index([userId])`
 

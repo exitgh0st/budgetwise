@@ -1,34 +1,35 @@
 ---
 type: module-frontend
 source_files: [budgetwise-ui/src/app/pages/transactions/transactions.component.ts, budgetwise-ui/src/app/pages/transactions/transactions.component.html, budgetwise-ui/src/app/pages/transactions/transaction-dialog/transaction-dialog.component.ts]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [frontend, transactions]
 ---
 
 # Transactions Page
 
 ## Purpose
-List, filter, and CRUD income, expense, and transfer transactions.
+List, filter, export, and CRUD income, expense, and transfer transactions.
 
 ## Files
 | File | Role |
 |------|------|
-| `pages/transactions/transactions.component.ts` | List + filters + pagination |
-| `pages/transactions/transactions.component.html` | Date-grouped list, filter bar (expansion panel on mobile), transfer-aware labels |
-| `pages/transactions/transaction-dialog/transaction-dialog.component.ts` | Add/edit dialog with type toggle for Income / Expense / Transfer. Datepicker relies on global `MatNativeDateModule` in `app.config.ts`. |
+| `pages/transactions/transactions.component.ts` | List, filters, pagination, CSV export |
+| `pages/transactions/transactions.component.html` | Date-grouped list, filter bar, export actions |
+| `pages/transactions/transaction-dialog/transaction-dialog.component.ts` | Add/edit dialog with Income / Expense / Transfer toggle |
 
 ## UI Elements
-- Filter bar: account, category, type, date range (collapses into expansion panel < 600px)
+- Filter bar: account, category, type, date range (expansion panel on mobile)
+- Desktop `Export CSV` button plus a mobile icon action
 - Date-grouped transaction list with pagination
-- "Adjustment" badge pill on transactions whose category is the system Adjustment category
-- Transfer rows show `fromAccount -> toAccount` instead of a single account
-- Transaction dialog validates that transfer source and destination accounts are different
-- Add/edit dialog, delete confirmation via shared `ConfirmDialogComponent`
+- Adjustment badge for system Adjustment-category rows
+- Transfer rows show `fromAccount -> toAccount`
+- Add/edit dialog and delete confirmation
 
 ## Data Sources
-- `TransactionsService.getAll` -> `/api/transactions` (with filters)
-- Category dropdowns intentionally keep the `Savings` and `Debt` system categories available because [[goals-page]] reuses the transaction dialog for linked contribution edits
-- See [[transactions]]
+- `TransactionsService.getAll` -> `/api/transactions`
+- `TransactionsService.exportAll` reuses the same filters without pagination to build the client-side CSV export
+- Category dropdowns intentionally keep the `Savings` and `Debt` system categories available because [[goals-page]] reuses the dialog for linked contribution edits
 
 ## Notes
-- The previous "Recurring" tab was removed when [[bills]] superseded recurring transactions (Ticket 30). Bills live on their own page now -> [[bills-page]].
+- CSV export is frontend-only: escaped cells, descriptive filenames, browser download, no new backend endpoint.
+- The previous recurring tab is gone; scheduled templates live on [[scheduled-transactions-page]].

@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "549d748e4945b9f7",
+        "id": "9f416f3d579fcff0",
         "type": "tabs",
         "children": [
           {
-            "id": "8a7b0d9aa3313b93",
+            "id": "b5c60155721ce91f",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "entities/bill.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "bill"
+              "title": "New tab"
             }
           }
         ]
@@ -184,15 +180,17 @@
       "bases:Create new base": false
     }
   },
-  "active": "8a7b0d9aa3313b93",
+  "active": "b5c60155721ce91f",
   "lastOpenFiles": [
+    "architecture/chat-agent-flow.md",
+    "modules/backend/goals.md",
+    "entities/bill.md",
     "entities/transaction.md",
     "modules/frontend/goals-page.md",
     "architecture/database-schema.md",
     "architecture/data-flow.md",
     "project/decisions.md",
     "modules/backend/bills.md",
-    "entities/bill.md",
     "index.md.tmp.53992.1775529917664",
     "project/known-issues.md",
     "project/tickets-overview.md",
@@ -212,8 +210,6 @@
     "index.md",
     "modules/frontend/categories-page.md",
     "modules/frontend/reports-page.md",
-    "modules/frontend/budgets-page.md",
-    "modules/frontend/bills-page.md",
     "overview.md.tmp.53992.1775529361948",
     "log.md.tmp.53992.1775529348214",
     "index.md.tmp.53992.1775529340918",

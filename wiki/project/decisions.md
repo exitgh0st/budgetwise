@@ -1,43 +1,45 @@
 ---
 type: project
 source_files: [PROJECT-STATUS.md]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-09
 tags: [project, decisions]
 ---
 
 # Architectural & Design Decisions
 
 ## Backend
-- **Auth model:** Supabase JWT validated via JWKS (`ES256`). Single global `JwtAuthGuard`; opt-out per route via `@Public()`. See [[auth]].
-- **Multi-tenancy:** Every owned model carries nullable `userId`; every query filters by `userId` from JWT `sub`. Ownership violations return **404, not 403**.
-- **Categories model:** Three flavors - user-owned, system (`isSystem`), and templates (`userId=null, isSystem=false`). Templates are cloned per user during onboarding.
-- **Decimal at the boundary:** Always `Number()`-convert Prisma `Decimal` before returning from a service.
-- **Reports exclude system categories** so balance adjustments and goal helper categories do not skew income/expense aggregations.
-- **Atomic balance sync:** Transaction create/update/delete all run inside `prisma.$transaction` to keep `Account.balance` consistent.
-- **Bills supersede RecurringTransaction:** Ticket 30 migrated to a unified [[bill]] model with `ONCE` frequency for one-off bills.
-- **Bills cron:** Hourly via `@nestjs/schedule`. Loops `findAllDue()` until empty (max 100 iterations) with per-record try/catch.
-- **CORS origin from env:** `ORIGIN` env var read in `main.ts`.
-- **Account providers:** `providerId` is a nullable backend field, but the actual provider catalog and logos are frontend-owned static metadata.
-- **Transfers are first-class transactions:** account-to-account moves use `TransactionType.TRANSFER` with `fromAccountId`/`toAccountId` and are excluded from reports.
-- **Typed financial goals:** savings goals progress from linked transfer transactions into a destination account; debt-payoff goals progress from linked expense transactions.
+- **Auth model:** Supabase JWT validated via JWKS (`ES256`). Single global `JwtAuthGuard`; opt-out per route via `@Public()`.
+- **Multi-tenancy:** Every owned model carries nullable `userId`; every query filters by JWT `sub`. Ownership violations return **404, not 403**.
+- **Categories model:** user-owned, system (`isSystem`), and template (`userId=null, isSystem=false`) categories.
+- **Decimal at the boundary:** Prisma `Decimal` values are always converted to `Number()` before returning.
+- **Reports exclude system categories** so adjustments and helper categories do not skew analytics.
+- **Atomic balance sync:** transaction create/update/delete all run inside `prisma.$transaction`.
+- **Scheduled transactions supersede the old bills/recurring naming.**
+- **Scheduled-transactions cron:** hourly, loops due rows until empty, isolates per-record failures, and also enqueues reminders.
+- **Reminder dedupe:** at most one unread scheduled-transaction reminder per record per day.
+- **Budget spillover:** carry only walks backward through consecutive prior months that also have explicit budget rows with `spillover=true`; `budgetAmount` remains a compatibility alias of `baseBudget`.
+- **CORS origin from env:** `ORIGIN` in `main.ts`.
+- **Account providers:** `providerId` is backend data, while the provider registry and logo assets are frontend-owned static metadata.
+- **Transfers are first-class transactions:** account-to-account moves use `TransactionType.TRANSFER` and are excluded from reports.
 
 ## Chat agent
-- **Guardrails:** regex injection pre-filter -> LLM scope classifier -> execute -> LLM output scanner. All LLM checks fail open. See [[chat-agent-flow]].
+- **Guardrails:** regex injection pre-filter -> LLM scope classifier -> execute -> LLM output scanner. All LLM checks fail open.
 - **Destructive tool confirmation:** in-memory `PendingConfirmationService` keyed by `userId`, 2-minute TTL.
-- **Tool loop limit = 50** to support longer multi-tool chains.
-- **`ToolExecutor` never throws** - all errors are caught and returned as `{ error: message }`, so the LLM can recover.
-- **`record_transfer` tool:** the chat agent logs account-to-account movement through the transfer-aware transaction path instead of misclassifying it as income or expense.
+- **Tool loop limit = 50** for longer multi-tool chains.
+- **`ToolExecutor` never throws**; errors are returned as `{ error }` so the LLM can recover.
+- **Scheduled-transaction tools use renamed identifiers** instead of the old bill names.
 
 ## Frontend
 - **Standalone components everywhere** - no NgModules.
-- **Functional guards/interceptors** (Angular 14+ style).
-- **Signal-based AuthService** - `currentUser`, `isAuthenticated`, `isLoading` are signals.
-- **Lightweight custom MarkdownPipe** - chosen over `ngx-markdown` to keep bundle small. See [[pipes]].
+- **Functional guards/interceptors**.
+- **Signal-based AuthService** for auth state.
+- **Lightweight custom MarkdownPipe** over `ngx-markdown` to keep bundle weight down.
 - **`ng2-charts` install** requires `--legacy-peer-deps`.
-- **Datepicker fix:** the app config imports `MatNativeDateModule` for dialogs that bind `Date` objects.
-- **`maintainingBalance`** is optional and only displayed on BANK account cards.
-- **Theme preference:** light/dark mode persists in `localStorage` and falls back to `prefers-color-scheme`.
+- **Datepicker fix:** app config imports `MatNativeDateModule` for dialog date bindings.
+- **`maintainingBalance`** is optional and only shown on BANK cards.
+- **Theme preference:** persisted in `localStorage`, falls back to `prefers-color-scheme`.
+- **Transactions CSV export stays client-side** and reuses the existing filtered transactions endpoint.
 
 ## Workflow
-- One ticket at a time. Read ticket -> ask 2-5 clarifying questions -> implement -> verify build -> commit. See `CLAUDE.md`.
-- Wiki updates are manual. `/implement-ticket` only logs `wiki ingest pending` to `log.md`. The user runs ingest when ready.
+- One ticket at a time. Read ticket -> ask clarifying questions -> implement -> verify build -> commit.
+- Wiki updates are manual; ticket work logs `wiki ingest pending`, then ingest syncs the docs later.

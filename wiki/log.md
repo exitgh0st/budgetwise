@@ -1,4 +1,10 @@
-# Wiki Log
+﻿# Wiki Log
+
+## [2026-04-09] ingest | Delta 9711872..b6a5861 - scheduled-transactions rename, notifications/calendar, budget spillover, CSV export, provider logo refresh
+- Created pages: [[notification]], [[notifications]]
+- Renamed pages: [[bill]] -> [[scheduled-transaction]], [[bills]] -> [[scheduled-transactions]], [[bills-page]] -> [[scheduled-transactions-page]]
+- Updated pages: [[index]], [[overview]], [[project-structure]], [[database-schema]], [[api-routes]], [[chat-agent-flow]], [[data-flow]], [[account]], [[category]], [[transaction]], [[budget]], [[scheduled-transaction]], [[scheduled-transactions]], [[budgets]], [[reports]], [[chat]], [[auth]], [[categories]], [[transactions]], [[accounts-page]], [[transactions-page]], [[scheduled-transactions-page]], [[budgets-page]], [[reports-page]], [[core-models]], [[core-services]], [[guards]], [[decisions]], [[tickets-overview]], [[known-issues]]
+- Marker bumped from `9711872` to `b6a5861`
 
 ## [2026-04-08] ticket | #34 completed — wiki ingest pending
 
@@ -29,4 +35,4 @@
 
 ## [2026-04-09] ticket | #35 completed - wiki ingest pending
 
-## [2026-04-09] ticket | #23 completed � wiki ingest pending
+## [2026-04-09] ticket | #23 completed — wiki ingest pending

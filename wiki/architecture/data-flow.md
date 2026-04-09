@@ -1,7 +1,7 @@
 ---
 type: architecture
 source_files: [budgetwise-api/src/main.ts, budgetwise-ui/src/app/core/interceptors/auth.interceptor.ts, budgetwise-api/src/auth/jwt.strategy.ts]
-last_ingested: 2026-04-07
+last_ingested: 2026-04-09
 tags: [architecture, data-flow]
 ---
 
@@ -28,6 +28,6 @@ tags: [architecture, data-flow]
 
 See [[chat-agent-flow]] — the chat panel calls `POST /api/chat`, which invokes `ChatService.chat()` and runs a tool-call loop that re-uses every backend service via `ToolExecutor`.
 
-## Cron flow ([[bills]])
+## Cron flow ([[scheduled-transactions]])
 
-`BillsCronService` runs `@Cron(EVERY_HOUR)` → loops `BillsService.findAllDue()` (status=ACTIVE, nextDueDate ≤ now, userId not null) → for each bill calls `generateFromRecord` which creates a transaction (linked back via `billId`) and advances `nextDueDate` (or marks COMPLETED). Per-record try/catch isolates failures. Manual trigger: `POST /api/bills/process-due` (`@Public()`).
+`ScheduledTransactionsCronService` runs `@Cron(EVERY_HOUR)` → `processDueTransactions()` loops `findAllDue()` (status=ACTIVE, nextDueDate ≤ now, userId not null) → for each record calls `generateFromRecord` which creates a transaction (linked back via `scheduledTransactionId`) and advances `nextDueDate` or marks it COMPLETED. After generation it auto-marks matching reminder notifications as read, then `enqueueUpcomingNotifications()` creates at most one unread reminder per scheduled transaction per day. Manual trigger: `POST /api/scheduled-transactions/process-due` (`@Public()`).
