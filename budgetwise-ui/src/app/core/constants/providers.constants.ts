@@ -67,13 +67,13 @@ export const ACCOUNT_PROVIDERS: AccountProvider[] = [
   {
     id: 'eastwestbank',
     name: 'EastWest Bank',
-    logoPath: 'assets/providers/eastwestbank.svg',
+    logoPath: 'assets/providers/eastwestbank.png',
     types: BANK_LOAN_TYPES,
   },
   {
     id: 'chinabank',
     name: 'China Bank',
-    logoPath: 'assets/providers/chinabank.svg',
+    logoPath: 'assets/providers/chinabank.jpeg',
     types: BANK_LOAN_TYPES,
   },
   {
@@ -91,7 +91,7 @@ export const ACCOUNT_PROVIDERS: AccountProvider[] = [
   {
     id: 'shopeepay',
     name: 'ShopeePay',
-    logoPath: 'assets/providers/shopeepay.svg',
+    logoPath: 'assets/providers/shopeepay.jpeg',
     types: ['EWALLET'],
   },
   {

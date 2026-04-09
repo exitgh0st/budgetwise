@@ -71,6 +71,20 @@ const PROVIDER_TYPES: AccountType[] = [
           <mat-form-field appearance="outline">
             <mat-label>Provider</mat-label>
             <mat-select formControlName="providerId">
+              <mat-select-trigger>
+                @if (selectedProvider; as provider) {
+                  <div class="provider-option">
+                    <img
+                      [src]="provider.logoPath"
+                      [alt]="provider.name"
+                      class="provider-option-logo"
+                    />
+                    <span>{{ provider.name }}</span>
+                  </div>
+                } @else {
+                  <span>None</span>
+                }
+              </mat-select-trigger>
               <mat-option [value]="null">None</mat-option>
               @for (provider of filteredProviders; track provider.id) {
                 <mat-option [value]="provider.id">
@@ -173,6 +187,17 @@ export class AccountDialogComponent implements OnInit {
 
   get showProviderPicker(): boolean {
     return PROVIDER_TYPES.includes(this.form?.get('type')?.value);
+  }
+
+  get selectedProvider(): AccountProvider | undefined {
+    const providerId = this.form?.get('providerId')?.value as
+      | string
+      | null
+      | undefined;
+
+    return providerId
+      ? this.filteredProviders.find((provider) => provider.id === providerId)
+      : undefined;
   }
 
   ngOnInit() {
