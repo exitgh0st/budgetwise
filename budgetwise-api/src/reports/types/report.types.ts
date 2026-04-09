@@ -21,10 +21,14 @@ export interface BudgetStatus {
   categoryName: string;
   categoryIcon: string | null;
   budgetAmount: number;
+  baseBudget: number;
+  carriedAmount: number;
+  effectiveBudget: number;
   spent: number;
   remaining: number;
   percentUsed: number;
   isOver: boolean;
+  spillover: boolean;
 }
 
 export interface MonthlyTrend {

@@ -28,10 +28,14 @@ export class BudgetsService {
           userId,
         },
       },
-      update: { amount: dto.amount },
+      update: {
+        amount: dto.amount,
+        ...(dto.spillover !== undefined ? { spillover: dto.spillover } : {}),
+      },
       create: {
         categoryId: dto.categoryId,
         amount: dto.amount,
+        spillover: dto.spillover ?? false,
         month,
         year,
         userId,
@@ -66,7 +70,10 @@ export class BudgetsService {
     await this.findOne(id, userId);
     return this.prisma.budget.update({
       where: { id },
-      data: { amount: dto.amount },
+      data: {
+        ...(dto.amount !== undefined ? { amount: dto.amount } : {}),
+        ...(dto.spillover !== undefined ? { spillover: dto.spillover } : {}),
+      },
       include: { category: true },
     });
   }

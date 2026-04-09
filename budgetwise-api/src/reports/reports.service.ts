@@ -11,6 +11,14 @@ import {
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
+  private getBudgetKey(
+    categoryId: string,
+    month: number,
+    year: number,
+  ): string {
+    return `${categoryId}:${year}-${month}`;
+  }
+
   private async getSystemCategoryIds(): Promise<string[]> {
     const cats = await this.prisma.category.findMany({
       where: { isSystem: true },
@@ -145,6 +153,21 @@ export class ReportsService {
       where: budgetWhere,
       include: { category: true },
     });
+    const budgetCache = new Map<
+      string,
+      {
+        amount: number;
+        spillover: boolean;
+      }
+    >(
+      budgets.map((budget) => [
+        this.getBudgetKey(budget.categoryId, budget.month, budget.year),
+        {
+          amount: Number(budget.amount),
+          spillover: budget.spillover,
+        },
+      ]),
+    );
 
     const systemCategoryIds = await this.getSystemCategoryIds();
     const txWhere: any = {
@@ -163,24 +186,155 @@ export class ReportsService {
     const spendingMap = new Map(
       spending.map((s) => [s.categoryId, Number(s._sum.amount ?? 0)]),
     );
+    const spentCache = new Map<string, number>(
+      budgets.map((budget) => [
+        this.getBudgetKey(budget.categoryId, budget.month, budget.year),
+        spendingMap.get(budget.categoryId) ?? 0,
+      ]),
+    );
+    const carryCache = new Map<string, Promise<number>>();
 
-    return budgets.map((b) => {
-      const spent = spendingMap.get(b.categoryId) ?? 0;
-      const budgetAmount = Number(b.amount);
-      const remaining = budgetAmount - spent;
-      return {
-        budgetId: b.id,
-        categoryId: b.categoryId,
-        categoryName: b.category.name,
-        categoryIcon: b.category.icon,
-        budgetAmount,
-        spent,
-        remaining,
-        percentUsed:
-          budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0,
-        isOver: spent > budgetAmount,
+    const getSpentFor = async (
+      categoryId: string,
+      targetMonth: number,
+      targetYear: number,
+    ): Promise<number> => {
+      const key = this.getBudgetKey(categoryId, targetMonth, targetYear);
+      const cached = spentCache.get(key);
+      if (cached !== undefined) {
+        return cached;
+      }
+
+      const monthStart = new Date(targetYear, targetMonth - 1, 1);
+      const monthEnd = new Date(targetYear, targetMonth, 0, 23, 59, 59);
+      const where: any = {
+        type: 'EXPENSE',
+        categoryId,
+        date: { gte: monthStart, lte: monthEnd },
       };
-    });
+
+      if (userId) {
+        where.userId = userId;
+      }
+      if (systemCategoryIds.length > 0) {
+        where.categoryId = {
+          equals: categoryId,
+          notIn: systemCategoryIds,
+        };
+      }
+
+      const aggregate = await this.prisma.transaction.aggregate({
+        where,
+        _sum: { amount: true },
+      });
+      const spentAmount = Number(aggregate._sum.amount ?? 0);
+      spentCache.set(key, spentAmount);
+      return spentAmount;
+    };
+
+    const findBudgetFor = async (
+      categoryId: string,
+      targetMonth: number,
+      targetYear: number,
+    ): Promise<{ amount: number; spillover: boolean } | null> => {
+      const key = this.getBudgetKey(categoryId, targetMonth, targetYear);
+      const cached = budgetCache.get(key);
+      if (cached) {
+        return cached;
+      }
+
+      const where: any = { categoryId, month: targetMonth, year: targetYear };
+      if (userId) {
+        where.userId = userId;
+      }
+
+      const budget = await this.prisma.budget.findFirst({ where });
+      if (!budget) {
+        return null;
+      }
+
+      const normalizedBudget = {
+        amount: Number(budget.amount),
+        spillover: budget.spillover,
+      };
+      budgetCache.set(key, normalizedBudget);
+      return normalizedBudget;
+    };
+
+    const computeCarry = async (
+      categoryId: string,
+      targetMonth: number,
+      targetYear: number,
+    ): Promise<number> => {
+      const key = this.getBudgetKey(categoryId, targetMonth, targetYear);
+      const cached = carryCache.get(key);
+      if (cached) {
+        return cached;
+      }
+
+      const carryPromise = (async () => {
+        const previousMonth = targetMonth === 1 ? 12 : targetMonth - 1;
+        const previousYear = targetMonth === 1 ? targetYear - 1 : targetYear;
+        const priorBudget = await findBudgetFor(
+          categoryId,
+          previousMonth,
+          previousYear,
+        );
+
+        if (!priorBudget || !priorBudget.spillover) {
+          return 0;
+        }
+
+        const priorSpent = await getSpentFor(
+          categoryId,
+          previousMonth,
+          previousYear,
+        );
+        const priorCarry = await computeCarry(
+          categoryId,
+          previousMonth,
+          previousYear,
+        );
+
+        return priorBudget.amount + priorCarry - priorSpent;
+      })();
+
+      carryCache.set(key, carryPromise);
+      return carryPromise;
+    };
+
+    return Promise.all(
+      budgets.map(async (budget) => {
+        const spent = spendingMap.get(budget.categoryId) ?? 0;
+        const baseBudget = Number(budget.amount);
+        const carriedAmount = await computeCarry(
+          budget.categoryId,
+          budget.month,
+          budget.year,
+        );
+        const effectiveBudget = baseBudget + carriedAmount;
+        const remaining = effectiveBudget - spent;
+
+        return {
+          budgetId: budget.id,
+          categoryId: budget.categoryId,
+          categoryName: budget.category.name,
+          categoryIcon: budget.category.icon,
+          budgetAmount: baseBudget,
+          baseBudget,
+          carriedAmount,
+          effectiveBudget,
+          spent,
+          remaining,
+          percentUsed:
+            effectiveBudget > 0
+              ? Math.round((spent / effectiveBudget) * 100)
+              : 0,
+          isOver: spent > effectiveBudget,
+          spillover: budget.spillover,
+        };
+      }),
+    );
   }
 
   async getMonthlyTrend(
