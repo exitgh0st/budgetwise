@@ -15,6 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TransactionsService, TransactionFilters } from '../../core/services/transactions.service';
 import { AccountsService } from '../../core/services/accounts.service';
 import { CategoriesService } from '../../core/services/categories.service';
@@ -47,6 +48,7 @@ export interface DateGroup {
     MatPaginatorModule,
     MatProgressBarModule,
     MatExpansionModule,
+    MatTooltipModule,
   ],
   templateUrl: './transactions.component.html',
   styleUrl: './transactions.component.scss',
@@ -63,6 +65,7 @@ export class TransactionsComponent implements OnInit {
   categories: Category[] = [];
   dateGroups: DateGroup[] = [];
   loading = true;
+  exporting = false;
   isMobile = false;
   total = 0;
   pageSize = 20;
@@ -139,6 +142,23 @@ export class TransactionsComponent implements OnInit {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
     this.loadTransactions();
+  }
+
+  exportCsv() {
+    this.exporting = true;
+
+    this.transactionsService.exportAll(this.buildExportFilters()).subscribe({
+      next: result => {
+        const csv = this.buildCsv(result.data);
+        this.downloadFile(csv, this.buildFilename());
+        this.exporting = false;
+        this.snackBar.open(`Exported ${result.data.length} transaction(s)`, 'Dismiss', { duration: 3000 });
+      },
+      error: () => {
+        this.exporting = false;
+        this.snackBar.open('Export failed. Please try again.', 'Dismiss', { duration: 4000 });
+      },
+    });
   }
 
   openAddDialog() {
@@ -269,5 +289,88 @@ export class TransactionsComponent implements OnInit {
     }
 
     return '';
+  }
+
+  private buildExportFilters(): Omit<TransactionFilters, 'limit' | 'offset'> {
+    const filters: Omit<TransactionFilters, 'limit' | 'offset'> = {};
+
+    if (this.filterAccountId) filters.accountId = this.filterAccountId;
+    if (this.filterCategoryId) filters.categoryId = this.filterCategoryId;
+    if (this.filterType) filters.type = this.filterType as TransactionType;
+    if (this.filterStartDate) filters.startDate = this.filterStartDate.toISOString();
+    if (this.filterEndDate) filters.endDate = this.filterEndDate.toISOString();
+
+    return filters;
+  }
+
+  private buildCsv(transactions: Transaction[]): string {
+    const headers = ['Date', 'Type', 'Amount', 'Account', 'Category', 'Description'];
+    const rows = transactions.map(transaction => [
+      this.formatDate(transaction.date),
+      transaction.type,
+      this.formatAmount(transaction.amount),
+      this.getAccountExportLabel(transaction),
+      this.getCategoryExportLabel(transaction),
+      transaction.description ?? '',
+    ].map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','));
+
+    return [headers.join(','), ...rows].join('\r\n');
+  }
+
+  private buildFilename(): string {
+    const parts = ['transactions'];
+
+    if (this.filterStartDate) {
+      parts.push(this.formatDate(this.filterStartDate));
+    }
+
+    if (this.filterEndDate) {
+      parts.push(this.formatDate(this.filterEndDate));
+    }
+
+    parts.push(this.formatDate(new Date()));
+
+    return `${parts.join('_')}.csv`;
+  }
+
+  private downloadFile(content: string, filename: string) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.style.display = 'none';
+
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  }
+
+  private getAccountExportLabel(transaction: Transaction): string {
+    if (transaction.type === 'TRANSFER') {
+      return this.getAccountLabel(transaction);
+    }
+
+    return transaction.account?.name ?? transaction.accountId ?? 'Unknown account';
+  }
+
+  private getCategoryExportLabel(transaction: Transaction): string {
+    if (transaction.type === 'TRANSFER') {
+      return transaction.category?.name ?? 'Transfer';
+    }
+
+    return transaction.category?.name ?? transaction.categoryId ?? 'Uncategorized';
+  }
+
+  private formatDate(value: string | Date): string {
+    return new Date(value).toLocaleDateString('en-CA');
+  }
+
+  private formatAmount(value: number | string): string {
+    const amount = Number(value);
+
+    return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
   }
 }

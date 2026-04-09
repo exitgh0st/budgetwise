@@ -1,14 +1,36 @@
 <div class="page-header">
   <h1>Transactions</h1>
+  @if (isMobile) {
+    <button
+      mat-icon-button
+      color="primary"
+      (click)="exportCsv()"
+      [disabled]="exporting || loading"
+      aria-label="Export CSV"
+      matTooltip="Export CSV">
+      <mat-icon>download</mat-icon>
+    </button>
+  }
 </div>
 
 <div class="tab-content">
   @if (!isMobile) {
     <div class="tab-actions-bar">
       <span></span>
-      <button mat-flat-button color="primary" (click)="openAddDialog()">
-        <mat-icon>add</mat-icon> Add Transaction
-      </button>
+      <div class="header-actions">
+        <button
+          mat-stroked-button
+          color="primary"
+          (click)="exportCsv()"
+          [disabled]="exporting || loading"
+          aria-label="Export transactions as CSV">
+          <mat-icon>download</mat-icon>
+          <span>{{ exporting ? 'Exporting...' : 'Export CSV' }}</span>
+        </button>
+        <button mat-flat-button color="primary" (click)="openAddDialog()">
+          <mat-icon>add</mat-icon> Add Transaction
+        </button>
+      </div>
     </div>
   }
 

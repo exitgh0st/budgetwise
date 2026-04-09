@@ -40,6 +40,16 @@ export class TransactionsService {
     return this.http.get<PaginatedTransactions>(this.url, { params });
   }
 
+  exportAll(filters: Omit<TransactionFilters, 'limit' | 'offset'> = {}): Observable<PaginatedTransactions> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params = params.set(key, String(value));
+      }
+    });
+    return this.http.get<PaginatedTransactions>(this.url, { params });
+  }
+
   getById(id: string): Observable<Transaction> {
     return this.http.get<Transaction>(`${this.url}/${id}`);
   }
