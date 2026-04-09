@@ -44,6 +44,7 @@
 | 34 — Scheduled Transaction Notifications + Calendar | `notifyDaysBefore`, `Notification` model/module, toolbar bell, monthly calendar view, reminder dedupe + auto-clear. |
 | 35 — Budget Spillover Toggle | `Budget.spillover`, spillover-aware `getBudgetStatus`, base/carry/effective budget UX in Budgets + Reports. |
 | 36 — Chat Tool Coverage Expansion | Added goal CRUD/contribution chat tools, read-only notification chat tools, and expanded account/budget/scheduled-transaction chat fields to match newer backend support. |
+| 37 — Secure `process-due` Endpoint | Kept `POST /api/scheduled-transactions/process-due` for ops/debugging but gated it behind `InternalAdminGuard` with `x-internal-secret` / `INTERNAL_ADMIN_SECRET`, leaving the hourly cron path unchanged. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -107,7 +108,27 @@ Manual changes outside the numbered ticket flow:
 
 ## Upcoming Tickets
 
-No open numbered ticket files after `36-chat-tool-coverage-expansion.md`.
+Code-review remediation backlog — created 2026-04-10 from `code-review-remediation-backlog.md`.
+
+### Ticket 38 — Scheduled Transaction Ownership Validation
+**Status:** Pending
+**Description:** Add account/category ownership checks to `ScheduledTransactionsService.create/update`, mirroring the `TransactionsService.ensureOwnedAccount`/`ensureAccessibleCategory` pattern so cross-tenant references fail cleanly with `404`.
+
+### Ticket 39 — Settlement-Aware Balance Handling
+**Status:** Pending
+**Description:** Reintroduce `Transaction.isSettled` (dropped by the April 6 rename-recurring-to-bill migration), derive it from `date`, and make `applyBalanceEffect` a no-op when unsettled. Reports filter to settled rows and the UI shows a Pending badge on future-dated transactions.
+
+### Ticket 40 — Date-Only Normalization
+**Status:** Pending
+**Description:** Replace frontend `.toISOString()` calls on datepicker values with a shared `toDateOnlyString` helper (YYYY-MM-DD). Backend parses via `parseDateOnly` at noon UTC. Reports compute boundaries in UTC. Eliminates timezone drift across day/month boundaries.
+
+### Ticket 41 — Atomic Scheduled Generation
+**Status:** Pending
+**Description:** Wrap `ScheduledTransactionsService.generate` and `generateFromRecord` in a single `prisma.$transaction` (using a new `TransactionsService.createWithTx`) so generate/link/advance either all succeed or all roll back. Adds an in-tx re-read for idempotency.
+
+### Ticket 42 — Decimal Normalization in API Responses
+**Status:** Pending
+**Description:** Add `toResponse()` mappers to `AccountsService`, `TransactionsService`, `BudgetsService`, and `ScheduledTransactionsService` that cast all `Prisma.Decimal` money fields (including nested relation accounts) to plain JSON numbers, following the existing `GoalsService.toResponse` pattern.
 
 ---
 

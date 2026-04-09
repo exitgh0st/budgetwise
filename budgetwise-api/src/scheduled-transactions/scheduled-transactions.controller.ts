@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ScheduledTransactionsService } from './scheduled-transactions.service';
@@ -15,6 +16,7 @@ import { CreateScheduledTransactionDto } from './dto/create-scheduled-transactio
 import { UpdateScheduledTransactionDto } from './dto/update-scheduled-transaction.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
+import { InternalAdminGuard } from '../auth/internal-admin.guard';
 
 @ApiTags('Scheduled Transactions')
 @ApiBearerAuth()
@@ -64,6 +66,7 @@ export class ScheduledTransactionsController {
   }
 
   @Public()
+  @UseGuards(InternalAdminGuard)
   @Post('process-due')
   processDue() {
     return this.cronService.processDueTransactions();
