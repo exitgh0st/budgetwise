@@ -39,8 +39,8 @@
 | 31 — Account Providers | Nullable `Account.providerId`, Prisma migration, static PH provider registry (17 providers), placeholder SVG logos, provider picker in account dialog, provider logo/subtitle on account cards. |
 | 32 — Transfer Transaction Type | `TransactionType.TRANSFER`, `fromAccountId`/`toAccountId`, atomic dual-account balance sync, transfer-aware transaction dialog/listing, reports exclude transfers, chat `record_transfer` tool. |
 | 33 — Financial Goals | Typed goals (`SAVINGS` / `DEBT_PAYOFF`), `GoalContribution` link model, `/api/goals` CRUD/contribute endpoints. Goal progress is derived from linked transactions, savings contributions create transfers, debt-payoff contributions create expenses, and `/goals` is now a Financial Goals page with a two-step creation flow. |
-
-| 34 â€” Scheduled Transaction Notifications + Calendar | Added `notifyDaysBefore` to scheduled transactions plus a new `Notification` model and `/api/notifications` module. The hourly scheduled-transactions cron now enqueues deduped in-app reminders and auto-marks them read when a real transaction is generated. Frontend adds a toolbar bell with unread polling + mark-read actions and a responsive calendar tab using `angular-calendar` with inline desktop details / mobile bottom sheet. |
+| 34 — Scheduled Transaction Notifications + Calendar | Added `notifyDaysBefore` to scheduled transactions plus a new `Notification` model and `/api/notifications` module. The hourly scheduled-transactions cron now enqueues deduped in-app reminders and auto-marks them read when a real transaction is generated. Frontend adds a toolbar bell with unread polling + mark-read actions and a responsive calendar tab using `angular-calendar` with inline desktop details / mobile bottom sheet. |
+| 35 — Budget Spillover Toggle | Added `Budget.spillover` with a Prisma migration, exposed it through budget create/update/read APIs, and updated `getBudgetStatus` to return `baseBudget`, `carriedAmount`, `effectiveBudget`, and `spillover`. Budgets and Reports now show spillover badges plus the effective-budget breakdown. |
 
 ---
 
@@ -79,11 +79,12 @@ Manual changes made outside the ticket workflow:
 - **Scheduled transaction notifications:** `notifyDaysBefore` on scheduled transactions plus `Notification` rows for due reminders. `NotificationsModule` exposes list / unread-count / mark-read / mark-all / dismiss endpoints, and the scheduled-transactions cron dedupes reminders to one unread notification per scheduled transaction per day before auto-clearing them on generation.
 - **Modules:** Auth, Prisma, Accounts, Categories, Transactions, Budgets, Reports, Chat, Bills, Goals
 - **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via `SUPABASE_JWT_SECRET`. `@Public()` exempts routes. All endpoints require Bearer JWT.
-- **Multi-tenancy:** Every query scoped to `userId` from JWT `sub`. Categories return own + global (userId=null) templates. Ownership violations → 404.
-- **Database models:** Account (+ maintainingBalance, providerId, CREDIT_CARD/LOAN types, userId), Category (isSystem, userId), Transaction (`TRANSFER`, `fromAccountId`, `toAccountId`, `billId`, userId), Goal (`targetAmount`, `currentAmount`, optional `targetDate`/`accountId`, userId), Budget (userId), ChatSession (userId), ChatMessage, Bill (BillStatus, RecurringFrequency incl. ONCE, totalInstallments, completedInstallments, userId, `@@index([nextDueDate])`)
+- **Multi-tenancy:** Every query scoped to `userId` from JWT `sub`. Categories return own + global (userId=null) templates. Ownership violations -> 404.
+- **Database models:** Account (+ maintainingBalance, providerId, CREDIT_CARD/LOAN types, userId), Category (isSystem, userId), Transaction (`TRANSFER`, `fromAccountId`, `toAccountId`, `billId`, userId), Goal (`targetAmount`, `currentAmount`, optional `targetDate`/`accountId`, userId), Budget (`spillover`, userId), ChatSession (userId), ChatMessage, Bill (BillStatus, RecurringFrequency incl. ONCE, totalInstallments, completedInstallments, userId, `@@index([nextDueDate])`)
 - **Seed:** 11 global template categories (userId=null) + Adjustment system category. No accounts (created by onboard).
 - **CORS:** `ORIGIN` env var
-- **Chat:** DeepSeek V3 via OpenAI SDK, tool call loop max=50, GuardrailsService (injection filter + scope LLM check), PendingConfirmationService for destructive tools, 32 tools total (accounts×6, categories×5, transactions×6 incl. `record_transfer`, budgets×5, reports×4, bills×6)
+- **Chat:** DeepSeek V3 via OpenAI SDK, tool call loop max=50, GuardrailsService (injection filter -> LLM scope check), PendingConfirmationService for destructive tools, 32 tools total (accounts x6, categories x5, transactions x6 incl. `record_transfer`, budgets x5, reports x4, bills x6)
+- **Budget spillover:** `GET /api/reports/budget-status` now computes `baseBudget`, chained `carriedAmount`, and `effectiveBudget` per category-month when consecutive prior months exist and the prior row has `spillover=true`. `budgetAmount` remains the compatibility alias for `baseBudget`.
 - **Bills cron:** Hourly `@Cron(EVERY_HOUR)` via `BillsCronService`, processes due bills, per-record error isolation
 
 ### Frontend (`budgetwise-ui/`)
@@ -91,11 +92,12 @@ Manual changes made outside the ticket workflow:
 - **Scheduled transactions calendar:** New Calendar tab on the scheduled-transactions page using `angular-calendar`, client-side recurrence projection for the visible month, color-coded day states (income / expense / mixed), inline desktop day details, and mobile bottom-sheet day details with Edit actions
 - **Auth:** SupabaseService + signal-based AuthService, JWT interceptor, authGuard + guestGuard, full auth pages, user menu + logout in toolbar
 - **Pages:** Dashboard, Accounts, Transactions, Bills (expense + income tabs, search/filter/sort, installment tracking, pay action), Budgets, Reports, Categories, Goals — all lazy-loaded, auth-protected
+- **Budget UX:** Budget dialogs now include a `Spill over to next month` toggle, budget cards show spillover badges plus base/carry/effective values, and the reports page includes a budget-status section using effective-budget progress.
 - **Goals:** Financial Goals page with typed Savings vs Debt Payoff goals, two-step creation flow, derived progress from linked transactions, progress bars, goal-type badges, and contribution dialogs that create transfer or expense transactions based on goal type
 - **Accounts:** provider picker for BANK/EWALLET/CREDIT_CARD/LOAN, static PH provider registry, placeholder logos on cards when `providerId` is set
 - **Account types:** CASH, BANK, EWALLET, CREDIT_CARD, LOAN
 - **Shared:** ConfirmDialogComponent, ChatPanelComponent, MarkdownPipe
-- **Production:** `environment.prod.ts` → `https://budgetwise-api-k9z9.onrender.com/api`
+- **Production:** `environment.prod.ts` -> `https://budgetwise-api-k9z9.onrender.com/api`
 
 ### Chat Agent
 - Full end-to-end: 32 tools, guardrails, destructive confirmation, history pagination, session management
@@ -112,7 +114,7 @@ Manual changes made outside the ticket workflow:
 
 ## Upcoming / In Progress Tickets
 
-### Ticket 33 — Rename Bill → ScheduledTransaction
+### Ticket 33 — Rename Bill -> ScheduledTransaction
 **Status:** Pending
 **Description:** Full-stack rename of the `Bill` entity to `ScheduledTransaction` across Prisma schema, backend module, chat tools, frontend service/page/routes, and wiki. In-place migration preserves data. No behavior changes.
 
@@ -124,7 +126,7 @@ Manual changes made outside the ticket workflow:
 
 ## Key Decisions
 
-- Account card grid (not table) for Accounts page
+- Account card grid (not table)
 - Expansion panel for transaction filters on mobile
 - Emoji: `<span class="emoji">` vs `<mat-icon>` fallback
 - `ng2-charts` requires `--legacy-peer-deps`
@@ -134,17 +136,18 @@ Manual changes made outside the ticket workflow:
 - `isSettled` auto-derived from date — no manual override
 - Balance adjustment: sequential save (balance first, then props); skip API if diff=0
 - Adjustment badge (pill) on transaction rows from system Adjustment category
-- Ownership violations → 404 (not 403)
+- Ownership violations -> 404 (not 403)
 - Login allowed before email verification (Supabase enforces server-side if configured)
 - Supabase project: `gsffiyasnkkwrplydmqj` — same key in both environment files
 - Seed no longer creates accounts — per-user, created by `POST /api/auth/onboard`
-- `userId: null` in composite unique → seed uses `findFirst` + conditional `create` (Prisma upsert limitation)
+- `userId: null` in composite unique -> seed uses `findFirst` + conditional `create` (Prisma upsert limitation)
 - Chat loop limit = 50 (raised from 10 for multi-tool chains)
 - Production API: `https://budgetwise-api-k9z9.onrender.com/api`
-- GuardrailsService: regex pre-filter → LLM scope check; destructive tools require user confirmation via PendingConfirmationService
+- GuardrailsService: regex pre-filter -> LLM scope check; destructive tools require user confirmation via PendingConfirmationService
 - CREDIT_CARD and LOAN account types added post-ticket (user request)
 - maintainingBalance is optional on Account; only shown on bank account cards
-- Reports exclude `isSystem=true` categories so adjustment transactions don't skew summaries
+- Reports exclude `isSystem=true` categories so adjustment transactions do not skew summaries
+- Budget spillover chains only across consecutive prior months that also have explicit budget rows with `spillover=true`; `budgetAmount` stays as the compatibility alias for `baseBudget`
 - `billId` nullable on Transaction — links cron/manual-generated transactions back to their source Bill
 
 ---

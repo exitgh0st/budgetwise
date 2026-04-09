@@ -26,3 +26,5 @@
 - NOTE: PROJECT-STATUS.md still references the old `RecurringTransaction` model and module - that has been replaced by [[bill]] / [[bills]] in code (Ticket 30, commit 53c0eb5). Status doc is stale; wiki reflects current code.
 
 ## [2026-04-08] ticket | #31 completed - wiki ingest pending - ingested 9711872
+
+## [2026-04-09] ticket | #35 completed - wiki ingest pending
