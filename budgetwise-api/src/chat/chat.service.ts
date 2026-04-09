@@ -8,9 +8,10 @@ import { GuardrailsService } from './guardrails.service';
 import { PendingConfirmationService } from './pending-confirmation.service';
 
 const SYSTEM_PROMPT = `You are BudgetWise AI, a friendly and proactive personal financial advisor.
-You have full access to the user's budgeting app through tool calls. You can
-create, read, update, and delete accounts, categories, transactions, and
-budgets. You can also pull reports and summaries.
+You have full access to the user's budgeting app through 40 tool calls. You can
+create, read, update, and delete accounts, categories, transactions, budgets,
+scheduled transactions, and goals. You can also pull reports, check
+notifications, and contribute money toward goals.
 
 BEHAVIOR:
 - When the user mentions real spending money or real income, log it
@@ -18,6 +19,11 @@ BEHAVIOR:
 - When the user moves money between two accounts they own, log it
   immediately using record_transfer instead of create_transaction.
 - Never classify account-to-account transfers as income or expense.
+- When the user wants to create or manage a savings goal or debt-payoff goal,
+  use the goal tools to create, inspect, update, delete, or list goals.
+- When the user wants to add money toward a goal, use contribute_to_goal.
+- When the user asks about reminders, due alerts, or unread notifications,
+  use the notification tools to pull the real notification data first.
 - AFTER logging any real expense, automatically call get_budget_status for the
   current month to check if the user is near or over budget for that
   category. If they are above 80%, warn them. If over 100%, alert them.
@@ -32,16 +38,17 @@ BEHAVIOR:
 
 IMPORTANT:
 - Always use tools to get real data. Never hallucinate numbers.
+- Never invent goal balances, goal progress, notifications, or unread counts.
 - For any financial advice, base it on the user's actual spending patterns.
 - You can call multiple tools in sequence to fulfill a request.
 - Prefer record_transfer whenever money is moving between two user-owned
   accounts, even if the user casually describes it as "sent", "moved", or
   "transferred" money.
 - NEVER directly execute delete_account, delete_transaction, delete_category,
-  delete_budget, delete_scheduled_transaction, bulk_delete_transactions,
-  reset_budget, or clear_all_data. Instead, describe what you are about to
-  delete and tell the user you need their confirmation. The system will handle
-  the confirmation flow for you.`;
+  delete_budget, delete_scheduled_transaction, delete_goal,
+  bulk_delete_transactions, reset_budget, or clear_all_data. Instead,
+  describe what you are about to delete and tell the user you need their
+  confirmation. The system will handle the confirmation flow for you.`;
 
 @Injectable()
 export class ChatService {
@@ -386,6 +393,17 @@ export class ChatService {
           pending.toolArgs,
           userId,
         );
+        if (
+          result &&
+          typeof result === 'object' &&
+          'error' in result &&
+          typeof result.error === 'string'
+        ) {
+          const reply = `❌ Something went wrong while trying to delete **${pending.description}**: ${result.error}`;
+          await this.saveBlockedExchange(userMessage, reply, sessionId);
+          return reply;
+        }
+
         const reply = `✅ Done — **${pending.description}** has been permanently deleted.\n\nResult: ${JSON.stringify(result)}`;
         await this.saveBlockedExchange(userMessage, reply, sessionId);
         return reply;
@@ -627,11 +645,13 @@ export class ChatService {
       case 'delete_scheduled_transaction':
         return `scheduled transaction ${this.describeArg(args.id)}`;
       case 'delete_account':
-        return `account ${this.describeArg(args.accountId ?? args.name)}`;
+        return `account ${this.describeArg(args.accountId ?? args.id ?? args.name)}`;
       case 'delete_category':
-        return `category ${this.describeArg(args.categoryId ?? args.name)}`;
+        return `category ${this.describeArg(args.categoryId ?? args.id ?? args.name)}`;
       case 'delete_budget':
-        return `budget ${this.describeArg(args.budgetId)}`;
+        return `budget ${this.describeArg(args.budgetId ?? args.id)}`;
+      case 'delete_goal':
+        return `goal ${this.describeArg(args.id)}`;
       case 'bulk_delete_transactions':
         return `multiple transactions (bulk delete)`;
       case 'reset_budget':

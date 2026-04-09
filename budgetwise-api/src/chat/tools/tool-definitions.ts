@@ -7,7 +7,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
     function: {
       name: 'create_account',
       description:
-        'Create a new financial account (bank, cash, or e-wallet). Use when the user wants to add a new account to track.',
+        'Create a new financial account to track cash, banks, e-wallets, credit cards, or loans. Use providerId only when it matches a known provider. If the user wants to correct an existing balance, use adjust_balance instead of recreating or editing the account.',
       parameters: {
         type: 'object',
         properties: {
@@ -17,12 +17,22 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           type: {
             type: 'string',
-            enum: ['CASH', 'BANK', 'EWALLET'],
+            enum: ['CASH', 'BANK', 'EWALLET', 'CREDIT_CARD', 'LOAN'],
             description: 'The type of account',
           },
           balance: {
             type: 'number',
             description: 'Initial balance. Defaults to 0 if not specified.',
+          },
+          providerId: {
+            type: 'string',
+            description:
+              'Optional provider registry ID, such as a known bank, e-wallet, card issuer, or loan provider key.',
+          },
+          maintainingBalance: {
+            type: 'number',
+            description:
+              'Optional maintaining balance amount in PHP. Most useful for bank accounts.',
           },
         },
         required: ['name', 'type'],
@@ -57,7 +67,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
     function: {
       name: 'update_account',
       description:
-        'Update an account name or type. To change the balance, use the adjust_balance tool instead.',
+        'Update an account name, type, provider metadata, or maintaining balance. To correct the account balance itself, use adjust_balance instead. Only set providerId when it matches a known provider, and use null to clear providerId or maintainingBalance if the user explicitly wants them removed.',
       parameters: {
         type: 'object',
         properties: {
@@ -65,8 +75,18 @@ export const toolDefinitions: ChatCompletionTool[] = [
           name: { type: 'string', description: 'New account name' },
           type: {
             type: 'string',
-            enum: ['CASH', 'BANK', 'EWALLET'],
+            enum: ['CASH', 'BANK', 'EWALLET', 'CREDIT_CARD', 'LOAN'],
             description: 'New account type',
+          },
+          providerId: {
+            anyOf: [{ type: 'string' }, { type: 'null' }],
+            description:
+              'Optional provider registry ID. Use null only when explicitly clearing the provider.',
+          },
+          maintainingBalance: {
+            anyOf: [{ type: 'number' }, { type: 'null' }],
+            description:
+              'Optional maintaining balance amount in PHP. Use null only when explicitly clearing it.',
           },
         },
         required: ['id'],
@@ -377,6 +397,11 @@ export const toolDefinitions: ChatCompletionTool[] = [
             type: 'number',
             description: 'Year. Defaults to current year.',
           },
+          spillover: {
+            type: 'boolean',
+            description:
+              'Optional. Set to true to allow unused budget to carry forward into the next month when applicable.',
+          },
         },
         required: ['categoryId', 'amount'],
       },
@@ -414,14 +439,20 @@ export const toolDefinitions: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'update_budget',
-      description: 'Update a budget amount.',
+      description:
+        'Update a budget amount and/or spillover setting for an existing budget.',
       parameters: {
         type: 'object',
         properties: {
           id: { type: 'string', description: 'The budget ID to update' },
           amount: { type: 'number', description: 'New budget amount in PHP' },
+          spillover: {
+            type: 'boolean',
+            description:
+              'Optional. Enable or disable spillover carry behavior for this budget.',
+          },
         },
-        required: ['id', 'amount'],
+        required: ['id'],
       },
     },
   },
@@ -436,6 +467,145 @@ export const toolDefinitions: ChatCompletionTool[] = [
           id: { type: 'string', description: 'The budget ID to delete' },
         },
         required: ['id'],
+      },
+    },
+  },
+
+  // ============ GOALS ============
+  {
+    type: 'function',
+    function: {
+      name: 'create_goal',
+      description:
+        'Create a savings goal or debt-payoff goal. Savings goals should include an accountId. Debt-payoff goals ignore accountId.',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['SAVINGS', 'DEBT_PAYOFF'],
+            description: 'Goal type',
+          },
+          name: {
+            type: 'string',
+            description: 'Goal name',
+          },
+          targetAmount: {
+            type: 'number',
+            description: 'Target amount in PHP',
+          },
+          targetDate: {
+            type: 'string',
+            description: 'Optional ISO date string target date',
+          },
+          accountId: {
+            type: 'string',
+            description:
+              'Required for savings goals, ignored for debt-payoff goals',
+          },
+        },
+        required: ['type', 'name', 'targetAmount'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_goals',
+      description: 'Return all goals for the current user.',
+      parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_goal',
+      description: 'Return one goal by ID.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Goal ID' },
+        },
+        required: ['id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_goal',
+      description:
+        'Update mutable goal fields only. Do not use this to change the goal type because goal type is immutable after creation.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Goal ID to update' },
+          name: { type: 'string', description: 'New goal name' },
+          targetAmount: {
+            type: 'number',
+            description: 'New target amount in PHP',
+          },
+          targetDate: {
+            type: 'string',
+            description:
+              'Optional ISO date string. Omit to keep existing value.',
+          },
+          accountId: {
+            type: 'string',
+            description:
+              'Savings-goal account ID. Omit to keep existing value.',
+          },
+        },
+        required: ['id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'delete_goal',
+      description:
+        'Delete a goal. Always confirm with the user before deleting.',
+      parameters: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'Goal ID to delete' },
+        },
+        required: ['id'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'contribute_to_goal',
+      description:
+        'Add a contribution to a goal using an owned funding account. This reuses the goal contribution flow and creates linked transaction records.',
+      parameters: {
+        type: 'object',
+        properties: {
+          goalId: {
+            type: 'string',
+            description: 'Goal ID to contribute to',
+          },
+          amount: {
+            type: 'number',
+            description: 'Contribution amount in PHP',
+          },
+          fromAccountId: {
+            type: 'string',
+            description: 'Funding account ID',
+          },
+          categoryId: {
+            type: 'string',
+            description: 'Optional category ID',
+          },
+          description: {
+            type: 'string',
+            description: 'Optional contribution description',
+          },
+        },
+        required: ['goalId', 'amount', 'fromAccountId'],
       },
     },
   },
@@ -567,6 +737,11 @@ export const toolDefinitions: ChatCompletionTool[] = [
             description:
               'Optional. Total number of installments before auto-completing. Auto-set to 1 for ONCE frequency.',
           },
+          notifyDaysBefore: {
+            type: 'number',
+            description:
+              'Optional reminder lead time in days before the due date. Valid range is 0 to 365.',
+          },
         },
         required: [
           'type',
@@ -636,6 +811,11 @@ export const toolDefinitions: ChatCompletionTool[] = [
             description:
               'Optional. Total number of installments before auto-completing.',
           },
+          notifyDaysBefore: {
+            type: 'number',
+            description:
+              'Optional reminder lead time in days before the due date. Valid range is 0 to 365.',
+          },
           status: {
             type: 'string',
             enum: ['ACTIVE', 'COMPLETED', 'CANCELLED'],
@@ -677,6 +857,36 @@ export const toolDefinitions: ChatCompletionTool[] = [
         },
         required: ['id'],
       },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_notifications',
+      description:
+        'Return notifications for the current user with optional pagination. This is read-only.',
+      parameters: {
+        type: 'object',
+        properties: {
+          skip: {
+            type: 'number',
+            description: 'Optional pagination offset. Defaults to 0.',
+          },
+          take: {
+            type: 'number',
+            description: 'Optional page size. Defaults to 20.',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_unread_notification_count',
+      description:
+        'Return the current user unread notification count. This is read-only.',
+      parameters: { type: 'object', properties: {} },
     },
   },
 ];

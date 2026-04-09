@@ -5,6 +5,8 @@ import { TransactionsService } from '../../transactions/transactions.service';
 import { BudgetsService } from '../../budgets/budgets.service';
 import { ReportsService } from '../../reports/reports.service';
 import { ScheduledTransactionsService } from '../../scheduled-transactions/scheduled-transactions.service';
+import { GoalsService } from '../../goals/goals.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class ToolExecutor {
@@ -17,6 +19,8 @@ export class ToolExecutor {
     private budgets: BudgetsService,
     private reports: ReportsService,
     private scheduledTransactions: ScheduledTransactionsService,
+    private goals: GoalsService,
+    private notifications: NotificationsService,
   ) {}
 
   async execute(toolName: string, args: any, userId: string): Promise<any> {
@@ -70,6 +74,17 @@ export class ToolExecutor {
       update_budget: () => this.budgets.update(id, data, userId),
       delete_budget: () => this.budgets.remove(id, userId),
 
+      // Goals
+      create_goal: () => this.goals.create(args, userId),
+      list_goals: () => this.goals.findAll(userId),
+      get_goal: () => this.goals.findOne(id, userId),
+      update_goal: () => this.goals.update(id, data, userId),
+      delete_goal: () => this.goals.remove(id, userId),
+      contribute_to_goal: () => {
+        const { goalId, ...payload } = args;
+        return this.goals.contribute(goalId, payload, userId);
+      },
+
       // Reports
       get_summary: () => this.reports.getSummary(args.month, args.year, userId),
       get_spending_by_category: () =>
@@ -92,6 +107,13 @@ export class ToolExecutor {
         this.scheduledTransactions.remove(id, userId),
       generate_scheduled_transaction: () =>
         this.scheduledTransactions.generate(id, userId),
+
+      // Notifications
+      list_notifications: () =>
+        this.notifications.listForUser(userId, args.skip, args.take),
+      get_unread_notification_count: async () => ({
+        count: await this.notifications.unreadCount(userId),
+      }),
     };
 
     const handler = handlers[toolName];

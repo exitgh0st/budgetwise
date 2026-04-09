@@ -2,7 +2,7 @@
 
 > Read this file FIRST at the start of every session. Use `/resume` to do this automatically.
 
-**Last updated at commit:** `b6a5861` — source baseline for wiki ingest 9711872..b6a5861 (2026-04-09)
+**Last updated at commit:** `a90d08a` — source baseline for wiki ingest b6a5861..a90d08a (2026-04-10)
 
 ## Completed Tickets (summary)
 
@@ -43,6 +43,7 @@
 | 33 — Rename Bill -> ScheduledTransaction | Full-stack rename to `ScheduledTransaction`, `/api/scheduled-transactions`, `/scheduled-transactions`, renamed chat tools, `/bills` redirect. |
 | 34 — Scheduled Transaction Notifications + Calendar | `notifyDaysBefore`, `Notification` model/module, toolbar bell, monthly calendar view, reminder dedupe + auto-clear. |
 | 35 — Budget Spillover Toggle | `Budget.spillover`, spillover-aware `getBudgetStatus`, base/carry/effective budget UX in Budgets + Reports. |
+| 36 — Chat Tool Coverage Expansion | Added goal CRUD/contribution chat tools, read-only notification chat tools, and expanded account/budget/scheduled-transaction chat fields to match newer backend support. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -82,7 +83,7 @@ Manual changes outside the numbered ticket flow:
 - **Scheduled transactions:** Full CRUD + `POST :id/generate` + hourly cron + `/process-due` manual trigger
 - **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss
 - **Reports:** Exclude system categories and transfers; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
-- **Chat:** DeepSeek V3 via OpenAI SDK, 32 tools total, guardrails, destructive confirmation, history pagination
+- **Chat:** DeepSeek V3 via OpenAI SDK, 40 tools total, guardrails, destructive confirmation, history pagination, goal management, read-only notifications
 - **Seed/onboarding:** Template categories cloned per user; starter accounts created by `POST /api/auth/onboard`
 
 ### Frontend (`budgetwise-ui/`)
@@ -98,15 +99,15 @@ Manual changes outside the numbered ticket flow:
 - **Production URL:** `https://budgetwise-api-k9z9.onrender.com/api`
 
 ### Chat Agent
-- Full end-to-end flow with accounts/categories/transactions/budgets/reports/scheduled-transactions tools
-- Destructive tools require explicit confirmation
-- Transfer-aware and scheduled-transaction-aware tool set
+- Full end-to-end flow with accounts/categories/transactions/budgets/reports/scheduled-transactions/goals/notifications tools
+- Destructive tools require explicit confirmation, including `delete_goal`
+- Transfer-aware, scheduled-transaction-aware, goal-aware, and notification-aware tool set
 
 ---
 
 ## Upcoming Tickets
 
-No open numbered ticket files after `35-budget-spillover-toggle.md`.
+No open numbered ticket files after `36-chat-tool-coverage-expansion.md`.
 
 ---
 
@@ -131,5 +132,6 @@ No open numbered ticket files after `35-budget-spillover-toggle.md`.
 ## Known Issues
 
 - **Bundle size:** the Angular initial bundle is still above the default 500KB warning budget. Not blocking.
+- **Backend lint debt:** `budgetwise-api` still fails `npm run lint` due pre-existing repo-wide `@typescript-eslint` issues outside Ticket 36 scope.
 - **Chat cursor:** `oldestMessageId` only tracks initial-load messages; live-session messages still use `id=''` on the frontend cursor path.
 - **`ChatService.testConnection()`** remains in the service for debugging and is not exposed by any controller.

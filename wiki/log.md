@@ -36,3 +36,5 @@
 ## [2026-04-09] ticket | #35 completed - wiki ingest pending
 
 ## [2026-04-09] ticket | #23 completed — wiki ingest pending
+
+## [2026-04-10] ticket | #36 completed — wiki ingest pending

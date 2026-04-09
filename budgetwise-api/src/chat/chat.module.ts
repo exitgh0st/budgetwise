@@ -8,6 +8,8 @@ import { TransactionsModule } from '../transactions/transactions.module';
 import { BudgetsModule } from '../budgets/budgets.module';
 import { ReportsModule } from '../reports/reports.module';
 import { ScheduledTransactionsModule } from '../scheduled-transactions/scheduled-transactions.module';
+import { GoalsModule } from '../goals/goals.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PendingConfirmationService } from './pending-confirmation.service';
 import { GuardrailsService } from './guardrails.service';
 
@@ -19,6 +21,8 @@ import { GuardrailsService } from './guardrails.service';
     ScheduledTransactionsModule,
     BudgetsModule,
     ReportsModule,
+    GoalsModule,
+    NotificationsModule,
   ],
   controllers: [ChatController],
   providers: [
