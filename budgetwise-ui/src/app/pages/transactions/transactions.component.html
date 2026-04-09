@@ -181,13 +181,6 @@
           @for (t of group.transactions; track t.id) {
             <div class="transaction-row">
               <div class="transaction-info">
-                @if (t.type === 'TRANSFER') {
-                  <mat-icon class="category-icon transfer-icon">swap_horiz</mat-icon>
-                } @else if (t.category?.icon) {
-                  <span class="category-icon emoji">{{ t.category?.icon }}</span>
-                } @else {
-                  <mat-icon class="category-icon">receipt</mat-icon>
-                }
                 <div class="transaction-details">
                   <span class="description">
                     {{ getDescriptionLabel(t) }}
@@ -198,8 +191,10 @@
                       <span class="system-badge">adjustment</span>
                     }
                   </span>
-                  <span class="account-name">{{ getAccountLabel(t) }}</span>
-                  <span class="category-name">{{ getCategoryLabel(t) }}</span>
+                  <div class="transaction-meta">
+                    <span class="account-name">{{ getAccountLabel(t) }}</span>
+                    <span class="category-pill">{{ getCategoryLabel(t) }}</span>
+                  </div>
                 </div>
               </div>
               <div class="transaction-actions">
