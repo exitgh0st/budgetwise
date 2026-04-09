@@ -1,4 +1,4 @@
-<div class="page-header">
+﻿<div class="page-header">
   <div class="month-nav">
     <button mat-icon-button (click)="prevMonth()" aria-label="Previous month">
       <mat-icon>chevron_left</mat-icon>
@@ -9,9 +9,14 @@
     </button>
   </div>
   @if (!isMobile) {
-    <button mat-flat-button color="primary" (click)="openSetBudgetDialog()"
-            [disabled]="unbudgetedCategories.length === 0">
-      <mat-icon>add</mat-icon> Set Budget
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="openSetBudgetDialog()"
+      [disabled]="unbudgetedCategories.length === 0"
+    >
+      <mat-icon>add</mat-icon>
+      Set Budget
     </button>
   }
 </div>
@@ -25,9 +30,14 @@
     <mat-icon class="empty-icon">savings</mat-icon>
     <h2>No budgets set for {{ monthLabel }}</h2>
     <p>Set spending limits per category to track where your money goes.</p>
-    <button mat-flat-button color="primary" (click)="openSetBudgetDialog()"
-            [disabled]="unbudgetedCategories.length === 0">
-      <mat-icon>add</mat-icon> Set Budget
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="openSetBudgetDialog()"
+      [disabled]="unbudgetedCategories.length === 0"
+    >
+      <mat-icon>add</mat-icon>
+      Set Budget
     </button>
   </div>
 }
@@ -42,23 +52,37 @@
           } @else {
             <mat-icon mat-card-avatar class="category-icon">category</mat-icon>
           }
-          <mat-card-title>{{ status.categoryName }}</mat-card-title>
+          <div class="budget-title-group">
+            <mat-card-title>{{ status.categoryName }}</mat-card-title>
+            @if (status.spillover) {
+              <mat-chip class="spillover-chip">Spillover</mat-chip>
+            }
+          </div>
         </mat-card-header>
         <mat-card-content>
           <mat-progress-bar
             mode="determinate"
             [value]="getProgressValue(status.percentUsed)"
-            [class]="'progress-' + getProgressColor(status.percentUsed)">
+            [class]="'progress-' + getProgressColor(status.percentUsed)"
+          >
           </mat-progress-bar>
           <div class="budget-details">
             <span class="spent-label">
               {{ status.spent | currency:'PHP':'symbol-narrow':'1.2-2' }}
-              / {{ status.budgetAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              / {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
               <span class="percent">({{ status.percentUsed / 100 | percent:'1.0-0' }})</span>
+            </span>
+            <span class="budget-breakdown">
+              Base {{ status.baseBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              + Carry
+              <span [class]="getCarryAmountClass(status.carriedAmount)">
+                {{ status.carriedAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              </span>
+              = Effective {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
             </span>
             @if (status.isOver) {
               <span class="remaining over">
-                {{ (status.spent - status.budgetAmount) | currency:'PHP':'symbol-narrow':'1.2-2' }} over budget!
+                {{ (status.spent - status.effectiveBudget) | currency:'PHP':'symbol-narrow':'1.2-2' }} over budget!
               </span>
             } @else {
               <span class="remaining ok">
@@ -68,13 +92,23 @@
           </div>
         </mat-card-content>
         <mat-card-actions align="end">
-          <button mat-icon-button color="primary" (click)="openAddTransactionDialog(status)" aria-label="Add transaction">
+          <button
+            mat-icon-button
+            color="primary"
+            (click)="openAddTransactionDialog(status)"
+            aria-label="Add transaction"
+          >
             <mat-icon>add</mat-icon>
           </button>
           <button mat-icon-button (click)="openEditDialog(status)" aria-label="Edit budget">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button color="warn" (click)="confirmDelete(status)" aria-label="Delete budget">
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="confirmDelete(status)"
+            aria-label="Delete budget"
+          >
             <mat-icon>delete</mat-icon>
           </button>
         </mat-card-actions>
@@ -102,8 +136,14 @@
 }
 
 @if (isMobile && !loading) {
-  <button mat-fab class="fab-add" color="primary" (click)="openSetBudgetDialog()"
-          [disabled]="unbudgetedCategories.length === 0" aria-label="Set budget">
+  <button
+    mat-fab
+    class="fab-add"
+    color="primary"
+    (click)="openSetBudgetDialog()"
+    [disabled]="unbudgetedCategories.length === 0"
+    aria-label="Set budget"
+  >
     <mat-icon>add</mat-icon>
   </button>
 }

@@ -1,4 +1,4 @@
-<div class="page-header">
+﻿<div class="page-header">
   <h1>Reports</h1>
   <mat-form-field appearance="outline" class="month-selector">
     <mat-label>Month</mat-label>
@@ -15,9 +15,7 @@
 }
 
 @if (!loading) {
-  <!-- Top section: Doughnut + Summary side by side on desktop -->
   <div class="top-section">
-    <!-- Spending by Category -->
     <mat-card class="chart-card flat-card">
       <mat-card-header>
         <mat-card-title>Spending by Category</mat-card-title>
@@ -25,10 +23,13 @@
       <mat-card-content>
         @if (categoryBreakdown.length > 0) {
           <div class="chart-container">
-            <canvas baseChart #doughnutChart
+            <canvas
+              baseChart
+              #doughnutChart
               type="doughnut"
               [data]="doughnutData"
-              [options]="doughnutOptions">
+              [options]="doughnutOptions"
+            >
             </canvas>
           </div>
           <div class="category-list">
@@ -51,14 +52,15 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Income vs Expenses Summary -->
     <div class="summary-cards">
       <mat-card class="summary-card income flat-card">
         <mat-card-content>
           <mat-icon>trending_up</mat-icon>
           <div>
             <span class="summary-label">Income</span>
-            <span class="summary-value">{{ (summary?.totalIncome || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            <span class="summary-value">
+              {{ (summary?.totalIncome || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}
+            </span>
           </div>
         </mat-card-content>
       </mat-card>
@@ -68,12 +70,18 @@
           <mat-icon>trending_down</mat-icon>
           <div>
             <span class="summary-label">Expenses</span>
-            <span class="summary-value">{{ (summary?.totalExpenses || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+            <span class="summary-value">
+              {{ (summary?.totalExpenses || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}
+            </span>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="summary-card flat-card" [class.positive]="(summary?.netBalance || 0) >= 0" [class.negative]="(summary?.netBalance || 0) < 0">
+      <mat-card
+        class="summary-card flat-card"
+        [class.positive]="(summary?.netBalance || 0) >= 0"
+        [class.negative]="(summary?.netBalance || 0) < 0"
+      >
         <mat-card-content>
           <mat-icon>account_balance</mat-icon>
           <div>
@@ -87,7 +95,6 @@
     </div>
   </div>
 
-  <!-- Monthly Trend Bar Chart -->
   <mat-card class="trend-card flat-card">
     <mat-card-header>
       <mat-card-title>Monthly Trend (Last 6 Months)</mat-card-title>
@@ -97,16 +104,74 @@
         <mat-progress-bar mode="indeterminate"></mat-progress-bar>
       } @else if (barData.labels && barData.labels.length > 0) {
         <div class="chart-container bar-chart-container">
-          <canvas baseChart
-            type="bar"
-            [data]="barData"
-            [options]="barOptions">
+          <canvas baseChart type="bar" [data]="barData" [options]="barOptions">
           </canvas>
         </div>
       } @else {
         <div class="empty-chart">
           <mat-icon>bar_chart</mat-icon>
           <p>No trend data available</p>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="budget-status-card flat-card">
+    <mat-card-header>
+      <mat-card-title>Budget Status</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (budgetStatuses.length > 0) {
+        <div class="budget-status-list">
+          @for (status of budgetStatuses; track status.budgetId) {
+            <div class="budget-status-row">
+              <div class="budget-status-header">
+                <div class="budget-status-title-group">
+                  <span class="budget-status-title">{{ status.categoryName }}</span>
+                  @if (status.spillover) {
+                    <span class="budget-status-chip">Spillover</span>
+                  }
+                </div>
+                <span class="budget-status-amount">
+                  {{ status.spent | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  / {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                </span>
+              </div>
+
+              <mat-progress-bar
+                mode="determinate"
+                [value]="getBudgetProgressValue(status.percentUsed)"
+                [class]="'progress-' + getBudgetProgressColor(status.percentUsed)"
+              >
+              </mat-progress-bar>
+
+              <div class="budget-status-meta">
+                <span class="budget-breakdown">
+                  Base {{ status.baseBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  + Carry
+                  <span [class]="getCarryAmountClass(status.carriedAmount)">
+                    {{ status.carriedAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  </span>
+                  = Effective {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                </span>
+
+                @if (status.isOver) {
+                  <span class="budget-remaining over">
+                    {{ (status.spent - status.effectiveBudget) | currency:'PHP':'symbol-narrow':'1.2-2' }} over budget
+                  </span>
+                } @else {
+                  <span class="budget-remaining ok">
+                    {{ status.remaining | currency:'PHP':'symbol-narrow':'1.2-2' }} remaining
+                  </span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty-chart">
+          <mat-icon>savings</mat-icon>
+          <p>No budget data for this month</p>
         </div>
       }
     </mat-card-content>

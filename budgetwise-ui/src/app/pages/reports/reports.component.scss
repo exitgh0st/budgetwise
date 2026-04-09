@@ -1,4 +1,4 @@
-.page-header {
+﻿.page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -15,7 +15,6 @@
   }
 }
 
-// Top section: doughnut + summary side by side
 .top-section {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
@@ -23,7 +22,6 @@
   margin-bottom: 16px;
 }
 
-// Chart card
 .chart-card {
   mat-card-content {
     padding-top: 8px;
@@ -40,7 +38,6 @@
   min-height: 320px;
 }
 
-// Category breakdown list
 .category-list {
   margin-top: 16px;
   border-top: 1px solid var(--mat-sys-outline-variant);
@@ -68,7 +65,6 @@
   }
 }
 
-// Summary cards
 .summary-cards {
   display: flex;
   flex-direction: column;
@@ -105,34 +101,160 @@
   }
 
   &.income {
-    mat-icon { color: var(--app-income); }
-    .summary-value { color: var(--app-income); }
+    mat-icon {
+      color: var(--app-income);
+    }
+
+    .summary-value {
+      color: var(--app-income);
+    }
   }
 
   &.expense {
-    mat-icon { color: var(--app-expense); }
-    .summary-value { color: var(--app-expense); }
+    mat-icon {
+      color: var(--app-expense);
+    }
+
+    .summary-value {
+      color: var(--app-expense);
+    }
   }
 
   &.positive {
-    mat-icon { color: var(--app-income); }
-    .summary-value { color: var(--app-income); }
+    mat-icon {
+      color: var(--app-income);
+    }
+
+    .summary-value {
+      color: var(--app-income);
+    }
   }
 
   &.negative {
-    mat-icon { color: var(--app-expense); }
-    .summary-value { color: var(--app-expense); }
+    mat-icon {
+      color: var(--app-expense);
+    }
+
+    .summary-value {
+      color: var(--app-expense);
+    }
   }
 }
 
-// Trend card
 .trend-card {
   mat-card-content {
     padding-top: 8px;
   }
 }
 
-// Empty chart state
+.budget-status-card {
+  margin-top: 16px;
+
+  mat-card-content {
+    padding-top: 8px;
+  }
+}
+
+.budget-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.budget-status-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.budget-status-row + .budget-status-row {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.budget-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.budget-status-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.budget-status-title {
+  font-weight: 600;
+}
+
+.budget-status-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--app-warning) 18%, transparent);
+  color: var(--app-warning);
+}
+
+.budget-status-amount {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.budget-status-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.budget-breakdown {
+  color: var(--mat-sys-outline);
+  line-height: 1.4;
+}
+
+.budget-remaining.ok {
+  color: var(--app-income);
+  font-weight: 600;
+}
+
+.budget-remaining.over {
+  color: var(--app-expense);
+  font-weight: 600;
+}
+
+.carry-positive {
+  color: var(--app-income);
+  font-weight: 600;
+}
+
+.carry-negative {
+  color: var(--app-expense);
+  font-weight: 600;
+}
+
+.carry-neutral {
+  color: inherit;
+}
+
+.progress-green {
+  --mdc-linear-progress-active-indicator-color: var(--app-income);
+}
+
+.progress-amber {
+  --mdc-linear-progress-active-indicator-color: var(--app-warning);
+}
+
+.progress-red {
+  --mdc-linear-progress-active-indicator-color: var(--app-expense);
+}
+
 .empty-chart {
   display: flex;
   flex-direction: column;
@@ -176,5 +298,9 @@
 
   .summary-card .summary-value {
     font-size: 18px;
+  }
+
+  .budget-status-header {
+    flex-direction: column;
   }
 }

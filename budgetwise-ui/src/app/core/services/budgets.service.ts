@@ -25,11 +25,12 @@ export class BudgetsService {
     amount: number;
     month?: number;
     year?: number;
+    spillover?: boolean;
   }): Observable<Budget> {
     return this.http.post<Budget>(this.url, data);
   }
 
-  update(id: string, data: { amount: number }): Observable<Budget> {
+  update(id: string, data: { amount?: number; spillover?: boolean }): Observable<Budget> {
     return this.http.patch<Budget>(`${this.url}/${id}`, data);
   }
 

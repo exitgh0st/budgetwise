@@ -1,4 +1,4 @@
-.page-header {
+﻿.page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -26,6 +26,11 @@
 }
 
 mat-card {
+  mat-card-header {
+    align-items: center;
+    gap: 8px;
+  }
+
   .category-icon {
     width: 40px;
     height: 40px;
@@ -50,14 +55,32 @@ mat-card {
   }
 }
 
+.budget-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spillover-chip {
+  background: color-mix(in srgb, var(--app-warning) 18%, transparent);
+  color: var(--app-warning);
+}
+
 .budget-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 
   .spent-label {
     font-size: 14px;
     font-weight: 500;
+  }
+
+  .budget-breakdown {
+    font-size: 13px;
+    color: var(--mat-sys-outline);
+    line-height: 1.4;
   }
 
   .percent {
@@ -77,6 +100,20 @@ mat-card {
       font-weight: 600;
     }
   }
+}
+
+.carry-positive {
+  color: var(--app-income);
+  font-weight: 600;
+}
+
+.carry-negative {
+  color: var(--app-expense);
+  font-weight: 600;
+}
+
+.carry-neutral {
+  color: inherit;
 }
 
 .unbudgeted-section {

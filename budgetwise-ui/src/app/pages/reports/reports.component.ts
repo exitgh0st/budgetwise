@@ -1,17 +1,21 @@
-import { Component, effect, inject, OnInit, ViewChild } from '@angular/core';
+﻿import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { CurrencyPipe } from '@angular/common';
+import { Component, effect, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { Chart, ChartData, ChartOptions, registerables } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { forkJoin } from 'rxjs';
-import { SummaryReport, CategoryBreakdown } from '../../core/models/report.model';
+import {
+  BudgetStatus,
+  CategoryBreakdown,
+  SummaryReport,
+} from '../../core/models/report.model';
 import { ReportsService } from '../../core/services/reports.service';
 import { ThemeService } from '../../core/services/theme.service';
 
@@ -56,13 +60,16 @@ export class ReportsComponent implements OnInit {
 
   summary: SummaryReport | null = null;
   categoryBreakdown: CategoryBreakdown[] = [];
+  budgetStatuses: BudgetStatus[] = [];
 
   doughnutData: ChartData<'doughnut'> = {
     labels: [],
-    datasets: [{
-      data: [],
-      backgroundColor: [],
-    }],
+    datasets: [
+      {
+        data: [],
+        backgroundColor: [],
+      },
+    ],
   };
 
   doughnutOptions: ChartOptions<'doughnut'> = {
@@ -72,7 +79,10 @@ export class ReportsComponent implements OnInit {
       legend: { position: 'right' },
       tooltip: {
         callbacks: {
-          label: ctx => `${ctx.label}: ₱${Number(ctx.parsed).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+          label: (ctx) =>
+            `${ctx.label}: PHP${Number(ctx.parsed).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}`,
         },
       },
     },
@@ -97,7 +107,7 @@ export class ReportsComponent implements OnInit {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: value => '₱' + Number(value).toLocaleString(),
+          callback: (value) => 'PHP' + Number(value).toLocaleString(),
         },
         grid: {},
       },
@@ -106,7 +116,10 @@ export class ReportsComponent implements OnInit {
       legend: {},
       tooltip: {
         callbacks: {
-          label: ctx => `${ctx.dataset.label}: ₱${(ctx.parsed.y ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+          label: (ctx) =>
+            `${ctx.dataset.label}: PHP${(ctx.parsed.y ?? 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}`,
         },
       },
     },
@@ -120,7 +133,7 @@ export class ReportsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
+    this.breakpointObserver.observe([Breakpoints.Handset]).subscribe((result) => {
       this.isMobile = result.matches;
       this.applyChartTheme();
     });
@@ -142,6 +155,30 @@ export class ReportsComponent implements OnInit {
     this.loadMonthData();
   }
 
+  getBudgetProgressValue(percentUsed: number): number {
+    return Math.min(percentUsed, 100);
+  }
+
+  getBudgetProgressColor(percentUsed: number): string {
+    if (percentUsed > 90) {
+      return 'red';
+    }
+    if (percentUsed >= 70) {
+      return 'amber';
+    }
+    return 'green';
+  }
+
+  getCarryAmountClass(carriedAmount: number): string {
+    if (carriedAmount > 0) {
+      return 'carry-positive';
+    }
+    if (carriedAmount < 0) {
+      return 'carry-negative';
+    }
+    return 'carry-neutral';
+  }
+
   private buildMonthOptions() {
     const now = new Date();
 
@@ -150,7 +187,10 @@ export class ReportsComponent implements OnInit {
       this.monthOptions.push({
         month: date.getMonth() + 1,
         year: date.getFullYear(),
-        label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        label: date.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        }),
       });
     }
 
@@ -162,19 +202,30 @@ export class ReportsComponent implements OnInit {
 
     forkJoin({
       summary: this.reportsService.getSummary(this.currentMonth, this.currentYear),
-      breakdown: this.reportsService.getSpendingByCategory(this.currentMonth, this.currentYear),
+      breakdown: this.reportsService.getSpendingByCategory(
+        this.currentMonth,
+        this.currentYear,
+      ),
+      budgets: this.reportsService.getBudgetStatus(this.currentMonth, this.currentYear),
     }).subscribe({
-      next: ({ summary, breakdown }) => {
+      next: ({ summary, breakdown, budgets }) => {
         this.summary = summary;
-        this.categoryBreakdown = breakdown.sort((left, right) => right.totalSpent - left.totalSpent);
+        this.categoryBreakdown = breakdown.sort(
+          (left, right) => right.totalSpent - left.totalSpent,
+        );
+        this.budgetStatuses = budgets.sort((left, right) =>
+          left.categoryName.localeCompare(right.categoryName),
+        );
         this.doughnutData = {
           ...this.doughnutData,
-          labels: breakdown.map(item => item.categoryName),
-          datasets: [{
-            ...this.doughnutData.datasets[0],
-            data: breakdown.map(item => Number(item.totalSpent)),
-            backgroundColor: this.buildChartPalette(),
-          }],
+          labels: breakdown.map((item) => item.categoryName),
+          datasets: [
+            {
+              ...this.doughnutData.datasets[0],
+              data: breakdown.map((item) => Number(item.totalSpent)),
+              backgroundColor: this.buildChartPalette(),
+            },
+          ],
         };
         this.loading = false;
         this.applyChartTheme();
@@ -189,19 +240,19 @@ export class ReportsComponent implements OnInit {
     this.loadingTrend = true;
 
     this.reportsService.getMonthlyTrend(6).subscribe({
-      next: trends => {
+      next: (trends) => {
         this.barData = {
           ...this.barData,
-          labels: trends.map(item => item.label),
+          labels: trends.map((item) => item.label),
           datasets: [
             {
               label: 'Income',
-              data: trends.map(item => Number(item.income)),
+              data: trends.map((item) => Number(item.income)),
               backgroundColor: this.readCssVar('--app-income', '#4CAF50'),
             },
             {
               label: 'Expenses',
-              data: trends.map(item => Number(item.expenses)),
+              data: trends.map((item) => Number(item.expenses)),
               backgroundColor: this.readCssVar('--app-expense', '#F44336'),
             },
           ],
@@ -223,14 +274,19 @@ export class ReportsComponent implements OnInit {
     const textColor = this.readCssVar('--mat-sys-on-surface', '#1c1b1f');
     const mutedColor = this.readCssVar('--mat-sys-outline', '#6b7280');
     const gridColor = this.readCssVar('--app-chart-grid', 'rgba(0, 0, 0, 0.12)');
-    const tooltipBackground = this.readCssVar('--mat-sys-surface-container-high', '#ffffff');
+    const tooltipBackground = this.readCssVar(
+      '--mat-sys-surface-container-high',
+      '#ffffff',
+    );
 
     this.doughnutData = {
       ...this.doughnutData,
-      datasets: [{
-        ...this.doughnutData.datasets[0],
-        backgroundColor: this.buildChartPalette(),
-      }],
+      datasets: [
+        {
+          ...this.doughnutData.datasets[0],
+          backgroundColor: this.buildChartPalette(),
+        },
+      ],
     };
 
     this.doughnutOptions = {
@@ -281,7 +337,7 @@ export class ReportsComponent implements OnInit {
           beginAtZero: true,
           ticks: {
             color: mutedColor,
-            callback: value => '₱' + Number(value).toLocaleString(),
+            callback: (value) => 'PHP' + Number(value).toLocaleString(),
           },
           grid: { color: gridColor },
         },
@@ -324,7 +380,9 @@ export class ReportsComponent implements OnInit {
   }
 
   private readCssVar(name: string, fallback: string): string {
-    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const value = getComputedStyle(document.documentElement)
+      .getPropertyValue(name)
+      .trim();
     return value || fallback;
   }
 }
