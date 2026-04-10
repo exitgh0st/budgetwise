@@ -34,6 +34,14 @@ export class TransactionsService {
     });
   }
 
+  async createWithTx(
+    tx: Prisma.TransactionClient,
+    dto: CreateTransactionDto,
+    userId: string,
+  ): Promise<TransactionWithRelations> {
+    return this.createInTransaction(tx, dto, userId);
+  }
+
   async createInTransaction(
     tx: Prisma.TransactionClient,
     dto: CreateTransactionDto,

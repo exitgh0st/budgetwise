@@ -135,38 +135,47 @@ export class ScheduledTransactionsService {
   }
 
   async generate(id: string, userId: string): Promise<object> {
-    const scheduledTransaction = await this.findOne(id, userId);
+    return this.prisma.$transaction(async (tx) => {
+      const scheduledTransaction = await tx.scheduledTransaction.findFirst({
+        where: { id, userId },
+      });
 
-    if (scheduledTransaction.status !== 'ACTIVE') {
-      throw new BadRequestException(
-        'Cannot generate from a non-active scheduled transaction',
+      if (!scheduledTransaction) {
+        throw new NotFoundException(`Scheduled transaction ${id} not found`);
+      }
+
+      if (scheduledTransaction.status !== 'ACTIVE') {
+        throw new BadRequestException(
+          'Cannot generate from a non-active scheduled transaction',
+        );
+      }
+
+      const transaction = await this.transactionsService.createWithTx(
+        tx,
+        {
+          type: scheduledTransaction.type,
+          amount: Number(scheduledTransaction.amount),
+          description: scheduledTransaction.description ?? undefined,
+          accountId: scheduledTransaction.accountId,
+          categoryId: scheduledTransaction.categoryId,
+          // Manual generation should create a settled transaction now, not a future-dated one.
+          date: new Date().toISOString(),
+        },
+        userId,
       );
-    }
 
-    const transaction = await this.transactionsService.create(
-      {
-        type: scheduledTransaction.type,
-        amount: Number(scheduledTransaction.amount),
-        description: scheduledTransaction.description ?? undefined,
-        accountId: scheduledTransaction.accountId,
-        categoryId: scheduledTransaction.categoryId,
-        // Manual generation should create a settled transaction now, not a future-dated one.
-        date: new Date().toISOString(),
-      },
-      userId,
-    );
+      await tx.transaction.update({
+        where: { id: transaction.id },
+        data: { scheduledTransactionId: scheduledTransaction.id },
+      });
 
-    await this.prisma.transaction.update({
-      where: { id: transaction.id },
-      data: { scheduledTransactionId: scheduledTransaction.id },
+      await tx.scheduledTransaction.update({
+        where: { id },
+        data: this.getProgressUpdate(scheduledTransaction),
+      });
+
+      return transaction;
     });
-
-    await this.prisma.scheduledTransaction.update({
-      where: { id },
-      data: this.getProgressUpdate(scheduledTransaction),
-    });
-
-    return transaction;
   }
 
   async findAllDue(): Promise<ScheduledTransaction[]> {
@@ -184,30 +193,47 @@ export class ScheduledTransactionsService {
 
   async generateFromRecord(
     scheduledTransaction: ScheduledTransaction,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const userId = scheduledTransaction.userId;
-    if (!userId) return;
+    if (!userId) return false;
 
-    const transaction = await this.transactionsService.create(
-      {
-        type: scheduledTransaction.type,
-        amount: Number(scheduledTransaction.amount),
-        description: scheduledTransaction.description ?? undefined,
-        accountId: scheduledTransaction.accountId,
-        categoryId: scheduledTransaction.categoryId,
-        date: scheduledTransaction.nextDueDate.toISOString(),
-      },
-      userId,
-    );
+    return this.prisma.$transaction(async (tx) => {
+      const current = await tx.scheduledTransaction.findUnique({
+        where: { id: scheduledTransaction.id },
+      });
 
-    await this.prisma.transaction.update({
-      where: { id: transaction.id },
-      data: { scheduledTransactionId: scheduledTransaction.id },
-    });
+      if (!current || current.status !== 'ACTIVE') {
+        return false;
+      }
 
-    await this.prisma.scheduledTransaction.update({
-      where: { id: scheduledTransaction.id },
-      data: this.getProgressUpdate(scheduledTransaction),
+      if (current.nextDueDate.getTime() > endOfLocalDay(new Date()).getTime()) {
+        return false;
+      }
+
+      const transaction = await this.transactionsService.createWithTx(
+        tx,
+        {
+          type: current.type,
+          amount: Number(current.amount),
+          description: current.description ?? undefined,
+          accountId: current.accountId,
+          categoryId: current.categoryId,
+          date: current.nextDueDate.toISOString(),
+        },
+        userId,
+      );
+
+      await tx.transaction.update({
+        where: { id: transaction.id },
+        data: { scheduledTransactionId: current.id },
+      });
+
+      await tx.scheduledTransaction.update({
+        where: { id: current.id },
+        data: this.getProgressUpdate(current),
+      });
+
+      return true;
     });
   }
 

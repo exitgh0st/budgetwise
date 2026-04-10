@@ -48,7 +48,13 @@ export class ScheduledTransactionsCronService {
 
       for (const record of dueRecords) {
         try {
-          await this.scheduledTransactionsService.generateFromRecord(record);
+          const generated =
+            await this.scheduledTransactionsService.generateFromRecord(record);
+
+          if (!generated) {
+            continue;
+          }
+
           await this.notificationsService.markReadByScheduledTx(record.id);
           totalProcessed++;
         } catch (err) {

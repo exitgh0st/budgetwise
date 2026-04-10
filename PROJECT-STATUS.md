@@ -47,6 +47,7 @@
 | 37 — Secure `process-due` Endpoint | Kept `POST /api/scheduled-transactions/process-due` for ops/debugging but gated it behind `InternalAdminGuard` with `x-internal-secret` / `INTERNAL_ADMIN_SECRET`, leaving the hourly cron path unchanged. |
 | 38 — Scheduled Transaction Ownership Validation | Added owned-account and accessible-category checks to scheduled transaction create/update, returning clean `404` responses for cross-tenant references while preserving system-category access. |
 | 40 — Date-Only Normalization | Standardized date-only picker payloads to `YYYY-MM-DD`, added shared frontend/backend date helpers, and moved report/filter boundaries to UTC to prevent timezone drift. |
+| 41 — Atomic Scheduled Generation | Wrapped manual and cron scheduled-transaction generation in single Prisma transactions via `TransactionsService.createWithTx`, so create/link/advance now roll back together and cron re-reads in-tx for idempotency. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -84,7 +85,7 @@ Manual changes outside the numbered ticket flow:
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
 - **Transactions:** Support income, expense, and transfer flows with atomic balance sync
-- **Scheduled transactions:** Full CRUD with owned account/category validation + `POST :id/generate` + hourly cron + `/process-due` manual trigger
+- **Scheduled transactions:** Full CRUD with owned account/category validation + atomic `POST :id/generate` + atomic hourly cron generation + `/process-due` manual trigger
 - **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss
 - **Reports:** Exclude system categories and transfers; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
 - **Chat:** DeepSeek V3 via OpenAI SDK, 40 tools total, guardrails, destructive confirmation, history pagination, goal management, read-only notifications
@@ -116,10 +117,6 @@ Code-review remediation backlog — created 2026-04-10 from `code-review-remedia
 ### Ticket 39 — Settlement-Aware Balance Handling
 **Status:** Pending
 **Description:** Reintroduce `Transaction.isSettled` (dropped by the April 6 rename-recurring-to-bill migration), derive it from `date`, and make `applyBalanceEffect` a no-op when unsettled. Reports filter to settled rows and the UI shows a Pending badge on future-dated transactions.
-
-### Ticket 41 — Atomic Scheduled Generation
-**Status:** Pending
-**Description:** Wrap `ScheduledTransactionsService.generate` and `generateFromRecord` in a single `prisma.$transaction` (using a new `TransactionsService.createWithTx`) so generate/link/advance either all succeed or all roll back. Adds an in-tx re-read for idempotency.
 
 ### Ticket 42 — Decimal Normalization in API Responses
 **Status:** Pending
