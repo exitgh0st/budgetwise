@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
+import { CopyBudgetsDto } from './dto/copy-budgets.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 
 const budgetInclude = {
@@ -119,6 +120,54 @@ export class BudgetsService {
     });
 
     return this.toResponse(budget);
+  }
+
+  async copyFromMonth(
+    dto: CopyBudgetsDto,
+    userId: string,
+  ): Promise<{ copied: number; skipped: number; sourceTotal: number }> {
+    return this.prisma.$transaction(async (tx) => {
+      const selectedCategoryIds = dto.categoryIds?.length
+        ? new Set(dto.categoryIds)
+        : null;
+
+      const sourceBudgets = await tx.budget.findMany({
+        where: {
+          month: dto.sourceMonth,
+          year: dto.sourceYear,
+          userId,
+          ...(selectedCategoryIds
+            ? {
+                categoryId: {
+                  in: [...selectedCategoryIds],
+                },
+              }
+            : {}),
+        },
+      });
+
+      if (sourceBudgets.length === 0) {
+        return { copied: 0, skipped: 0, sourceTotal: 0 };
+      }
+
+      const result = await tx.budget.createMany({
+        data: sourceBudgets.map((budget) => ({
+          categoryId: budget.categoryId,
+          amount: budget.amount,
+          spillover: budget.spillover,
+          month: dto.targetMonth,
+          year: dto.targetYear,
+          userId,
+        })),
+        skipDuplicates: true,
+      });
+
+      return {
+        copied: result.count,
+        skipped: sourceBudgets.length - result.count,
+        sourceTotal: sourceBudgets.length,
+      };
+    });
   }
 
   private toResponse(budget: BudgetWithCategory): BudgetResponse {

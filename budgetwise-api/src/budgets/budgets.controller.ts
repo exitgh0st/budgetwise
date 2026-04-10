@@ -11,6 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BudgetsService } from './budgets.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
+import { CopyBudgetsDto } from './dto/copy-budgets.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { FilterBudgetsDto } from './dto/filter-budgets.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -30,6 +31,12 @@ export class BudgetsController {
     @Body() dto: CreateBudgetDto,
   ) {
     return this.budgetsService.create(dto, user.userId);
+  }
+
+  @Post('copy')
+  @ApiOperation({ summary: 'Copy budgets from one month to another' })
+  copy(@CurrentUser() user: { userId: string }, @Body() dto: CopyBudgetsDto) {
+    return this.budgetsService.copyFromMonth(dto, user.userId);
   }
 
   @Get()

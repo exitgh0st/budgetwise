@@ -1,4 +1,4 @@
-﻿<div class="page-header">
+<div class="page-header">
   <div class="month-nav">
     <button mat-icon-button (click)="prevMonth()" aria-label="Previous month">
       <mat-icon>chevron_left</mat-icon>
@@ -7,17 +7,37 @@
     <button mat-icon-button (click)="nextMonth()" aria-label="Next month">
       <mat-icon>chevron_right</mat-icon>
     </button>
+    @if (isMobile) {
+      <button
+        mat-icon-button
+        (click)="copyFromLastMonth()"
+        [disabled]="isCopyBusy"
+        aria-label="Copy budgets from last month"
+      >
+        <mat-icon>content_copy</mat-icon>
+      </button>
+    }
   </div>
   @if (!isMobile) {
-    <button
-      mat-flat-button
-      color="primary"
-      (click)="openSetBudgetDialog()"
-      [disabled]="unbudgetedCategories.length === 0"
-    >
-      <mat-icon>add</mat-icon>
-      Set Budget
-    </button>
+    <div class="header-actions">
+      <button
+        mat-stroked-button
+        (click)="copyFromLastMonth()"
+        [disabled]="isCopyBusy"
+      >
+        <mat-icon>content_copy</mat-icon>
+        Copy Last Month
+      </button>
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="openSetBudgetDialog()"
+        [disabled]="unbudgetedCategories.length === 0"
+      >
+        <mat-icon>add</mat-icon>
+        Set Budget
+      </button>
+    </div>
   }
 </div>
 

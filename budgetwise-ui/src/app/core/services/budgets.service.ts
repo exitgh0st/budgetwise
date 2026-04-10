@@ -37,4 +37,17 @@ export class BudgetsService {
   delete(id: string): Observable<Budget> {
     return this.http.delete<Budget>(`${this.url}/${id}`);
   }
+
+  copyFromMonth(data: {
+    sourceMonth: number;
+    sourceYear: number;
+    targetMonth: number;
+    targetYear: number;
+    categoryIds?: string[];
+  }): Observable<{ copied: number; skipped: number; sourceTotal: number }> {
+    return this.http.post<{ copied: number; skipped: number; sourceTotal: number }>(
+      `${this.url}/copy`,
+      data,
+    );
+  }
 }

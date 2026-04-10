@@ -10,6 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin } from 'rxjs';
 import { Account } from '../../core/models/account.model';
+import { Budget } from '../../core/models/budget.model';
 import { Category } from '../../core/models/category.model';
 import { BudgetStatus } from '../../core/models/report.model';
 import { AccountsService } from '../../core/services/accounts.service';
@@ -29,6 +30,10 @@ import {
   BudgetDialogComponent,
   BudgetDialogData,
 } from './budget-dialog/budget-dialog.component';
+import {
+  CopyBudgetPreviewItem,
+  CopyBudgetsDialogComponent,
+} from './copy-budgets-dialog/copy-budgets-dialog.component';
 
 @Component({
   selector: 'app-budgets',
@@ -61,6 +66,8 @@ export class BudgetsComponent implements OnInit {
   unbudgetedCategories: Category[] = [];
   loading = true;
   isMobile = false;
+  copyPreviewLoading = false;
+  copySubmitting = false;
 
   currentMonth: number;
   currentYear: number;
@@ -72,11 +79,11 @@ export class BudgetsComponent implements OnInit {
   }
 
   get monthLabel(): string {
-    const date = new Date(this.currentYear, this.currentMonth - 1);
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    });
+    return this.getMonthLabel(this.currentMonth, this.currentYear);
+  }
+
+  get isCopyBusy(): boolean {
+    return this.loading || this.copyPreviewLoading || this.copySubmitting;
   }
 
   ngOnInit() {
@@ -141,6 +148,147 @@ export class BudgetsComponent implements OnInit {
       this.currentYear++;
     }
     this.loadData();
+  }
+
+  copyFromLastMonth() {
+    const sourceMonth = this.currentMonth === 1 ? 12 : this.currentMonth - 1;
+    const sourceYear =
+      this.currentMonth === 1 ? this.currentYear - 1 : this.currentYear;
+    const targetMonth = this.currentMonth;
+    const targetYear = this.currentYear;
+    const sourceLabel = this.getMonthLabel(sourceMonth, sourceYear);
+    const targetLabel = this.getMonthLabel(targetMonth, targetYear);
+
+    this.copyPreviewLoading = true;
+    forkJoin({
+      sourceBudgets: this.budgetsService.getAll(sourceMonth, sourceYear),
+      targetBudgets: this.budgetsService.getAll(targetMonth, targetYear),
+    }).subscribe({
+      next: ({ sourceBudgets, targetBudgets }) => {
+        this.copyPreviewLoading = false;
+
+        if (sourceBudgets.length === 0) {
+          this.snackBar.open(`No budgets found in ${sourceLabel}`, 'Dismiss', {
+            duration: 3000,
+          });
+          return;
+        }
+
+        const previewItems = this.buildCopyPreviewItems(
+          sourceBudgets,
+          targetBudgets,
+        );
+        const dialogRef = this.dialog.open(CopyBudgetsDialogComponent, {
+          width: '640px',
+          maxWidth: 'calc(100vw - 24px)',
+          data: {
+            sourceLabel,
+            targetLabel,
+            items: previewItems,
+          },
+        });
+
+        dialogRef.afterClosed().subscribe((selectedCategoryIds) => {
+          if (selectedCategoryIds?.length) {
+            this.performCopyFromLastMonth(
+              sourceMonth,
+              sourceYear,
+              targetMonth,
+              targetYear,
+              sourceLabel,
+              selectedCategoryIds,
+            );
+          }
+        });
+      },
+      error: () => {
+        this.copyPreviewLoading = false;
+        this.snackBar.open('Failed to load budgets to preview', 'Dismiss', {
+          duration: 3000,
+        });
+      },
+    });
+  }
+
+  private performCopyFromLastMonth(
+    sourceMonth: number,
+    sourceYear: number,
+    targetMonth: number,
+    targetYear: number,
+    sourceLabel: string,
+    categoryIds: string[],
+  ) {
+    this.copySubmitting = true;
+
+    this.budgetsService
+      .copyFromMonth({
+        sourceMonth,
+        sourceYear,
+        targetMonth,
+        targetYear,
+        categoryIds,
+      })
+      .subscribe({
+        next: (result) => {
+          this.copySubmitting = false;
+          let message: string;
+
+          if (result.sourceTotal === 0) {
+            message = `No budgets found in ${sourceLabel}`;
+          } else if (result.copied === 0) {
+            message = 'All categories already have budgets this month';
+          } else {
+            message = `Copied ${result.copied} budget(s) from ${sourceLabel}`;
+            if (result.skipped > 0) {
+              message += ` (${result.skipped} already existed)`;
+            }
+          }
+
+          this.snackBar.open(message, 'Dismiss', { duration: 3000 });
+          this.loadData();
+        },
+        error: () => {
+          this.copySubmitting = false;
+          this.snackBar.open('Failed to copy budgets', 'Dismiss', {
+            duration: 3000,
+          });
+        },
+      });
+  }
+
+  private buildCopyPreviewItems(
+    sourceBudgets: Budget[],
+    targetBudgets: Budget[],
+  ): CopyBudgetPreviewItem[] {
+    const targetCategoryIds = new Set(
+      targetBudgets.map((budget) => budget.categoryId),
+    );
+
+    return [...sourceBudgets]
+      .map((budget) => ({
+        categoryId: budget.categoryId,
+        categoryName: budget.category.name,
+        categoryIcon: budget.category.icon,
+        amount: budget.amount,
+        spillover: budget.spillover,
+        willCopy: !targetCategoryIds.has(budget.categoryId),
+        selected: !targetCategoryIds.has(budget.categoryId),
+      }))
+      .sort((left, right) => {
+        if (left.willCopy !== right.willCopy) {
+          return left.willCopy ? -1 : 1;
+        }
+
+        return left.categoryName.localeCompare(right.categoryName);
+      });
+  }
+
+  private getMonthLabel(month: number, year: number): string {
+    const date = new Date(year, month - 1);
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    });
   }
 
   getProgressColor(percentUsed: number): string {

@@ -49,6 +49,7 @@
 | 40 — Date-Only Normalization | Standardized date-only picker payloads to `YYYY-MM-DD`, added shared frontend/backend date helpers, and moved report/filter boundaries to UTC to prevent timezone drift. |
 | 41 — Atomic Scheduled Generation | Wrapped manual and cron scheduled-transaction generation in single Prisma transactions via `TransactionsService.createWithTx`, so create/link/advance now roll back together and cron re-reads in-tx for idempotency. |
 | 42 — Decimal Normalization in API Responses | Added response mappers for accounts, transactions, budgets, and scheduled transactions so Decimal money fields, including nested account balances, now return plain JSON numbers. |
+| 43 — Copy Budgets from Last Month | Added atomic `POST /api/budgets/copy` plus budgets-page copy actions that pull prior-month amount/spillover values into the current month without overwriting existing categories. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -99,7 +100,7 @@ Manual changes outside the numbered ticket flow:
 - **Transactions page:** Filtered list, transfer-aware dialog, client-side CSV export
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, create/edit/delete/pay/receive flow
 - **Notifications UI:** Toolbar bell with unread polling, recent menu, mark-read/mark-all-read, deep-link to `/scheduled-transactions`
-- **Budgets UX:** Spillover toggle in dialog, spillover chip, base/carry/effective breakdowns
+- **Budgets UX:** Spillover toggle in dialog, spillover chip, base/carry/effective breakdowns, and copy-from-last-month actions for desktop/mobile headers
 - **Reports UX:** Doughnut + bar charts plus effective-budget status cards
 - **Accounts UX:** Provider picker for BANK / EWALLET / CREDIT_CARD / LOAN with refreshed local brand assets
 - **Shared:** `ConfirmDialogComponent`, `NotificationBellComponent`, `ChatPanelComponent`, `MarkdownPipe`
