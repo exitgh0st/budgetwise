@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, TransactionType } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
 import { parseDateBoundary, parseDateOnly } from '../common/date.util';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { FilterTransactionsDto } from './dto/filter-transactions.dto';
+import { UpdateTransactionDto } from './dto/update-transaction.dto';
 
 const transactionInclude = {
   account: true,
@@ -21,6 +21,38 @@ type TransactionWithRelations = Prisma.TransactionGetPayload<{
   include: typeof transactionInclude;
 }>;
 
+type AccountWithMoneyFields = {
+  balance: Prisma.Decimal;
+  maintainingBalance: Prisma.Decimal | null;
+};
+
+type NormalizedAccount<T extends AccountWithMoneyFields> = Omit<
+  T,
+  'balance' | 'maintainingBalance'
+> & {
+  balance: number;
+  maintainingBalance: number | null;
+};
+
+type TransactionAccount = NonNullable<TransactionWithRelations['account']>;
+
+export type TransactionResponse = Omit<
+  TransactionWithRelations,
+  'amount' | 'account' | 'fromAccount' | 'toAccount'
+> & {
+  amount: number;
+  account: NormalizedAccount<TransactionAccount> | null;
+  fromAccount: NormalizedAccount<TransactionAccount> | null;
+  toAccount: NormalizedAccount<TransactionAccount> | null;
+};
+
+export interface PaginatedTransactionsResponse {
+  data: TransactionResponse[];
+  total: number;
+  limit: number | undefined;
+  offset: number | undefined;
+}
+
 @Injectable()
 export class TransactionsService {
   constructor(private prisma: PrismaService) {}
@@ -28,55 +60,38 @@ export class TransactionsService {
   async create(
     dto: CreateTransactionDto,
     userId: string,
-  ): Promise<TransactionWithRelations> {
-    return this.prisma.$transaction(async (tx) => {
-      return this.createInTransaction(tx, dto, userId);
-    });
+  ): Promise<TransactionResponse> {
+    const transaction = await this.prisma.$transaction((tx) =>
+      this.createRawInTransaction(tx, dto, userId),
+    );
+
+    return this.toResponse(transaction);
   }
 
   async createWithTx(
     tx: Prisma.TransactionClient,
     dto: CreateTransactionDto,
     userId: string,
-  ): Promise<TransactionWithRelations> {
-    return this.createInTransaction(tx, dto, userId);
+  ): Promise<TransactionResponse> {
+    const transaction = await this.createRawInTransaction(tx, dto, userId);
+
+    return this.toResponse(transaction);
   }
 
   async createInTransaction(
     tx: Prisma.TransactionClient,
     dto: CreateTransactionDto,
     userId: string,
-  ): Promise<TransactionWithRelations> {
-    const normalized = await this.resolveTransactionShape(tx, dto, userId);
-    const date = dto.date ? parseDateOnly(dto.date) : new Date();
+  ): Promise<TransactionResponse> {
+    const transaction = await this.createRawInTransaction(tx, dto, userId);
 
-    const transaction = await tx.transaction.create({
-      data: {
-        type: normalized.type,
-        amount: dto.amount,
-        description: dto.description,
-        date,
-        accountId: normalized.accountId,
-        fromAccountId: normalized.fromAccountId,
-        toAccountId: normalized.toAccountId,
-        categoryId: normalized.categoryId,
-        userId,
-      },
-      include: transactionInclude,
-    });
-
-    await this.applyBalanceEffect(tx, {
-      type: normalized.type,
-      amount: dto.amount,
-      accountId: normalized.accountId,
-      fromAccountId: normalized.fromAccountId,
-      toAccountId: normalized.toAccountId,
-    });
-
-    return transaction;
+    return this.toResponse(transaction);
   }
 
-  async findAll(filters: FilterTransactionsDto, userId: string) {
+  async findAll(
+    filters: FilterTransactionsDto,
+    userId: string,
+  ): Promise<PaginatedTransactionsResponse> {
     const where: Prisma.TransactionWhereInput = { userId };
 
     if (filters.accountId) {
@@ -111,29 +126,39 @@ export class TransactionsService {
         this.prisma.transaction.count({ where }),
       ]);
 
-    return { data, total, limit: filters.limit, offset: filters.offset };
+    return {
+      data: data.map((transaction) => this.toResponse(transaction)),
+      total,
+      limit: filters.limit,
+      offset: filters.offset,
+    };
   }
 
-  async findOne(id: string, userId: string): Promise<TransactionWithRelations> {
+  async findOne(id: string, userId: string): Promise<TransactionResponse> {
     const transaction = await this.prisma.transaction.findFirst({
       where: { id, userId },
       include: transactionInclude,
     });
-    if (!transaction)
+
+    if (!transaction) {
       throw new NotFoundException(`Transaction ${id} not found`);
-    return transaction;
+    }
+
+    return this.toResponse(transaction);
   }
 
   async update(
     id: string,
     dto: UpdateTransactionDto,
     userId: string,
-  ): Promise<TransactionWithRelations> {
-    return this.prisma.$transaction(async (tx) => {
+  ): Promise<TransactionResponse> {
+    const transaction = await this.prisma.$transaction(async (tx) => {
       const existing = await tx.transaction.findFirst({
         where: { id, userId },
       });
-      if (!existing) throw new NotFoundException(`Transaction ${id} not found`);
+      if (!existing) {
+        throw new NotFoundException(`Transaction ${id} not found`);
+      }
 
       const linkedContribution = await tx.goalContribution.findUnique({
         where: { transactionId: id },
@@ -196,20 +221,62 @@ export class TransactionsService {
 
       return updated;
     });
+
+    return this.toResponse(transaction);
   }
 
-  async remove(id: string, userId: string) {
-    return this.prisma.$transaction(async (tx) => {
+  async remove(id: string, userId: string): Promise<TransactionResponse> {
+    const transaction = await this.prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.findFirst({
         where: { id, userId },
       });
-      if (!transaction)
+      if (!transaction) {
         throw new NotFoundException(`Transaction ${id} not found`);
+      }
 
       await this.reverseBalanceEffect(tx, transaction);
 
-      return tx.transaction.delete({ where: { id } });
+      return tx.transaction.delete({
+        where: { id },
+        include: transactionInclude,
+      });
     });
+
+    return this.toResponse(transaction);
+  }
+
+  private async createRawInTransaction(
+    tx: Prisma.TransactionClient,
+    dto: CreateTransactionDto,
+    userId: string,
+  ): Promise<TransactionWithRelations> {
+    const normalized = await this.resolveTransactionShape(tx, dto, userId);
+    const date = dto.date ? parseDateOnly(dto.date) : new Date();
+
+    const transaction = await tx.transaction.create({
+      data: {
+        type: normalized.type,
+        amount: dto.amount,
+        description: dto.description,
+        date,
+        accountId: normalized.accountId,
+        fromAccountId: normalized.fromAccountId,
+        toAccountId: normalized.toAccountId,
+        categoryId: normalized.categoryId,
+        userId,
+      },
+      include: transactionInclude,
+    });
+
+    await this.applyBalanceEffect(tx, {
+      type: normalized.type,
+      amount: dto.amount,
+      accountId: normalized.accountId,
+      fromAccountId: normalized.fromAccountId,
+      toAccountId: normalized.toAccountId,
+    });
+
+    return transaction;
   }
 
   private async resolveTransactionShape(
@@ -360,5 +427,34 @@ export class TransactionsService {
       where: { id: transaction.accountId },
       data: { balance: { increment: balanceChange } },
     });
+  }
+
+  private normalizeAccount<T extends AccountWithMoneyFields>(
+    account: T | null,
+  ): NormalizedAccount<T> | null {
+    if (!account) {
+      return null;
+    }
+
+    return {
+      ...account,
+      balance: Number(account.balance),
+      maintainingBalance:
+        account.maintainingBalance === null
+          ? null
+          : Number(account.maintainingBalance),
+    };
+  }
+
+  private toResponse(
+    transaction: TransactionWithRelations,
+  ): TransactionResponse {
+    return {
+      ...transaction,
+      amount: Number(transaction.amount),
+      account: this.normalizeAccount(transaction.account),
+      fromAccount: this.normalizeAccount(transaction.fromAccount),
+      toAccount: this.normalizeAccount(transaction.toAccount),
+    };
   }
 }

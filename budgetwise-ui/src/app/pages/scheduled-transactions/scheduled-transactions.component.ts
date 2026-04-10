@@ -140,14 +140,14 @@ export class ScheduledTransactionsComponent implements OnInit {
 
   get totalIncome(): number {
     return this.incomeScheduledTransactions.reduce(
-      (sum, scheduledTransaction) => sum + Number(scheduledTransaction.amount),
+      (sum, scheduledTransaction) => sum + scheduledTransaction.amount,
       0,
     );
   }
 
   get totalExpense(): number {
     return this.expenseScheduledTransactions.reduce(
-      (sum, scheduledTransaction) => sum + Number(scheduledTransaction.amount),
+      (sum, scheduledTransaction) => sum + scheduledTransaction.amount,
       0,
     );
   }
@@ -410,7 +410,7 @@ export class ScheduledTransactionsComponent implements OnInit {
       scheduledTransaction.type === 'EXPENSE'
         ? 'Failed to record scheduled payment'
         : 'Failed to record scheduled income';
-    const amount = Number(scheduledTransaction.amount).toLocaleString('en-PH', {
+    const amount = scheduledTransaction.amount.toLocaleString('en-PH', {
       minimumFractionDigits: 2,
     });
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -510,7 +510,7 @@ export class ScheduledTransactionsComponent implements OnInit {
           scheduledTransaction.description || scheduledTransaction.category.name
         ).toLowerCase();
       case 'amount':
-        return Number(scheduledTransaction.amount);
+        return scheduledTransaction.amount;
       case 'frequency':
         return this.frequencyLabel(scheduledTransaction.frequency).toLowerCase();
       case 'status':

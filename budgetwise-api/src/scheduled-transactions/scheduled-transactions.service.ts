@@ -3,7 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { RecurringFrequency, ScheduledTransaction } from '@prisma/client';
+import {
+  Prisma,
+  RecurringFrequency,
+  ScheduledTransaction,
+} from '@prisma/client';
 import {
   createDateOnlyUtc,
   endOfLocalDay,
@@ -13,6 +17,43 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { CreateScheduledTransactionDto } from './dto/create-scheduled-transaction.dto';
 import { UpdateScheduledTransactionDto } from './dto/update-scheduled-transaction.dto';
+
+const scheduledTransactionInclude = {
+  account: true,
+  category: true,
+} satisfies Prisma.ScheduledTransactionInclude;
+
+type ScheduledTransactionWithRelations = Prisma.ScheduledTransactionGetPayload<{
+  include: typeof scheduledTransactionInclude;
+}>;
+
+type AccountWithMoneyFields = {
+  balance: Prisma.Decimal;
+  maintainingBalance: Prisma.Decimal | null;
+};
+
+type NormalizedAccount<T extends AccountWithMoneyFields> = Omit<
+  T,
+  'balance' | 'maintainingBalance'
+> & {
+  balance: number;
+  maintainingBalance: number | null;
+};
+
+export type ScheduledTransactionResponse = Omit<
+  ScheduledTransactionWithRelations,
+  'amount' | 'account'
+> & {
+  amount: number;
+  account: NormalizedAccount<ScheduledTransactionWithRelations['account']>;
+};
+
+export type DueScheduledTransactionResponse = Omit<
+  ScheduledTransaction,
+  'amount'
+> & {
+  amount: number;
+};
 
 @Injectable()
 export class ScheduledTransactionsService {
@@ -24,7 +65,7 @@ export class ScheduledTransactionsService {
   async create(
     dto: CreateScheduledTransactionDto,
     userId: string,
-  ): Promise<ScheduledTransaction> {
+  ): Promise<ScheduledTransactionResponse> {
     const totalInstallments =
       dto.frequency === 'ONCE' ? 1 : (dto.totalInstallments ?? null);
     const completedInstallments = dto.completedInstallments ?? 0;
@@ -33,7 +74,7 @@ export class ScheduledTransactionsService {
     await this.ensureOwnedAccount(dto.accountId, userId);
     await this.ensureAccessibleCategory(dto.categoryId, userId);
 
-    return this.prisma.scheduledTransaction.create({
+    const scheduledTransaction = await this.prisma.scheduledTransaction.create({
       data: {
         type: dto.type,
         amount: dto.amount,
@@ -47,41 +88,52 @@ export class ScheduledTransactionsService {
         notifyDaysBefore: dto.notifyDaysBefore,
         userId,
       },
-      include: { account: true, category: true },
+      include: scheduledTransactionInclude,
     });
+
+    return this.toResponse(scheduledTransaction);
   }
 
   async findAll(
     userId: string,
     status?: ScheduledTransaction['status'],
-  ): Promise<ScheduledTransaction[]> {
-    return this.prisma.scheduledTransaction.findMany({
-      where: {
-        userId,
-        ...(status !== undefined && { status }),
-      },
-      include: { account: true, category: true },
-      orderBy: { nextDueDate: 'asc' },
-    });
+  ): Promise<ScheduledTransactionResponse[]> {
+    const scheduledTransactions =
+      await this.prisma.scheduledTransaction.findMany({
+        where: {
+          userId,
+          ...(status !== undefined && { status }),
+        },
+        include: scheduledTransactionInclude,
+        orderBy: { nextDueDate: 'asc' },
+      });
+
+    return scheduledTransactions.map((scheduledTransaction) =>
+      this.toResponse(scheduledTransaction),
+    );
   }
 
-  async findOne(id: string, userId: string): Promise<ScheduledTransaction> {
+  async findOne(
+    id: string,
+    userId: string,
+  ): Promise<ScheduledTransactionResponse> {
     const scheduledTransaction =
       await this.prisma.scheduledTransaction.findFirst({
         where: { id, userId },
-        include: { account: true, category: true },
+        include: scheduledTransactionInclude,
       });
     if (!scheduledTransaction) {
       throw new NotFoundException(`Scheduled transaction ${id} not found`);
     }
-    return scheduledTransaction;
+
+    return this.toResponse(scheduledTransaction);
   }
 
   async update(
     id: string,
     dto: UpdateScheduledTransactionDto,
     userId: string,
-  ): Promise<ScheduledTransaction> {
+  ): Promise<ScheduledTransactionResponse> {
     const existing = await this.findOne(id, userId);
     const nextFrequency = dto.frequency ?? existing.frequency;
     const totalInstallments =
@@ -103,7 +155,7 @@ export class ScheduledTransactionsService {
       await this.ensureAccessibleCategory(dto.categoryId, userId);
     }
 
-    return this.prisma.scheduledTransaction.update({
+    const scheduledTransaction = await this.prisma.scheduledTransaction.update({
       where: { id },
       data: {
         ...(dto.type !== undefined && { type: dto.type }),
@@ -125,8 +177,10 @@ export class ScheduledTransactionsService {
         ...((dto.totalInstallments !== undefined ||
           dto.frequency !== undefined) && { totalInstallments }),
       },
-      include: { account: true, category: true },
+      include: scheduledTransactionInclude,
     });
+
+    return this.toResponse(scheduledTransaction);
   }
 
   async remove(id: string, userId: string): Promise<void> {
@@ -178,21 +232,26 @@ export class ScheduledTransactionsService {
     });
   }
 
-  async findAllDue(): Promise<ScheduledTransaction[]> {
+  async findAllDue(): Promise<DueScheduledTransactionResponse[]> {
     const todayEnd = endOfLocalDay(new Date());
 
-    return this.prisma.scheduledTransaction.findMany({
-      where: {
-        nextDueDate: { lte: todayEnd },
-        status: 'ACTIVE',
-        userId: { not: null },
-      },
-      orderBy: { nextDueDate: 'asc' },
-    });
+    const scheduledTransactions =
+      await this.prisma.scheduledTransaction.findMany({
+        where: {
+          nextDueDate: { lte: todayEnd },
+          status: 'ACTIVE',
+          userId: { not: null },
+        },
+        orderBy: { nextDueDate: 'asc' },
+      });
+
+    return scheduledTransactions.map((scheduledTransaction) =>
+      this.toDueResponse(scheduledTransaction),
+    );
   }
 
   async generateFromRecord(
-    scheduledTransaction: ScheduledTransaction,
+    scheduledTransaction: Pick<ScheduledTransaction, 'id' | 'userId'>,
   ): Promise<boolean> {
     const userId = scheduledTransaction.userId;
     if (!userId) return false;
@@ -352,6 +411,38 @@ export class ScheduledTransactionsService {
     return {
       completedInstallments: newCompleted,
       nextDueDate,
+    };
+  }
+
+  private normalizeAccount<T extends AccountWithMoneyFields>(
+    account: T,
+  ): NormalizedAccount<T> {
+    return {
+      ...account,
+      balance: Number(account.balance),
+      maintainingBalance:
+        account.maintainingBalance === null
+          ? null
+          : Number(account.maintainingBalance),
+    };
+  }
+
+  private toResponse(
+    scheduledTransaction: ScheduledTransactionWithRelations,
+  ): ScheduledTransactionResponse {
+    return {
+      ...scheduledTransaction,
+      amount: Number(scheduledTransaction.amount),
+      account: this.normalizeAccount(scheduledTransaction.account),
+    };
+  }
+
+  private toDueResponse(
+    scheduledTransaction: ScheduledTransaction,
+  ): DueScheduledTransactionResponse {
+    return {
+      ...scheduledTransaction,
+      amount: Number(scheduledTransaction.amount),
     };
   }
 }

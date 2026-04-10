@@ -48,6 +48,7 @@
 | 38 — Scheduled Transaction Ownership Validation | Added owned-account and accessible-category checks to scheduled transaction create/update, returning clean `404` responses for cross-tenant references while preserving system-category access. |
 | 40 — Date-Only Normalization | Standardized date-only picker payloads to `YYYY-MM-DD`, added shared frontend/backend date helpers, and moved report/filter boundaries to UTC to prevent timezone drift. |
 | 41 — Atomic Scheduled Generation | Wrapped manual and cron scheduled-transaction generation in single Prisma transactions via `TransactionsService.createWithTx`, so create/link/advance now roll back together and cron re-reads in-tx for idempotency. |
+| 42 — Decimal Normalization in API Responses | Added response mappers for accounts, transactions, budgets, and scheduled transactions so Decimal money fields, including nested account balances, now return plain JSON numbers. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -74,6 +75,7 @@ Manual changes outside the numbered ticket flow:
 | **Top-level `AGENTS.md` added** | `AGENTS.md` |
 | **Provider logo refresh** — replaced placeholder account-provider artwork with refreshed local brand assets | `core/constants/providers.constants.ts`, `src/assets/providers/*` |
 | **Date-only wire format normalization** — datepicker-backed payloads now submit `YYYY-MM-DD`, backend parses via shared helpers, and report/filter boundaries use UTC ranges | frontend dialogs/filter files, `src/common/date.util.ts`, backend services/DTOs |
+| **Decimal response normalization** — accounts, transactions, budgets, and scheduled transactions now cast Decimal money fields to JSON numbers at the API boundary, and redundant frontend response coercions were removed | backend service mappers + dashboard/accounts/transactions/scheduled-transactions UI files |
 
 ---
 
@@ -117,10 +119,6 @@ Code-review remediation backlog — created 2026-04-10 from `code-review-remedia
 ### Ticket 39 — Settlement-Aware Balance Handling
 **Status:** Pending
 **Description:** Reintroduce `Transaction.isSettled` (dropped by the April 6 rename-recurring-to-bill migration), derive it from `date`, and make `applyBalanceEffect` a no-op when unsettled. Reports filter to settled rows and the UI shows a Pending badge on future-dated transactions.
-
-### Ticket 42 — Decimal Normalization in API Responses
-**Status:** Pending
-**Description:** Add `toResponse()` mappers to `AccountsService`, `TransactionsService`, `BudgetsService`, and `ScheduledTransactionsService` that cast all `Prisma.Decimal` money fields (including nested relation accounts) to plain JSON numbers, following the existing `GoalsService.toResponse` pattern.
 
 ---
 

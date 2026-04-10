@@ -227,7 +227,7 @@ export class TransactionDialogComponent implements OnInit {
 
     this.form = this.fb.group({
       type: [t?.type || initialValue?.type || 'EXPENSE', Validators.required],
-      amount: [t ? Number(t.amount) : null, [Validators.required, Validators.min(0.01)]],
+      amount: [t?.amount ?? null, [Validators.required, Validators.min(0.01)]],
       description: [t?.description || ''],
       accountId: [!isTransfer ? (t?.accountId || initialValue?.accountId || '') : '', Validators.required],
       fromAccountId: [isTransfer ? t?.fromAccountId || '' : ''],

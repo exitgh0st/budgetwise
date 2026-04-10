@@ -49,7 +49,7 @@ export class DashboardComponent implements OnInit {
       transactions: this.transactionsService.getAll({ limit: 10 }),
     }).subscribe({
       next: ({ accounts, summary, budgets, transactions }) => {
-        this.totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0);
+        this.totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
         this.summary = summary;
         this.budgetStatuses = budgets;
         this.recentTransactions = transactions.data;

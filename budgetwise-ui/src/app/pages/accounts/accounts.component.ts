@@ -66,21 +66,17 @@ export class AccountsComponent implements OnInit {
   get totalCreditCardDebt(): number {
     return this.accounts
       .filter((a) => a.type === 'CREDIT_CARD')
-      .reduce((sum, a) => sum + Number(a.balance), 0);
+      .reduce((sum, a) => sum + a.balance, 0);
   }
 
   get totalLiquidBalance(): number {
     return this.accounts
       .filter((a) => a.type === 'CASH' || a.type === 'BANK')
-      .reduce((sum, a) => sum + Number(a.balance), 0);
+      .reduce((sum, a) => sum + a.balance, 0);
   }
 
   get totalMaintainingBalance(): number {
-    return this.accounts.reduce(
-      (sum, a) =>
-        sum + (a.maintainingBalance != null ? Number(a.maintainingBalance) : 0),
-      0,
-    );
+    return this.accounts.reduce((sum, a) => sum + (a.maintainingBalance ?? 0), 0);
   }
 
   get totalUsableLiquidBalance(): number {
@@ -88,15 +84,13 @@ export class AccountsComponent implements OnInit {
   }
 
   get hasMaintainingBalances(): boolean {
-    return this.accounts.some(
-      (a) => a.maintainingBalance != null && Number(a.maintainingBalance) > 0,
-    );
+    return this.accounts.some((a) => a.maintainingBalance != null && a.maintainingBalance > 0);
   }
 
   isBelowMaintaining(account: Account): boolean {
     return (
       account.maintainingBalance != null &&
-      Number(account.balance) < Number(account.maintainingBalance)
+      account.balance < account.maintainingBalance
     );
   }
 
@@ -220,8 +214,7 @@ export class AccountsComponent implements OnInit {
 
       const { balance, ...updateData } = result;
       const newBalance = Number(balance);
-      const balanceChanged =
-        !isNaN(newBalance) && newBalance !== Number(account.balance);
+      const balanceChanged = !isNaN(newBalance) && newBalance !== account.balance;
       const maintainingChanged =
         (result.maintainingBalance ?? null) !==
           (account.maintainingBalance ?? null) &&

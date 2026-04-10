@@ -206,12 +206,8 @@ export class AccountDialogComponent implements OnInit {
       name: [account?.name ?? '', Validators.required],
       type: [account?.type ?? 'CASH', Validators.required],
       providerId: [account?.providerId ?? null],
-      balance: [account ? Number(account.balance) : 0],
-      maintainingBalance: [
-        account?.maintainingBalance != null
-          ? Number(account.maintainingBalance)
-          : null,
-      ],
+      balance: [account?.balance ?? 0],
+      maintainingBalance: [account?.maintainingBalance ?? null],
     });
 
     const typeControl = this.form.get('type');

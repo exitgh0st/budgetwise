@@ -278,7 +278,7 @@ export class ScheduledTransactionDialogComponent implements OnInit {
           Validators.required,
         ],
         amount: [
-          scheduledTransaction ? Number(scheduledTransaction.amount) : null,
+          scheduledTransaction?.amount ?? null,
           [Validators.required, Validators.min(0.01)],
         ],
         description: [scheduledTransaction?.description || ''],
