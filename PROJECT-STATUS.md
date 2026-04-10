@@ -46,6 +46,7 @@
 | 36 — Chat Tool Coverage Expansion | Added goal CRUD/contribution chat tools, read-only notification chat tools, and expanded account/budget/scheduled-transaction chat fields to match newer backend support. |
 | 37 — Secure `process-due` Endpoint | Kept `POST /api/scheduled-transactions/process-due` for ops/debugging but gated it behind `InternalAdminGuard` with `x-internal-secret` / `INTERNAL_ADMIN_SECRET`, leaving the hourly cron path unchanged. |
 | 38 — Scheduled Transaction Ownership Validation | Added owned-account and accessible-category checks to scheduled transaction create/update, returning clean `404` responses for cross-tenant references while preserving system-category access. |
+| 40 — Date-Only Normalization | Standardized date-only picker payloads to `YYYY-MM-DD`, added shared frontend/backend date helpers, and moved report/filter boundaries to UTC to prevent timezone drift. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -71,6 +72,7 @@ Manual changes outside the numbered ticket flow:
 | **`maintainingBalance` on Account** — optional field shown on bank cards | schema + account UI/model files |
 | **Top-level `AGENTS.md` added** | `AGENTS.md` |
 | **Provider logo refresh** — replaced placeholder account-provider artwork with refreshed local brand assets | `core/constants/providers.constants.ts`, `src/assets/providers/*` |
+| **Date-only wire format normalization** — datepicker-backed payloads now submit `YYYY-MM-DD`, backend parses via shared helpers, and report/filter boundaries use UTC ranges | frontend dialogs/filter files, `src/common/date.util.ts`, backend services/DTOs |
 
 ---
 
@@ -114,10 +116,6 @@ Code-review remediation backlog — created 2026-04-10 from `code-review-remedia
 ### Ticket 39 — Settlement-Aware Balance Handling
 **Status:** Pending
 **Description:** Reintroduce `Transaction.isSettled` (dropped by the April 6 rename-recurring-to-bill migration), derive it from `date`, and make `applyBalanceEffect` a no-op when unsettled. Reports filter to settled rows and the UI shows a Pending badge on future-dated transactions.
-
-### Ticket 40 — Date-Only Normalization
-**Status:** Pending
-**Description:** Replace frontend `.toISOString()` calls on datepicker values with a shared `toDateOnlyString` helper (YYYY-MM-DD). Backend parses via `parseDateOnly` at noon UTC. Reports compute boundaries in UTC. Eliminates timezone drift across day/month boundaries.
 
 ### Ticket 41 — Atomic Scheduled Generation
 **Status:** Pending

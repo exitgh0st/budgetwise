@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ScheduledTransaction } from '@prisma/client';
+import {
+  differenceInLocalCalendarDays,
+  startOfLocalDay,
+} from '../common/date.util';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ScheduledTransactionsService } from './scheduled-transactions.service';
@@ -67,11 +71,12 @@ export class ScheduledTransactionsCronService {
 
   private async enqueueUpcomingNotifications(): Promise<void> {
     const now = new Date();
+    const startOfToday = startOfLocalDay(now);
     const records = await this.prisma.scheduledTransaction.findMany({
       where: {
         status: 'ACTIVE',
         notifyDaysBefore: { not: null },
-        nextDueDate: { gte: now },
+        nextDueDate: { gte: startOfToday },
         userId: { not: null },
       },
     });
@@ -81,8 +86,11 @@ export class ScheduledTransactionsCronService {
         continue;
       }
 
-      const leadMs = record.notifyDaysBefore * 86400000;
-      if (record.nextDueDate.getTime() - now.getTime() <= leadMs) {
+      const daysUntilDue = differenceInLocalCalendarDays(
+        now,
+        record.nextDueDate,
+      );
+      if (daysUntilDue <= record.notifyDaysBefore) {
         await this.notificationsService.createForScheduledTx(
           record as Pick<
             ScheduledTransaction,

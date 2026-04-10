@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { GoalType, Prisma, TransactionType } from '@prisma/client';
+import { parseDateOnly } from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { ContributeGoalDto } from './dto/contribute-goal.dto';
@@ -104,7 +105,7 @@ export class GoalsService {
         type: dto.type,
         name: dto.name,
         targetAmount: dto.targetAmount,
-        targetDate: dto.targetDate ? new Date(dto.targetDate) : null,
+        targetDate: dto.targetDate ? parseDateOnly(dto.targetDate) : null,
         accountId:
           dto.type === GoalType.SAVINGS ? (dto.accountId ?? null) : null,
         userId,
@@ -158,7 +159,7 @@ export class GoalsService {
           targetAmount: dto.targetAmount,
         }),
         ...(dto.targetDate !== undefined && {
-          targetDate: dto.targetDate ? new Date(dto.targetDate) : null,
+          targetDate: dto.targetDate ? parseDateOnly(dto.targetDate) : null,
         }),
         ...(existing.type === GoalType.SAVINGS && {
           accountId,

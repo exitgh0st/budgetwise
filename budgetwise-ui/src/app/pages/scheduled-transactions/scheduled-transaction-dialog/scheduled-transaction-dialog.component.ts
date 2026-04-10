@@ -25,6 +25,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { Account } from '../../../core/models/account.model';
 import { Category } from '../../../core/models/category.model';
 import { ScheduledTransaction } from '../../../core/models/scheduled-transaction.model';
+import {
+  fromDateOnlyString,
+  toDateOnlyString,
+} from '../../../core/utils/date.util';
 
 export interface ScheduledTransactionDialogData {
   scheduledTransaction?: ScheduledTransaction;
@@ -260,6 +264,13 @@ export class ScheduledTransactionDialogComponent implements OnInit {
 
   ngOnInit() {
     const scheduledTransaction = this.data.scheduledTransaction;
+    const nextDueDate = scheduledTransaction?.nextDueDate
+      ? (
+          fromDateOnlyString(toDateOnlyString(scheduledTransaction.nextDueDate)) ??
+          new Date(scheduledTransaction.nextDueDate)
+        )
+      : new Date();
+
     this.form = this.fb.group(
       {
         type: [
@@ -280,12 +291,7 @@ export class ScheduledTransactionDialogComponent implements OnInit {
           scheduledTransaction?.frequency || 'MONTHLY',
           Validators.required,
         ],
-        nextDueDate: [
-          scheduledTransaction
-            ? new Date(scheduledTransaction.nextDueDate)
-            : new Date(),
-          Validators.required,
-        ],
+        nextDueDate: [nextDueDate, Validators.required],
         notifyDaysBefore: [
           scheduledTransaction?.notifyDaysBefore ?? null,
           [Validators.min(0), Validators.max(365)],
@@ -316,7 +322,12 @@ export class ScheduledTransactionDialogComponent implements OnInit {
   save() {
     if (this.form.invalid) return;
     const value = { ...this.form.getRawValue() };
-    value.nextDueDate = new Date(value.nextDueDate).toISOString();
+    const nextDueDate = toDateOnlyString(value.nextDueDate);
+    if (!nextDueDate) {
+      return;
+    }
+
+    value.nextDueDate = nextDueDate;
     value.amount = Number(value.amount);
     value.notifyDaysBefore =
       value.notifyDaysBefore === null || value.notifyDaysBefore === ''

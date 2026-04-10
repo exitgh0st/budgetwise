@@ -5,6 +5,10 @@ import {
   ScheduledTransaction,
   TransactionType,
 } from '@prisma/client';
+import {
+  differenceInLocalCalendarDays,
+  startOfLocalDay,
+} from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -113,8 +117,7 @@ export class NotificationsService {
       return;
     }
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = startOfLocalDay(new Date());
 
     const existing = await this.prisma.notification.findFirst({
       where: {
@@ -131,8 +134,9 @@ export class NotificationsService {
 
     const daysUntilDue = Math.max(
       0,
-      Math.ceil(
-        (scheduledTransaction.nextDueDate.getTime() - Date.now()) / 86400000,
+      differenceInLocalCalendarDays(
+        startOfToday,
+        scheduledTransaction.nextDueDate,
       ),
     );
     const label =

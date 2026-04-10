@@ -44,7 +44,7 @@ export class CreateTransactionDto {
   @IsString()
   categoryId?: string;
 
-  @ApiPropertyOptional({ example: '2026-03-24T00:00:00.000Z' })
+  @ApiPropertyOptional({ example: '2026-03-24' })
   @IsOptional()
   @IsDateString()
   date?: string;

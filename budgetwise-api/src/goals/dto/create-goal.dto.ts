@@ -23,7 +23,7 @@ export class CreateGoalDto {
   @Min(0.01)
   targetAmount!: number;
 
-  @ApiPropertyOptional({ example: '2026-12-31T00:00:00.000Z' })
+  @ApiPropertyOptional({ example: '2026-12-31' })
   @IsOptional()
   @IsDateString()
   targetDate?: string;

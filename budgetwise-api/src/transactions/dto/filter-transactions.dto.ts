@@ -26,12 +26,12 @@ export class FilterTransactionsDto {
   @IsEnum(TransactionType)
   type?: TransactionType;
 
-  @ApiPropertyOptional({ example: '2026-01-01T00:00:00.000Z' })
+  @ApiPropertyOptional({ example: '2026-01-01' })
   @IsOptional()
   @IsDateString()
   startDate?: string;
 
-  @ApiPropertyOptional({ example: '2026-12-31T23:59:59.999Z' })
+  @ApiPropertyOptional({ example: '2026-12-31' })
   @IsOptional()
   @IsDateString()
   endDate?: string;

@@ -21,6 +21,10 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { Transaction, TransactionType } from '../../../core/models/transaction.model';
 import { Account } from '../../../core/models/account.model';
 import { Category } from '../../../core/models/category.model';
+import {
+  fromDateOnlyString,
+  toDateOnlyString,
+} from '../../../core/utils/date.util';
 
 export interface TransactionDialogData {
   transaction?: Transaction;
@@ -206,6 +210,9 @@ export class TransactionDialogComponent implements OnInit {
     const t = this.data.transaction;
     const initialValue = this.data.initialValue;
     const isTransfer = t?.type === 'TRANSFER';
+    const transactionDate = t?.date
+      ? (fromDateOnlyString(toDateOnlyString(t.date)) ?? new Date(t.date))
+      : new Date();
 
     this.preservedNonTransfer = {
       accountId:
@@ -226,7 +233,7 @@ export class TransactionDialogComponent implements OnInit {
       fromAccountId: [isTransfer ? t?.fromAccountId || '' : ''],
       toAccountId: [isTransfer ? t?.toAccountId || '' : ''],
       categoryId: [t?.categoryId || initialValue?.categoryId || ''],
-      date: [t ? new Date(t.date) : new Date()],
+      date: [transactionDate],
     }, { validators: this.transferAccountsMustDiffer() });
 
     if (this.data.lockType) {
@@ -262,10 +269,12 @@ export class TransactionDialogComponent implements OnInit {
       delete value.toAccountId;
     }
 
-    // Format date as ISO string for the API
-    if (value.date instanceof Date) {
-      value.date = value.date.toISOString();
+    const date = toDateOnlyString(value.date);
+    if (!date) {
+      return;
     }
+
+    value.date = date;
     this.dialogRef.close(value);
   }
 

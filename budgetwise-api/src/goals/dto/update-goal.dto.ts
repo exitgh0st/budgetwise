@@ -27,7 +27,7 @@ export class UpdateGoalDto {
   targetAmount?: number;
 
   @ApiPropertyOptional({
-    example: '2026-12-31T00:00:00.000Z',
+    example: '2026-12-31',
     nullable: true,
   })
   @IsOptional()

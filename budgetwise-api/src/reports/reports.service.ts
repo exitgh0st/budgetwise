@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { getUtcMonthRange } from '../common/date.util';
 import {
   SummaryReport,
   CategoryBreakdown,
@@ -10,6 +12,25 @@ import {
 @Injectable()
 export class ReportsService {
   constructor(private prisma: PrismaService) {}
+
+  private getResolvedMonthYear(month?: number, year?: number) {
+    const now = new Date();
+
+    return {
+      month: month ?? now.getMonth() + 1,
+      year: year ?? now.getFullYear(),
+    };
+  }
+
+  private getRelativeMonthParts(monthOffset = 0) {
+    const now = new Date();
+    const date = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+
+    return {
+      month: date.getMonth() + 1,
+      year: date.getFullYear(),
+    };
+  }
 
   private getBudgetKey(
     categoryId: string,
@@ -32,21 +53,18 @@ export class ReportsService {
     year?: number,
     userId?: string,
   ): Promise<SummaryReport> {
-    const now = new Date();
-    const m = month ?? now.getMonth() + 1;
-    const y = year ?? now.getFullYear();
-
-    const startDate = new Date(y, m - 1, 1);
-    const endDate = new Date(y, m, 0, 23, 59, 59);
+    const { month: m, year: y } = this.getResolvedMonthYear(month, year);
+    const { startDate, endDate } = getUtcMonthRange(m, y);
 
     const systemCategoryIds = await this.getSystemCategoryIds();
-    const where: any = {
+    const where: Prisma.TransactionWhereInput = {
       date: { gte: startDate, lte: endDate },
-      type: { in: ['INCOME', 'EXPENSE'] },
+      type: { in: [TransactionType.INCOME, TransactionType.EXPENSE] },
     };
     if (userId) where.userId = userId;
-    if (systemCategoryIds.length > 0)
+    if (systemCategoryIds.length > 0) {
       where.categoryId = { notIn: systemCategoryIds };
+    }
 
     const result = await this.prisma.transaction.groupBy({
       by: ['type'],
@@ -75,21 +93,18 @@ export class ReportsService {
     year?: number,
     userId?: string,
   ): Promise<CategoryBreakdown[]> {
-    const now = new Date();
-    const m = month ?? now.getMonth() + 1;
-    const y = year ?? now.getFullYear();
-
-    const startDate = new Date(y, m - 1, 1);
-    const endDate = new Date(y, m, 0, 23, 59, 59);
+    const { month: m, year: y } = this.getResolvedMonthYear(month, year);
+    const { startDate, endDate } = getUtcMonthRange(m, y);
 
     const systemCategoryIds = await this.getSystemCategoryIds();
-    const where: any = {
-      type: 'EXPENSE',
+    const where: Prisma.TransactionWhereInput = {
+      type: TransactionType.EXPENSE,
       date: { gte: startDate, lte: endDate },
     };
     if (userId) where.userId = userId;
-    if (systemCategoryIds.length > 0)
+    if (systemCategoryIds.length > 0) {
       where.categoryId = { notIn: systemCategoryIds };
+    }
 
     const results = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
@@ -139,14 +154,10 @@ export class ReportsService {
     year?: number,
     userId?: string,
   ): Promise<BudgetStatus[]> {
-    const now = new Date();
-    const m = month ?? now.getMonth() + 1;
-    const y = year ?? now.getFullYear();
+    const { month: m, year: y } = this.getResolvedMonthYear(month, year);
+    const { startDate, endDate } = getUtcMonthRange(m, y);
 
-    const startDate = new Date(y, m - 1, 1);
-    const endDate = new Date(y, m, 0, 23, 59, 59);
-
-    const budgetWhere: any = { month: m, year: y };
+    const budgetWhere: Prisma.BudgetWhereInput = { month: m, year: y };
     if (userId) budgetWhere.userId = userId;
 
     const budgets = await this.prisma.budget.findMany({
@@ -170,13 +181,14 @@ export class ReportsService {
     );
 
     const systemCategoryIds = await this.getSystemCategoryIds();
-    const txWhere: any = {
-      type: 'EXPENSE',
+    const txWhere: Prisma.TransactionWhereInput = {
+      type: TransactionType.EXPENSE,
       date: { gte: startDate, lte: endDate },
     };
     if (userId) txWhere.userId = userId;
-    if (systemCategoryIds.length > 0)
+    if (systemCategoryIds.length > 0) {
       txWhere.categoryId = { notIn: systemCategoryIds };
+    }
 
     const spending = await this.prisma.transaction.groupBy({
       by: ['categoryId'],
@@ -205,22 +217,23 @@ export class ReportsService {
         return cached;
       }
 
-      const monthStart = new Date(targetYear, targetMonth - 1, 1);
-      const monthEnd = new Date(targetYear, targetMonth, 0, 23, 59, 59);
-      const where: any = {
-        type: 'EXPENSE',
+      const { startDate: monthStart, endDate: monthEnd } = getUtcMonthRange(
+        targetMonth,
+        targetYear,
+      );
+      if (systemCategoryIds.includes(categoryId)) {
+        spentCache.set(key, 0);
+        return 0;
+      }
+
+      const where: Prisma.TransactionWhereInput = {
+        type: TransactionType.EXPENSE,
         categoryId,
         date: { gte: monthStart, lte: monthEnd },
       };
 
       if (userId) {
         where.userId = userId;
-      }
-      if (systemCategoryIds.length > 0) {
-        where.categoryId = {
-          equals: categoryId,
-          notIn: systemCategoryIds,
-        };
       }
 
       const aggregate = await this.prisma.transaction.aggregate({
@@ -243,7 +256,11 @@ export class ReportsService {
         return cached;
       }
 
-      const where: any = { categoryId, month: targetMonth, year: targetYear };
+      const where: Prisma.BudgetWhereInput = {
+        categoryId,
+        month: targetMonth,
+        year: targetYear,
+      };
       if (userId) {
         where.userId = userId;
       }
@@ -342,7 +359,6 @@ export class ReportsService {
     userId?: string,
   ): Promise<MonthlyTrend[]> {
     const n = months ?? 6;
-    const now = new Date();
     const results: MonthlyTrend[] = [];
 
     const monthNames = [
@@ -363,17 +379,17 @@ export class ReportsService {
     const systemCategoryIds = await this.getSystemCategoryIds();
 
     for (let i = n - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const m = d.getMonth() + 1;
-      const y = d.getFullYear();
-      const startDate = new Date(y, m - 1, 1);
-      const endDate = new Date(y, m, 0, 23, 59, 59);
+      const { month: m, year: y } = this.getRelativeMonthParts(-i);
+      const { startDate, endDate } = getUtcMonthRange(m, y);
 
-      const where: any = { date: { gte: startDate, lte: endDate } };
-      where.type = { in: ['INCOME', 'EXPENSE'] };
+      const where: Prisma.TransactionWhereInput = {
+        date: { gte: startDate, lte: endDate },
+        type: { in: [TransactionType.INCOME, TransactionType.EXPENSE] },
+      };
       if (userId) where.userId = userId;
-      if (systemCategoryIds.length > 0)
+      if (systemCategoryIds.length > 0) {
         where.categoryId = { notIn: systemCategoryIds };
+      }
 
       const grouped = await this.prisma.transaction.groupBy({
         by: ['type'],

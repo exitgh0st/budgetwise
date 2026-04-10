@@ -19,6 +19,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Account } from '../../../core/models/account.model';
 import { Goal, GoalType } from '../../../core/models/goal.model';
+import {
+  fromDateOnlyString,
+  toDateOnlyString,
+} from '../../../core/utils/date.util';
 
 export interface GoalDialogData {
   goal?: Goal;
@@ -172,7 +176,12 @@ export class GoalDialogComponent implements OnInit {
     this.form.patchValue({
       name: goal.name,
       targetAmount: goal.targetAmount,
-      targetDate: goal.targetDate ? new Date(goal.targetDate) : null,
+      targetDate: goal.targetDate
+        ? (
+            fromDateOnlyString(toDateOnlyString(goal.targetDate)) ??
+            new Date(goal.targetDate)
+          )
+        : null,
       accountId: goal.accountId,
     });
   }
@@ -183,14 +192,13 @@ export class GoalDialogComponent implements OnInit {
     }
 
     const value = this.form.getRawValue();
+    const targetDate = toDateOnlyString(value.targetDate);
+
     this.dialogRef.close({
       type: this.data.goalType,
       name: value.name?.trim(),
       targetAmount: Number(value.targetAmount),
-      targetDate:
-        value.targetDate instanceof Date
-          ? value.targetDate.toISOString()
-          : null,
+      targetDate,
       accountId: this.isSavings ? value.accountId ?? null : null,
     });
   }

@@ -23,6 +23,10 @@ import { CategoriesService } from '../../core/services/categories.service';
 import { Transaction, TransactionType } from '../../core/models/transaction.model';
 import { Account } from '../../core/models/account.model';
 import { Category } from '../../core/models/category.model';
+import {
+  fromDateOnlyString,
+  toDateOnlyString,
+} from '../../core/utils/date.util';
 import { TransactionDialogComponent, TransactionDialogData } from './transaction-dialog/transaction-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -120,8 +124,12 @@ export class TransactionsComponent implements OnInit {
     if (this.filterAccountId) filters.accountId = this.filterAccountId;
     if (this.filterCategoryId) filters.categoryId = this.filterCategoryId;
     if (this.filterType) filters.type = this.filterType as TransactionType;
-    if (this.filterStartDate) filters.startDate = this.filterStartDate.toISOString();
-    if (this.filterEndDate) filters.endDate = this.filterEndDate.toISOString();
+    if (this.filterStartDate) {
+      filters.startDate = toDateOnlyString(this.filterStartDate) ?? undefined;
+    }
+    if (this.filterEndDate) {
+      filters.endDate = toDateOnlyString(this.filterEndDate) ?? undefined;
+    }
 
     this.transactionsService.getAll(filters).subscribe({
       next: result => {
@@ -244,7 +252,11 @@ export class TransactionsComponent implements OnInit {
   private groupByDate(transactions: Transaction[]): DateGroup[] {
     const map = new Map<string, Transaction[]>();
     for (const t of transactions) {
-      const dateKey = new Date(t.date).toLocaleDateString('en-CA');
+      const dateKey = toDateOnlyString(t.date);
+      if (!dateKey) {
+        continue;
+      }
+
       if (!map.has(dateKey)) map.set(dateKey, []);
       map.get(dateKey)!.push(t);
     }
@@ -252,7 +264,7 @@ export class TransactionsComponent implements OnInit {
       .sort((a, b) => b[0].localeCompare(a[0]))
       .map(([date, txns]) => ({
         date,
-        label: new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+        label: (fromDateOnlyString(date) ?? new Date(date)).toLocaleDateString('en-US', {
           month: 'short', day: 'numeric', year: 'numeric',
         }),
         transactions: txns,
@@ -313,8 +325,12 @@ export class TransactionsComponent implements OnInit {
     if (this.filterAccountId) filters.accountId = this.filterAccountId;
     if (this.filterCategoryId) filters.categoryId = this.filterCategoryId;
     if (this.filterType) filters.type = this.filterType as TransactionType;
-    if (this.filterStartDate) filters.startDate = this.filterStartDate.toISOString();
-    if (this.filterEndDate) filters.endDate = this.filterEndDate.toISOString();
+    if (this.filterStartDate) {
+      filters.startDate = toDateOnlyString(this.filterStartDate) ?? undefined;
+    }
+    if (this.filterEndDate) {
+      filters.endDate = toDateOnlyString(this.filterEndDate) ?? undefined;
+    }
 
     return filters;
   }
@@ -381,7 +397,7 @@ export class TransactionsComponent implements OnInit {
   }
 
   private formatDate(value: string | Date): string {
-    return new Date(value).toLocaleDateString('en-CA');
+    return toDateOnlyString(value) ?? '';
   }
 
   private formatAmount(value: number | string): string {

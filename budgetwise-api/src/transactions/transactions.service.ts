@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { parseDateBoundary, parseDateOnly } from '../common/date.util';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { FilterTransactionsDto } from './dto/filter-transactions.dto';
@@ -39,7 +40,7 @@ export class TransactionsService {
     userId: string,
   ): Promise<TransactionWithRelations> {
     const normalized = await this.resolveTransactionShape(tx, dto, userId);
-    const date = dto.date ? new Date(dto.date) : new Date();
+    const date = dto.date ? parseDateOnly(dto.date) : new Date();
 
     const transaction = await tx.transaction.create({
       data: {
@@ -68,7 +69,7 @@ export class TransactionsService {
   }
 
   async findAll(filters: FilterTransactionsDto, userId: string) {
-    const where: any = { userId };
+    const where: Prisma.TransactionWhereInput = { userId };
 
     if (filters.accountId) {
       where.OR = [
@@ -80,21 +81,27 @@ export class TransactionsService {
     if (filters.categoryId) where.categoryId = filters.categoryId;
     if (filters.type) where.type = filters.type;
     if (filters.startDate || filters.endDate) {
-      where.date = {};
-      if (filters.startDate) where.date.gte = new Date(filters.startDate);
-      if (filters.endDate) where.date.lte = new Date(filters.endDate);
+      const dateFilter: Prisma.DateTimeFilter = {};
+      if (filters.startDate) {
+        dateFilter.gte = parseDateBoundary(filters.startDate, 'start');
+      }
+      if (filters.endDate) {
+        dateFilter.lte = parseDateBoundary(filters.endDate, 'end');
+      }
+      where.date = dateFilter;
     }
 
-    const [data, total] = await Promise.all([
-      this.prisma.transaction.findMany({
-        where,
-        include: transactionInclude,
-        orderBy: { date: 'desc' },
-        take: filters.limit,
-        skip: filters.offset,
-      }),
-      this.prisma.transaction.count({ where }),
-    ]);
+    const [data, total]: [TransactionWithRelations[], number] =
+      await Promise.all([
+        this.prisma.transaction.findMany({
+          where,
+          include: transactionInclude,
+          orderBy: { date: 'desc' },
+          take: filters.limit,
+          skip: filters.offset,
+        }),
+        this.prisma.transaction.count({ where }),
+      ]);
 
     return { data, total, limit: filters.limit, offset: filters.offset };
   }
@@ -138,7 +145,7 @@ export class TransactionsService {
         }
       }
 
-      const newDate = dto.date ? new Date(dto.date) : existing.date;
+      const newDate = dto.date ? parseDateOnly(dto.date) : existing.date;
       const newType = dto.type ?? existing.type;
       const newAmount = dto.amount ?? Number(existing.amount);
       const resolved = await this.resolveTransactionShape(

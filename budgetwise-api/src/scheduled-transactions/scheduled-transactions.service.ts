@@ -4,6 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { RecurringFrequency, ScheduledTransaction } from '@prisma/client';
+import {
+  createDateOnlyUtc,
+  endOfLocalDay,
+  parseDateOnly,
+} from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { CreateScheduledTransactionDto } from './dto/create-scheduled-transaction.dto';
@@ -34,7 +39,7 @@ export class ScheduledTransactionsService {
         amount: dto.amount,
         description: dto.description,
         frequency: dto.frequency,
-        nextDueDate: new Date(dto.nextDueDate),
+        nextDueDate: parseDateOnly(dto.nextDueDate),
         accountId: dto.accountId,
         categoryId: dto.categoryId,
         totalInstallments,
@@ -106,7 +111,7 @@ export class ScheduledTransactionsService {
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.frequency !== undefined && { frequency: dto.frequency }),
         ...(dto.nextDueDate !== undefined && {
-          nextDueDate: new Date(dto.nextDueDate),
+          nextDueDate: parseDateOnly(dto.nextDueDate),
         }),
         ...(dto.accountId !== undefined && { accountId: dto.accountId }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
@@ -165,9 +170,11 @@ export class ScheduledTransactionsService {
   }
 
   async findAllDue(): Promise<ScheduledTransaction[]> {
+    const todayEnd = endOfLocalDay(new Date());
+
     return this.prisma.scheduledTransaction.findMany({
       where: {
-        nextDueDate: { lte: new Date() },
+        nextDueDate: { lte: todayEnd },
         status: 'ACTIVE',
         userId: { not: null },
       },
@@ -205,23 +212,25 @@ export class ScheduledTransactionsService {
   }
 
   private advanceDate(from: Date, frequency: RecurringFrequency): Date {
-    const originalDay = from.getDate();
-    const month = from.getMonth();
-    const year = from.getFullYear();
+    const originalDay = from.getUTCDate();
+    const month = from.getUTCMonth();
+    const year = from.getUTCFullYear();
 
     switch (frequency) {
       case 'ONCE':
         return new Date(from);
 
       case 'WEEKLY':
-        return new Date(year, month, originalDay + 7);
+        return createDateOnlyUtc(year, month, originalDay + 7);
 
       case 'MONTHLY': {
         const nextMonth = month + 1;
         const nextYear = year + Math.floor(nextMonth / 12);
         const normalizedMonth = nextMonth % 12;
-        const lastDay = new Date(nextYear, normalizedMonth + 1, 0).getDate();
-        return new Date(
+        const lastDay = new Date(
+          Date.UTC(nextYear, normalizedMonth + 1, 0, 12, 0, 0, 0),
+        ).getUTCDate();
+        return createDateOnlyUtc(
           nextYear,
           normalizedMonth,
           Math.min(originalDay, lastDay),
@@ -230,8 +239,14 @@ export class ScheduledTransactionsService {
 
       case 'YEARLY': {
         const nextYear = year + 1;
-        const lastDay = new Date(nextYear, month + 1, 0).getDate();
-        return new Date(nextYear, month, Math.min(originalDay, lastDay));
+        const lastDay = new Date(
+          Date.UTC(nextYear, month + 1, 0, 12, 0, 0, 0),
+        ).getUTCDate();
+        return createDateOnlyUtc(
+          nextYear,
+          month,
+          Math.min(originalDay, lastDay),
+        );
       }
 
       default:
