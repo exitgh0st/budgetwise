@@ -25,6 +25,8 @@ export class ScheduledTransactionsService {
     const completedInstallments = dto.completedInstallments ?? 0;
 
     this.validateInstallments(completedInstallments, totalInstallments);
+    await this.ensureOwnedAccount(dto.accountId, userId);
+    await this.ensureAccessibleCategory(dto.categoryId, userId);
 
     return this.prisma.scheduledTransaction.create({
       data: {
@@ -85,6 +87,16 @@ export class ScheduledTransactionsService {
       dto.completedInstallments ?? existing.completedInstallments;
 
     this.validateInstallments(completedInstallments, totalInstallments);
+    if (dto.accountId !== undefined && dto.accountId !== existing.accountId) {
+      await this.ensureOwnedAccount(dto.accountId, userId);
+    }
+
+    if (
+      dto.categoryId !== undefined &&
+      dto.categoryId !== existing.categoryId
+    ) {
+      await this.ensureAccessibleCategory(dto.categoryId, userId);
+    }
 
     return this.prisma.scheduledTransaction.update({
       where: { id },
@@ -238,6 +250,34 @@ export class ScheduledTransactionsService {
       throw new BadRequestException(
         'Current installment must be less than or equal to total installments',
       );
+    }
+  }
+
+  private async ensureOwnedAccount(
+    accountId: string,
+    userId: string,
+  ): Promise<void> {
+    const account = await this.prisma.account.findFirst({
+      where: { id: accountId, userId },
+      select: { id: true },
+    });
+
+    if (!account) {
+      throw new NotFoundException(`Account ${accountId} not found`);
+    }
+  }
+
+  private async ensureAccessibleCategory(
+    categoryId: string,
+    userId: string,
+  ): Promise<void> {
+    const category = await this.prisma.category.findFirst({
+      where: { id: categoryId, OR: [{ userId }, { isSystem: true }] },
+      select: { id: true },
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Category ${categoryId} not found`);
     }
   }
 

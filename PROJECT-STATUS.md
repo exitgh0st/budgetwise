@@ -45,6 +45,7 @@
 | 35 — Budget Spillover Toggle | `Budget.spillover`, spillover-aware `getBudgetStatus`, base/carry/effective budget UX in Budgets + Reports. |
 | 36 — Chat Tool Coverage Expansion | Added goal CRUD/contribution chat tools, read-only notification chat tools, and expanded account/budget/scheduled-transaction chat fields to match newer backend support. |
 | 37 — Secure `process-due` Endpoint | Kept `POST /api/scheduled-transactions/process-due` for ops/debugging but gated it behind `InternalAdminGuard` with `x-internal-secret` / `INTERNAL_ADMIN_SECRET`, leaving the hourly cron path unchanged. |
+| 38 — Scheduled Transaction Ownership Validation | Added owned-account and accessible-category checks to scheduled transaction create/update, returning clean `404` responses for cross-tenant references while preserving system-category access. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -81,7 +82,7 @@ Manual changes outside the numbered ticket flow:
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
 - **Transactions:** Support income, expense, and transfer flows with atomic balance sync
-- **Scheduled transactions:** Full CRUD + `POST :id/generate` + hourly cron + `/process-due` manual trigger
+- **Scheduled transactions:** Full CRUD with owned account/category validation + `POST :id/generate` + hourly cron + `/process-due` manual trigger
 - **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss
 - **Reports:** Exclude system categories and transfers; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
 - **Chat:** DeepSeek V3 via OpenAI SDK, 40 tools total, guardrails, destructive confirmation, history pagination, goal management, read-only notifications
@@ -109,10 +110,6 @@ Manual changes outside the numbered ticket flow:
 ## Upcoming Tickets
 
 Code-review remediation backlog — created 2026-04-10 from `code-review-remediation-backlog.md`.
-
-### Ticket 38 — Scheduled Transaction Ownership Validation
-**Status:** Pending
-**Description:** Add account/category ownership checks to `ScheduledTransactionsService.create/update`, mirroring the `TransactionsService.ensureOwnedAccount`/`ensureAccessibleCategory` pattern so cross-tenant references fail cleanly with `404`.
 
 ### Ticket 39 — Settlement-Aware Balance Handling
 **Status:** Pending
