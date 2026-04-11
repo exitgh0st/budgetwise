@@ -9,10 +9,9 @@ This file turns the recent code review into an implementation backlog. It is ord
 
 1. Lock down public scheduled-processing access
 2. Enforce ownership validation in scheduled transactions
-3. Restore correct settlement behavior for future-dated transactions
-4. Normalize date-only handling across frontend and backend
-5. Make scheduled generation atomic and idempotent-safe
-6. Normalize Decimal values at API boundaries
+3. Normalize date-only handling across frontend and backend
+4. Make scheduled generation atomic and idempotent-safe
+5. Normalize Decimal values at API boundaries
 
 ---
 
@@ -94,59 +93,7 @@ Scheduled transaction create/update paths persist `accountId` and `categoryId` w
 
 ---
 
-## 3. High - Restore Settlement Behavior for Future-Dated Transactions
-
-### Problem
-
-Future-dated transactions still affect balances immediately, which conflicts with the documented project behavior.
-
-### Risk
-
-- Account balances become incorrect before money has actually moved
-- Dashboard, account summaries, and downstream decisions become misleading
-- Scheduled and manually entered future transactions distort current state
-
-### Affected Files
-
-- `budgetwise-api/prisma/schema.prisma`
-- `budgetwise-api/src/transactions/transactions.service.ts`
-- `budgetwise-ui/src/app/pages/dashboard/dashboard.component.ts`
-- any related transaction/report/chat model files that assume settlement behavior
-
-### Recommended Change
-
-- Reintroduce an explicit settlement model instead of relying only on `date`
-- Likely shape:
-  - persist `isSettled` on `Transaction`
-  - default based on whether the transaction date is now/past vs future
-  - only apply balance effects when a transaction is settled
-- Update create, update, and delete flows so balance reversal/application respects settlement state changes
-- Review whether reports should include future-dated transactions or only settled ones, and make that rule explicit
-
-### Acceptance Criteria
-
-- Creating a future-dated transaction does not change current account balance
-- Editing a transaction from future to past applies the correct balance delta once
-- Editing a settled transaction into the future reverses its balance impact once
-- Deleting an unsettled transaction does not touch balances
-
-### Verification
-
-- Test create/update/delete for:
-  - past income
-  - past expense
-  - future income
-  - future expense
-  - transfer variants if future transfers are allowed
-- Recheck dashboard/account totals after each scenario
-
-### Notes
-
-- This change likely touches schema and API contracts. Treat it as a focused feature fix, not a quick patch.
-
----
-
-## 4. High - Normalize Date-Only Handling Across Frontend and Backend
+## 3. High - Normalize Date-Only Handling Across Frontend and Backend
 
 ### Problem
 
@@ -190,7 +137,7 @@ Angular datepicker values are serialized with `toISOString()`, while backend mon
 
 ---
 
-## 5. Medium - Make Scheduled Generation Atomic
+## 4. Medium - Make Scheduled Generation Atomic
 
 ### Problem
 
@@ -230,7 +177,7 @@ Scheduled generation currently creates the transaction, links it back, and advan
 
 ---
 
-## 6. Medium - Normalize `Decimal` Values Before API Response
+## 5. Medium - Normalize `Decimal` Values Before API Response
 
 ### Problem
 
@@ -276,15 +223,14 @@ Several services return raw Prisma models with `Decimal` fields instead of conve
 - Item 1: lock down `process-due`
 - Item 2: scheduled transaction ownership checks
 
-### Phase 2 - Money correctness
+### Phase 2 - Date correctness and transaction safety
 
-- Item 3: settlement behavior
-- Item 5: atomic scheduled generation
+- Item 3: date normalization
+- Item 4: atomic scheduled generation
 
-### Phase 3 - Date correctness and contract cleanup
+### Phase 3 - Contract cleanup
 
-- Item 4: date normalization
-- Item 6: Decimal normalization
+- Item 5: Decimal normalization
 
 ---
 
@@ -294,10 +240,9 @@ If you want to turn these into implementation tickets, this split should stay ma
 
 1. Secure scheduled transaction processing endpoint
 2. Add scheduled transaction ownership validation
-3. Reintroduce settlement-aware transaction balance handling
-4. Standardize date-only serialization and filtering
-5. Make scheduled generation transactional
-6. Normalize Decimal values in backend API responses
+3. Standardize date-only serialization and filtering
+4. Make scheduled generation transactional
+5. Normalize Decimal values in backend API responses
 
 ---
 
@@ -308,8 +253,6 @@ If you want to turn these into implementation tickets, this split should stay ma
 - `budgetwise-api`: `npm.cmd run lint` only after handling existing lint debt or limiting scope
 - Manual checks for:
   - account balances
-  - future-dated transactions
   - scheduled transaction generation
   - month-boundary reports
   - auth/ownership isolation
-

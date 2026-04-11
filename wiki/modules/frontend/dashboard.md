@@ -19,7 +19,7 @@ Landing page after login. Snapshot of finances: summary cards, budget bars, rece
 ## UI Elements
 - Summary cards: total income, total expenses, net balance (this month)
 - Budget status bars per category (green / amber / red)
-- "Recent" (settled) + "Upcoming" (future-dated) transaction sections
+- "Recent" + "Upcoming" transaction sections for current activity and planned items
 
 ## Data Sources
 - [[core-services]] `ReportsService.getSummary` → `/api/reports/summary`

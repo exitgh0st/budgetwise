@@ -43,5 +43,4 @@ Tickets live in `tickets/` and are handled one at a time. `PROJECT-STATUS.md` tr
 
 ## Notes
 - The goals feature is shipped in code and documented in the wiki, but it is not represented by a current numbered file in the `tickets/` directory.
-- `39-settlement-aware-balance-handling.md` was removed from `tickets/`; its follow-up work now lives in `PROJECT-STATUS.md` and `code-review-remediation-backlog.md`.
 - The latest numbered ticket file is `43-copy-budgets-from-last-month.md`.

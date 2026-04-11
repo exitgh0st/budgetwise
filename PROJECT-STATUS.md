@@ -60,8 +60,7 @@ Manual changes outside the numbered ticket flow:
 
 | Change | Files modified |
 |--------|---------------|
-| **`isSettled` on Transaction** — future-dated transactions do not affect balance; auto-derived from date | `prisma/schema.prisma`, `transactions.service.ts`, `transaction.model.ts`, `tool-definitions.ts` |
-| **Dashboard recent/upcoming split** — separate settled vs future-dated sections | `dashboard.component.ts/html` |
+| **Dashboard recent/upcoming split** — surfaces current activity alongside upcoming planned transactions | `dashboard.component.ts/html` |
 | **Accounts page polish** — total balance summary moved above the card grid | `accounts.component.html/scss` |
 | **App-wide UI layout** — sidenav width 240px; removed max-width from main content | `app.scss` |
 | **Datepicker provider fix** — native date adapter configured globally | `app.config.ts` |
@@ -120,11 +119,8 @@ Manual changes outside the numbered ticket flow:
 
 ## Upcoming Tickets
 
-Code-review remediation backlog — created 2026-04-10 from `code-review-remediation-backlog.md`.
-
-### Ticket 39 — Settlement-Aware Balance Handling
-**Status:** Pending
-**Description:** Reintroduce `Transaction.isSettled` (dropped by the April 6 rename-recurring-to-bill migration), derive it from `date`, and make `applyBalanceEffect` a no-op when unsettled. Reports filter to settled rows and the UI shows a Pending badge on future-dated transactions.
+No active numbered tickets are currently queued in `PROJECT-STATUS.md`.
+Upcoming or planned transactions are handled through scheduled transactions and upcoming views, not through a settlement flag on regular transactions.
 
 ---
 
@@ -136,10 +132,10 @@ Code-review remediation backlog — created 2026-04-10 from `code-review-remedia
 - `ng2-charts` requires `--legacy-peer-deps`
 - Lightweight custom `MarkdownPipe` instead of `ngx-markdown`
 - Recurrence date advance uses last-valid-day clamping
-- `isSettled` is auto-derived from transaction date; no manual override
 - Balance adjustment is sequential and skipped when the diff is zero
 - Ownership violations return 404, not 403
 - Scheduled transactions are the canonical replacement for the earlier bill/recurring naming
+- Upcoming or planned transactions are handled through scheduled transactions and upcoming views, not through a settlement flag on regular transactions
 - Reminder notifications dedupe to one unread row per scheduled transaction per day
 - Budget spillover only chains across consecutive prior months that also have explicit `spillover=true` budget rows
 - `scheduledTransactionId` on `Transaction` links cron/manual-generated rows back to their source template

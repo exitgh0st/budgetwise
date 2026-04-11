@@ -212,7 +212,7 @@ export class ScheduledTransactionsService {
           description: scheduledTransaction.description ?? undefined,
           accountId: scheduledTransaction.accountId,
           categoryId: scheduledTransaction.categoryId,
-          // Manual generation should create a settled transaction now, not a future-dated one.
+          // Manual generation posts a real transaction immediately, so use the current timestamp.
           date: new Date().toISOString(),
         },
         userId,
