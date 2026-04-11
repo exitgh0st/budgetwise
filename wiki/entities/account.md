@@ -1,7 +1,7 @@
 ---
 type: entity
 source_files: [budgetwise-api/prisma/schema.prisma]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [entity, account]
 ---
 
@@ -31,7 +31,7 @@ tags: [entity, account]
 - `@@index([userId])`
 
 ## Used By
-- [[accounts]] - CRUD + balance adjustment + provider metadata
+- [[accounts]] - CRUD + balance adjustment + provider metadata + audited opening-balance seeding
 - [[transactions]] - atomic balance increment/decrement, including transfers
 - [[scheduled-transactions]] - generated transactions target an account
 - [[goals]] - optional target account for savings goals

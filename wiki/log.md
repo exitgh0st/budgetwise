@@ -1,4 +1,8 @@
-﻿# Wiki Log
+# Wiki Log
+
+## [2026-04-11] ingest | Delta b6a5861..546bcd4 - tickets 36-43, guarded process-due, date-only normalization, decimal response normalization, budget copy preview, opening-balance transactions
+- Updated pages: [[index]], [[overview]], [[project-structure]], [[api-routes]], [[chat-agent-flow]], [[data-flow]], [[account]], [[budget]], [[transaction]], [[scheduled-transaction]], [[accounts]], [[auth]], [[budgets]], [[chat]], [[goals]], [[notifications]], [[reports]], [[scheduled-transactions]], [[transactions]], [[accounts-page]], [[budgets-page]], [[goals-page]], [[scheduled-transactions-page]], [[transactions-page]], [[core-models]], [[core-services]], [[tickets-overview]], [[decisions]], [[known-issues]]
+- Marker bumped from `b6a5861` to `546bcd4`
 
 ## [2026-04-09] ingest | Delta 9711872..b6a5861 - scheduled-transactions rename, notifications/calendar, budget spillover, CSV export, provider logo refresh
 - Created pages: [[notification]], [[notifications]]

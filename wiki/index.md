@@ -1,6 +1,6 @@
 # Wiki Index
 
-Last updated: 2026-04-09
+Last updated: 2026-04-11
 
 > Read this first. It is the codebase map. Follow Obsidian-style `[[links]]` to get specific details before scanning source.
 
@@ -15,26 +15,26 @@ Last updated: 2026-04-09
 - [[chat-agent-flow]] - DeepSeek tool loop, guardrails, and destructive confirmation flow
 
 ## Backend Modules (`budgetwise-api/src/`)
-- [[accounts]] - Financial accounts CRUD + balance adjustment
-- [[auth]] - Supabase ES256 JWT guard, `@Public`, `@CurrentUser`, onboarding
+- [[accounts]] - Financial accounts CRUD + balance adjustment + opening-balance transactions
+- [[auth]] - Supabase ES256 JWT guard, `InternalAdminGuard`, `@Public`, `@CurrentUser`, onboarding
 - [[scheduled-transactions]] - Scheduled expense/income templates + hourly generation cron
 - [[notifications]] - In-app scheduled-transaction reminders
-- [[budgets]] - Per-category monthly budget upserts + spillover flag
+- [[budgets]] - Per-category monthly budget upserts + spillover flag + bulk copy
 - [[categories]] - User, template, and system categories
-- [[chat]] - DeepSeek-powered AI advisor with 32 tools + guardrails
+- [[chat]] - DeepSeek-powered AI advisor with 40 tools + guardrails
 - [[goals]] - Typed financial goals + contribution-linked transactions
 - [[reports]] - Summary, spending-by-category, budget-status, monthly-trend
-- [[transactions]] - Income/expense/transfer CRUD with atomic balance sync
+- [[transactions]] - Income/expense/transfer CRUD with atomic balance sync + date-only normalization
 
 ## Frontend Pages (`budgetwise-ui/src/app/pages/`)
 - [[dashboard]] - Summary cards, budget bars, recent + upcoming
 - [[accounts-page]] - Card grid, filters, provider-aware account management
-- [[transactions-page]] - Filter bar, date-grouped list, transfer-aware dialog, CSV export
-- [[scheduled-transactions-page]] - Upcoming expense/income tabs + calendar view
-- [[budgets-page]] - Month nav, progress bars, spillover-aware breakdowns
+- [[transactions-page]] - Filter bar, searchable selects, date-grouped list, CSV export
+- [[scheduled-transactions-page]] - Upcoming expense/income tabs, searchable filters, calendar view
+- [[budgets-page]] - Month nav, spillover-aware breakdowns, copy-from-last-month preview
 - [[reports-page]] - Doughnut + bar charts plus effective-budget status cards
 - [[categories-page]] - Sortable table / mobile list, FK-protected delete
-- [[goals-page]] - Financial goals page with savings/debt payoff flows
+- [[goals-page]] - Financial goals page with searchable dialogs and contribution flows
 - [[auth-pages]] - Login, Register, Forgot/Reset Password, OAuth callback
 - [[chat-panel]] - Slide-in chat sidebar (`shared/components/chat-panel`)
 

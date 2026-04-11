@@ -1,7 +1,7 @@
 ---
 type: entity
 source_files: [budgetwise-api/prisma/schema.prisma]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [entity, budget]
 ---
 
@@ -25,6 +25,6 @@ tags: [entity, budget]
 - `@@index([userId])`
 
 ## Used By
-- [[budgets]] - CRUD (upsert on create) + spillover toggle
+- [[budgets]] - CRUD (upsert on create) + spillover toggle + copy-from-month
 - [[reports]] `getBudgetStatus`
 - [[budgets-page]], [[dashboard]], [[reports-page]]

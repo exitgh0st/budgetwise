@@ -1,7 +1,7 @@
 ---
 type: project
 source_files: [tickets, PROJECT-STATUS.md]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [project, tickets]
 ---
 
@@ -33,7 +33,15 @@ Tickets live in `tickets/` and are handled one at a time. `PROJECT-STATUS.md` tr
 - 33 Rename bill -> scheduled transaction
 - 34 Scheduled transaction notifications + calendar
 - 35 Budget spillover toggle
+- 36 Chat tool coverage expansion
+- 37 Secure scheduled-transactions `process-due`
+- 38 Scheduled-transaction ownership validation
+- 40 Date-only normalization
+- 41 Atomic scheduled generation
+- 42 Decimal normalization at the API boundary
+- 43 Copy budgets from last month
 
 ## Notes
 - The goals feature is shipped in code and documented in the wiki, but it is not represented by a current numbered file in the `tickets/` directory.
-- No ticket files are currently pending beyond `35-*`.
+- `39-settlement-aware-balance-handling.md` was removed from `tickets/`; its follow-up work now lives in `PROJECT-STATUS.md` and `code-review-remediation-backlog.md`.
+- The latest numbered ticket file is `43-copy-budgets-from-last-month.md`.

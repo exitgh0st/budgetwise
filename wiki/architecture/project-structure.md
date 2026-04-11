@@ -1,7 +1,7 @@
 ---
 type: architecture
 source_files: [budgetwise-api/src, budgetwise-ui/src/app]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [architecture, structure]
 ---
 
@@ -16,9 +16,10 @@ budgetwise/
 |       |-- main.ts                Bootstrap: CORS, /api prefix, ValidationPipe, Swagger /api/docs
 |       |-- app.module.ts          Wires all modules + global JwtAuthGuard
 |       |-- prisma/                PrismaModule + PrismaService (global)
-|       |-- auth/                  -> [[auth]]
+|       |-- auth/                  -> [[auth]] (incl. InternalAdminGuard)
 |       |-- accounts/              -> [[accounts]]
 |       |-- categories/            -> [[categories]]
+|       |-- common/                Shared backend date helpers (`date.util.ts`)
 |       |-- transactions/          -> [[transactions]]
 |       |-- scheduled-transactions/ -> [[scheduled-transactions]] (incl. hourly cron)
 |       |-- notifications/         -> [[notifications]]
@@ -37,14 +38,15 @@ budgetwise/
         |   |-- guards/            -> [[guards]]
         |   |-- interceptors/      -> [[interceptors]]
         |   |-- models/            -> [[core-models]]
-        |   '-- services/          -> [[core-services]]
+        |   |-- services/          -> [[core-services]]
+        |   '-- utils/             Date-only helpers (`core/utils/date.util.ts`)
         |-- pages/
         |   |-- auth/              login, register, forgot-password, reset-password, callback -> [[auth-pages]]
         |   |-- dashboard/         -> [[dashboard]]
         |   |-- accounts/          -> [[accounts-page]] (+ account-dialog)
         |   |-- transactions/      -> [[transactions-page]] (+ transaction-dialog)
         |   |-- scheduled-transactions/ -> [[scheduled-transactions-page]] (+ dialog + calendar + day sheet)
-        |   |-- budgets/           -> [[budgets-page]] (+ budget-dialog)
+        |   |-- budgets/           -> [[budgets-page]] (+ budget-dialog + copy-budgets-dialog)
         |   |-- reports/           -> [[reports-page]]
         |   |-- categories/        -> [[categories-page]] (+ category-dialog)
         |   '-- goals/             -> [[goals-page]] (+ goal-type-dialog, goal-dialog, goal-contribution-dialog)

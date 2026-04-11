@@ -1,7 +1,7 @@
 ---
 type: module-backend
 source_files: [budgetwise-api/src/goals/goals.module.ts, budgetwise-api/src/goals/goals.controller.ts, budgetwise-api/src/goals/goals.service.ts, budgetwise-api/src/goals/dto/create-goal.dto.ts, budgetwise-api/src/goals/dto/update-goal.dto.ts, budgetwise-api/src/goals/dto/contribute-goal.dto.ts]
-last_ingested: 2026-04-08
+last_ingested: 2026-04-11
 tags: [backend, goals]
 ---
 
@@ -26,6 +26,7 @@ See [[api-routes]] section Goals.
 ## Key Logic
 - Supports two immutable goal types: `SAVINGS` and `DEBT_PAYOFF`.
 - Savings goals require a linked `accountId`; debt-payoff goals clear `accountId`.
+- `targetDate` now parses through the shared date-only helper, so frontend `YYYY-MM-DD` payloads do not drift across timezones.
 - `contribute` runs inside `prisma.$transaction`.
 - Savings contributions create a real `TRANSFER` via [[transactions]] from `fromAccountId` into the goal account.
 - Debt-payoff contributions create a real `EXPENSE` via [[transactions]] from `fromAccountId`.
@@ -37,4 +38,4 @@ See [[api-routes]] section Goals.
 - Owns [[goal]] and [[goal-contribution]]
 - Depends on [[transactions]] for contribution writes
 - Reads [[account]], [[category]], [[transaction]]
-- Consumed by [[goals-page]]
+- Consumed by [[goals-page]] and [[chat]]

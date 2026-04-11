@@ -1,7 +1,7 @@
 ---
 type: module-backend
 source_files: [budgetwise-api/src/reports/reports.module.ts, budgetwise-api/src/reports/reports.controller.ts, budgetwise-api/src/reports/reports.service.ts, budgetwise-api/src/reports/types/report.types.ts]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [backend, reports]
 ---
 
@@ -23,6 +23,7 @@ See [[api-routes]] section Reports.
 
 ## Key Logic
 - All four endpoints accept optional `month`/`year` (or `months` for trend), defaulting to this month / 6 months.
+- Month boundaries resolve through shared UTC helpers so date-only frontend payloads stay stable across timezones.
 - System categories are excluded from every aggregation so adjustment and helper categories do not skew totals.
 - Transfers are excluded by type.
 - `getSummary` returns `{ totalIncome, totalExpenses, netBalance }`.

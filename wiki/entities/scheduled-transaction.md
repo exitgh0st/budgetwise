@@ -1,7 +1,7 @@
 ---
 type: entity
 source_files: [budgetwise-api/prisma/schema.prisma]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [entity, scheduled-transaction]
 ---
 
@@ -38,6 +38,6 @@ Recurring or one-time **template** for a future income or expense entry.
 - `@@index([status])`
 
 ## Used By
-- [[scheduled-transactions]] - CRUD, manual generate, hourly cron, reminder enqueueing
+- [[scheduled-transactions]] - CRUD, manual generate, hourly cron, reminder enqueueing, and atomic generation/link/advance
 - [[scheduled-transactions-page]]
 - [[chat]] - 6 scheduled-transaction tools

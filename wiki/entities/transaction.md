@@ -1,7 +1,7 @@
 ---
 type: entity
 source_files: [budgetwise-api/prisma/schema.prisma]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [entity, transaction]
 ---
 
@@ -32,8 +32,8 @@ tags: [entity, transaction]
 - `@@index([toAccountId])`
 
 ## Used By
-- [[transactions]] - CRUD with atomic balance sync and transfer validation
-- [[accounts]] - balance adjustment flow creates a system-category transaction
+- [[transactions]] - CRUD with atomic balance sync, transfer validation, and date-only request parsing
+- [[accounts]] - opening balances and later balance adjustments create system-category transactions
 - [[scheduled-transactions]] - generation paths create transactions and set `scheduledTransactionId`
 - [[goals]] - contributions link through [[goal-contribution]]
 - [[reports]] - income/expense aggregations

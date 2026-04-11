@@ -1,7 +1,7 @@
 ---
 type: module-frontend
 source_files: [budgetwise-ui/src/app/pages/transactions/transactions.component.ts, budgetwise-ui/src/app/pages/transactions/transactions.component.html, budgetwise-ui/src/app/pages/transactions/transaction-dialog/transaction-dialog.component.ts]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [frontend, transactions]
 ---
 
@@ -19,10 +19,12 @@ List, filter, export, and CRUD income, expense, and transfer transactions.
 
 ## UI Elements
 - Filter bar: account, category, type, date range (expansion panel on mobile)
+- Searchable account/category selects in both the page filters and the add/edit dialog
 - Desktop `Export CSV` button plus a mobile icon action
 - Date-grouped transaction list with pagination
 - Adjustment badge for system Adjustment-category rows
 - Transfer rows show `fromAccount -> toAccount`
+- Row metadata now emphasizes account + category via pills instead of the older leading icon treatment
 - Add/edit dialog and delete confirmation
 
 ## Data Sources
@@ -32,4 +34,5 @@ List, filter, export, and CRUD income, expense, and transfer transactions.
 
 ## Notes
 - CSV export is frontend-only: escaped cells, descriptive filenames, browser download, no new backend endpoint.
+- Date filters and dialog submits use shared `YYYY-MM-DD` helpers to avoid timezone drift.
 - The previous recurring tab is gone; scheduled templates live on [[scheduled-transactions-page]].

@@ -1,7 +1,7 @@
 ---
 type: module-frontend
 source_files: [budgetwise-ui/src/app/pages/scheduled-transactions/scheduled-transactions.component.ts, budgetwise-ui/src/app/pages/scheduled-transactions/scheduled-transactions.component.html, budgetwise-ui/src/app/pages/scheduled-transactions/scheduled-transaction-dialog/scheduled-transaction-dialog.component.ts, budgetwise-ui/src/app/pages/scheduled-transactions/scheduled-transactions-calendar/scheduled-transactions-calendar.component.ts]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [frontend, scheduled-transactions]
 ---
 
@@ -22,10 +22,11 @@ Manage future expense/income templates and view them as either filtered lists or
 - Three tabs: **Expenses**, **Income**, **Calendar**
 - Expense/income tabs each have:
   - Search, account/category/frequency/status/date filters
+  - Searchable account/category selects for the filter dropdowns
   - Sortable desktop table and mobile card list
   - Summary total card with active-filter suffix
   - Pay/Receive, edit, and delete actions
-- Dialog includes `notifyDaysBefore`, installment controls, and status when editing
+- Dialog includes searchable account/category selects, `notifyDaysBefore`, installment controls, and status when editing
 - Calendar tab projects active schedules into the visible month client-side, colors income days green, expense days red, and mixed days amber
 - Clicking a day opens inline details on desktop or a bottom sheet on mobile
 
@@ -36,4 +37,5 @@ Manage future expense/income templates and view them as either filtered lists or
 
 ## Notes
 - Old `/bills` URLs redirect here, but the user-facing title stays "Upcoming Transactions".
+- Dialogs submit `nextDueDate` as `YYYY-MM-DD` and the cron interprets due/reminder windows using local calendar days.
 - Reminder notifications surface through the toolbar bell, not inside this page itself.

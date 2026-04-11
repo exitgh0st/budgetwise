@@ -1,7 +1,7 @@
 ---
 type: shared
 source_files: [budgetwise-ui/src/app/core/models]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [frontend, models]
 ---
 
@@ -24,5 +24,6 @@ TypeScript interfaces mirroring backend API responses. Located at `budgetwise-ui
 ## Convention
 - All `Decimal` values from the backend arrive as `number` (the API converts them).
 - Date fields are ISO strings (`string`), not `Date` objects.
+- Date-only form submits use `YYYY-MM-DD` strings on the request side, even though persisted `DateTime` response fields still arrive as ISO strings.
 - Relational responses are eagerly included where the backend uses `include` (for example `Transaction.account`, `Transaction.fromAccount`, `Transaction.toAccount`, `Transaction.category`).
 - `BudgetStatus` includes spillover-aware fields (`baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`) and `ScheduledTransaction` includes `notifyDaysBefore`.

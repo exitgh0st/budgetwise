@@ -2,7 +2,7 @@
 
 > Read this file FIRST at the start of every session. Use `/resume` to do this automatically.
 
-**Last updated at commit:** `a90d08a` — source baseline for wiki ingest b6a5861..a90d08a (2026-04-10)
+**Last updated at commit:** `546bcd4` — source baseline for wiki ingest a90d08a..546bcd4 (2026-04-11)
 
 ## Completed Tickets (summary)
 
@@ -77,6 +77,10 @@ Manual changes outside the numbered ticket flow:
 | **Provider logo refresh** — replaced placeholder account-provider artwork with refreshed local brand assets | `core/constants/providers.constants.ts`, `src/assets/providers/*` |
 | **Date-only wire format normalization** — datepicker-backed payloads now submit `YYYY-MM-DD`, backend parses via shared helpers, and report/filter boundaries use UTC ranges | frontend dialogs/filter files, `src/common/date.util.ts`, backend services/DTOs |
 | **Decimal response normalization** — accounts, transactions, budgets, and scheduled transactions now cast Decimal money fields to JSON numbers at the API boundary, and redundant frontend response coercions were removed | backend service mappers + dashboard/accounts/transactions/scheduled-transactions UI files |
+| **Account opening balances now create Adjustment transactions** — new accounts start at zero and non-zero opening balances are recorded as income/expense adjustment entries for audit history | `accounts.service.ts`, `accounts.module.ts`, `create-account.dto.ts`, `accounts.service.spec.ts` |
+| **Searchable Material selects added to finance forms** — `ngx-mat-select-search` powers account/category pickers in transaction, scheduled-transaction, and goal dialogs plus key list filters | `package.json`, transaction/scheduled-transaction/goal dialog files, transactions page files |
+| **Transactions row metadata refresh** — transaction list now emphasizes account/category metadata with pill styling instead of the earlier leading icon treatment | `transactions.component.ts/html/scss` |
+| **Budget copy preview + selective copy** — the copy-from-last-month flow now previews source rows and can submit only selected category IDs to `/api/budgets/copy` | budgets page files, `copy-budgets-dialog.component.ts`, `copy-budgets.dto.ts`, `budgets.service.ts` |
 
 ---
 
@@ -84,7 +88,7 @@ Manual changes outside the numbered ticket flow:
 
 ### Backend (`budgetwise-api/`)
 - **Modules:** Auth, Prisma, Accounts, Categories, Transactions, ScheduledTransactions, Notifications, Budgets, Reports, Chat, Goals
-- **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via JWKS, `@Public()` + `@CurrentUser()`
+- **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via JWKS, `@Public()` + `@CurrentUser()`, plus `InternalAdminGuard` for manual ops hooks
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
 - **Transactions:** Support income, expense, and transfer flows with atomic balance sync
@@ -97,10 +101,11 @@ Manual changes outside the numbered ticket flow:
 ### Frontend (`budgetwise-ui/`)
 - **Auth shell:** Login/register/forgot/reset/callback pages, JWT interceptor, auth/guest guards
 - **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals
-- **Transactions page:** Filtered list, transfer-aware dialog, client-side CSV export
-- **Scheduled transactions page:** Expense tab, income tab, calendar tab, create/edit/delete/pay/receive flow
+- **Transactions page:** Filtered list, searchable filters/dialog selects, transfer-aware dialog, client-side CSV export
+- **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow
 - **Notifications UI:** Toolbar bell with unread polling, recent menu, mark-read/mark-all-read, deep-link to `/scheduled-transactions`
-- **Budgets UX:** Spillover toggle in dialog, spillover chip, base/carry/effective breakdowns, and copy-from-last-month actions for desktop/mobile headers
+- **Budgets UX:** Spillover toggle in dialog, spillover chip, base/carry/effective breakdowns, and copy-from-last-month actions with preview/selective-copy flow
+- **Goals UX:** Searchable account/category selects in goal and contribution dialogs, date-only target-date handling
 - **Reports UX:** Doughnut + bar charts plus effective-budget status cards
 - **Accounts UX:** Provider picker for BANK / EWALLET / CREDIT_CARD / LOAN with refreshed local brand assets
 - **Shared:** `ConfirmDialogComponent`, `NotificationBellComponent`, `ChatPanelComponent`, `MarkdownPipe`

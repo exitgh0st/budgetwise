@@ -1,7 +1,7 @@
 ---
 type: module-backend
 source_files: [budgetwise-api/src/notifications/notifications.module.ts, budgetwise-api/src/notifications/notifications.controller.ts, budgetwise-api/src/notifications/notifications.service.ts, budgetwise-api/src/notifications/dto/list-notifications.dto.ts]
-last_ingested: 2026-04-09
+last_ingested: 2026-04-11
 tags: [backend, notifications]
 ---
 
@@ -25,9 +25,9 @@ See [[api-routes]] section Notifications.
 - `listForUser` returns newest-first notifications with pagination.
 - `markRead` and `dismiss` verify ownership first and throw `NotFoundException` if the row is missing.
 - `markAllRead` bulk-updates unread rows and stamps `readAt`.
-- `createForScheduledTx` dedupes to at most one unread `SCHEDULED_TX_DUE` notification per scheduled transaction per day.
+- `createForScheduledTx` dedupes to at most one unread `SCHEDULED_TX_DUE` notification per scheduled transaction per day and calculates `daysUntilDue` with local-calendar-day math.
 - `markReadByScheduledTx` is called after successful scheduled-transaction generation so stale reminders clear automatically.
 
 ## Relations
 - Owns the [[notification]] entity
-- Consumed by [[scheduled-transactions]] cron logic
+- Consumed by [[scheduled-transactions]] cron logic and by [[chat]] read-only notification tools
