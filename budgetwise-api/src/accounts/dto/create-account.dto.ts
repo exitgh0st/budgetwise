@@ -11,7 +11,11 @@ export class CreateAccountDto {
   @IsEnum(AccountType)
   type: AccountType;
 
-  @ApiPropertyOptional({ example: 0 })
+  @ApiPropertyOptional({
+    example: 0,
+    description:
+      'Opening balance for the account. Non-zero values are recorded via an adjustment transaction.',
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   balance?: number;
