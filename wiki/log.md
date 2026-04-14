@@ -48,3 +48,4 @@
 ## [2026-04-10] ticket | #41 completed — wiki ingest pending
 ## [2026-04-10] ticket | #42 completed — wiki ingest pending
 ## [2026-04-11] ticket | #43 completed — wiki ingest pending
+## [2026-04-14] ticket | #44 completed — wiki ingest pending

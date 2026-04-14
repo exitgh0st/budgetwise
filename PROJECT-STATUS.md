@@ -50,6 +50,7 @@
 | 41 — Atomic Scheduled Generation | Wrapped manual and cron scheduled-transaction generation in single Prisma transactions via `TransactionsService.createWithTx`, so create/link/advance now roll back together and cron re-reads in-tx for idempotency. |
 | 42 — Decimal Normalization in API Responses | Added response mappers for accounts, transactions, budgets, and scheduled transactions so Decimal money fields, including nested account balances, now return plain JSON numbers. |
 | 43 — Copy Budgets from Last Month | Added atomic `POST /api/budgets/copy` plus budgets-page copy actions that pull prior-month amount/spillover values into the current month without overwriting existing categories. |
+| 44 — Backend Security Hardening | Added Helmet headers, global IP rate limiting with stricter caps for onboarding/chat, and a production-safe global exception filter that preserves normal HTTP responses while hiding unhandled error details. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -88,6 +89,7 @@ Manual changes outside the numbered ticket flow:
 ### Backend (`budgetwise-api/`)
 - **Modules:** Auth, Prisma, Accounts, Categories, Transactions, ScheduledTransactions, Notifications, Budgets, Reports, Chat, Goals
 - **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via JWKS, `@Public()` + `@CurrentUser()`, plus `InternalAdminGuard` for manual ops hooks
+- **API hardening:** Helmet security headers, trusted-proxy-aware IP throttling (`100/min` global, tighter onboard/chat caps), and a global exception filter that sanitizes unhandled production `500`s
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
 - **Transactions:** Support income, expense, and transfer flows with atomic balance sync

@@ -11,6 +11,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -26,7 +27,21 @@ export class ChatController {
 
   constructor(private chatService: ChatService) {}
 
+  private getErrorStatus(error: unknown): number | undefined {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'status' in error &&
+      typeof error.status === 'number'
+    ) {
+      return error.status;
+    }
+
+    return undefined;
+  }
+
   // Send a message to the AI agent
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post()
   async sendMessage(
     @CurrentUser() user: { userId: string },
@@ -39,15 +54,19 @@ export class ChatController {
         user.userId,
       );
       return { reply, sessionId: dto.sessionId };
-    } catch (error: any) {
-      this.logger.error('Chat error:', error.message);
+    } catch (error: unknown) {
+      this.logger.error(
+        'Chat error',
+        error instanceof Error ? error.stack : String(error),
+      );
+      const errorStatus = this.getErrorStatus(error);
 
-      if (error.status === 401) {
+      if (errorStatus === 401) {
         throw new InternalServerErrorException(
           'AI service authentication failed. Check your API key.',
         );
       }
-      if (error.status === 429) {
+      if (errorStatus === 429) {
         throw new InternalServerErrorException(
           'AI service rate limit reached. Please try again in a moment.',
         );

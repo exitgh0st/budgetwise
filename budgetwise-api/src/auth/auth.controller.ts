@@ -1,4 +1,5 @@
 import { Controller, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PrismaService } from '../prisma/prisma.service';
 import { CurrentUser } from './current-user.decorator';
 import { AccountType } from '@prisma/client';
@@ -7,6 +8,7 @@ import { AccountType } from '@prisma/client';
 export class AuthController {
   constructor(private prisma: PrismaService) {}
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('onboard')
   async onboard(@CurrentUser() user: { userId: string }) {
     const existingAccounts = await this.prisma.account.count({
