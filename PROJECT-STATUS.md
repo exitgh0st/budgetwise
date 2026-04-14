@@ -55,6 +55,7 @@
 | 46 — Enforce Email Verification | Rejects unverified Supabase JWTs with `EMAIL_NOT_VERIFIED`, routes signed-in unverified users to `/verify-email`, and adds resend/auto-redirect verification UX. |
 | 47 — User Settings, Data Export, and Account Deletion | Added `/settings`, Supabase email/password update flows, `GET /api/user/export`, and `DELETE /api/user` for permanent account removal plus JSON portability export. |
 | 48 — Legal Pages | Added public `/privacy` and `/terms` pages, linked them from auth and app-shell navigation, and gated registration behind a required Terms + Privacy consent checkbox. |
+| 49 — Secrets Rotation & Git History Cleanup | Purged tracked frontend env files from git history, replaced them with placeholder/dev-safe config, generated ignored production env output at build time, and added a `SECURITY.md` secret-rotation runbook. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -87,6 +88,7 @@ Manual changes outside the numbered ticket flow:
 | **Budget copy preview + selective copy** — the copy-from-last-month flow now previews source rows and can submit only selected category IDs to `/api/budgets/copy` | budgets page files, `copy-budgets-dialog.component.ts`, `copy-budgets.dto.ts`, `budgets.service.ts` |
 | **Chat markdown sanitization hardening** — `MarkdownPipe` now returns sanitized HTML strings instead of bypassing Angular security trust checks | `shared/pipes/markdown.pipe.ts` |
 | **Email verification enforcement** — unverified Supabase sessions are blocked at the API boundary, redirected to `/verify-email`, and can resend confirmation emails with a 60-second client cooldown | `jwt.strategy.ts`, auth guards/interceptor/service, `verify-email.component.*` |
+| **Frontend production env generation** — production Supabase values now come from a generated, ignored `environment.prod.ts`, while tracked env templates stay placeholder-only for safe source control | `.gitignore`, `budgetwise-ui/.gitignore`, `budgetwise-ui/package.json`, `budgetwise-ui/scripts/prepare-prod-environment.mjs`, `budgetwise-ui/src/environments/*`, `SECURITY.md` |
 
 ---
 

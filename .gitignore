@@ -1,3 +1,8 @@
 # MCP config (contains secrets)
 .mcp.json
 /node_modules
+.env
+.env.production
+**/.env
+**/.env.production
+budgetwise-ui/src/environments/environment.prod.ts
