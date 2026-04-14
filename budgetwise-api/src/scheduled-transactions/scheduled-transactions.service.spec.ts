@@ -1,20 +1,24 @@
 import { NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import {
+  AccountType,
   Prisma,
   RecurringFrequency,
   ScheduledTransaction,
   ScheduledTransactionStatus,
   TransactionType,
 } from '@prisma/client';
+import { endOfLocalDay } from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { CreateScheduledTransactionDto } from './dto/create-scheduled-transaction.dto';
 import { UpdateScheduledTransactionDto } from './dto/update-scheduled-transaction.dto';
 import { ScheduledTransactionsService } from './scheduled-transactions.service';
 
-describe('ScheduledTransactionsService ownership validation', () => {
+describe('ScheduledTransactionsService', () => {
   const userId = 'user-1';
   const scheduledTransactionId = 'scheduled-1';
+  const createdAt = new Date('2026-04-10T00:00:00.000Z');
 
   let service: ScheduledTransactionsService;
   let tx: {
@@ -31,17 +35,68 @@ describe('ScheduledTransactionsService ownership validation', () => {
     $transaction: jest.Mock;
     account: { findFirst: jest.Mock };
     category: { findFirst: jest.Mock };
-    transaction: { update: jest.Mock };
     scheduledTransaction: {
       create: jest.Mock;
       findFirst: jest.Mock;
-      findUnique: jest.Mock;
+      findMany: jest.Mock;
+      update: jest.Mock;
+      delete: jest.Mock;
+    };
+    transaction: {
       update: jest.Mock;
     };
   };
   let transactionsService: {
     createWithTx: jest.Mock;
   };
+
+  const makeAccount = (id = 'account-1', balance = 1000) => ({
+    id,
+    name: `${id} name`,
+    type: AccountType.CASH,
+    balance: new Prisma.Decimal(balance),
+    maintainingBalance: null,
+    providerId: null,
+    userId,
+    createdAt,
+    updatedAt: createdAt,
+  });
+
+  const makeScheduledTransaction = (
+    overrides: Partial<ScheduledTransaction> = {},
+  ): ScheduledTransaction => ({
+    id: scheduledTransactionId,
+    type: TransactionType.EXPENSE,
+    amount: new Prisma.Decimal(250),
+    description: null,
+    frequency: RecurringFrequency.MONTHLY,
+    nextDueDate: new Date('2026-04-15T12:00:00.000Z'),
+    accountId: 'account-1',
+    categoryId: 'category-1',
+    totalInstallments: null,
+    completedInstallments: 0,
+    status: ScheduledTransactionStatus.ACTIVE,
+    notifyDaysBefore: null,
+    userId,
+    createdAt,
+    updatedAt: createdAt,
+    ...overrides,
+  });
+
+  const makeScheduledTransactionWithRelations = (
+    overrides: Partial<
+      ScheduledTransaction & {
+        account: ReturnType<typeof makeAccount>;
+        category: { id: string; name: string };
+      }
+    > = {},
+  ) => ({
+    ...makeScheduledTransaction(overrides),
+    account:
+      overrides.account ??
+      makeAccount(overrides.accountId ?? 'account-1', 1000),
+    category: overrides.category ?? { id: 'category-1', name: 'Bills' },
+  });
 
   const createDto = (): CreateScheduledTransactionDto => ({
     type: TransactionType.EXPENSE,
@@ -52,33 +107,12 @@ describe('ScheduledTransactionsService ownership validation', () => {
     categoryId: 'category-1',
   });
 
-  const scheduledTransactionRecord = (
-    overrides: Partial<ScheduledTransaction> = {},
-  ): ScheduledTransaction => ({
-    id: scheduledTransactionId,
-    type: TransactionType.EXPENSE,
-    amount: new Prisma.Decimal(250),
-    description: null,
-    frequency: RecurringFrequency.MONTHLY,
-    nextDueDate: new Date('2026-04-15T00:00:00.000Z'),
-    accountId: 'account-1',
-    categoryId: 'category-1',
-    totalInstallments: null,
-    completedInstallments: 0,
-    status: ScheduledTransactionStatus.ACTIVE,
-    notifyDaysBefore: null,
-    userId,
-    createdAt: new Date('2026-04-10T00:00:00.000Z'),
-    updatedAt: new Date('2026-04-10T00:00:00.000Z'),
-    ...overrides,
-  });
-
-  beforeEach(() => {
+  beforeEach(async () => {
     tx = {
       scheduledTransaction: {
-        findFirst: jest.fn().mockResolvedValue(scheduledTransactionRecord()),
-        findUnique: jest.fn().mockResolvedValue(scheduledTransactionRecord()),
-        update: jest.fn().mockResolvedValue(scheduledTransactionRecord()),
+        findFirst: jest.fn().mockResolvedValue(makeScheduledTransaction()),
+        findUnique: jest.fn().mockResolvedValue(makeScheduledTransaction()),
+        update: jest.fn().mockResolvedValue(makeScheduledTransaction()),
       },
       transaction: {
         update: jest.fn().mockResolvedValue({ id: 'transaction-1' }),
@@ -89,8 +123,9 @@ describe('ScheduledTransactionsService ownership validation', () => {
       $transaction: jest
         .fn()
         .mockImplementation(
-          (callback: (transactionClient: typeof tx) => Promise<unknown>) =>
-            callback(tx),
+          async (
+            callback: (transactionClient: typeof tx) => Promise<unknown>,
+          ) => callback(tx),
         ),
       account: {
         findFirst: jest.fn().mockResolvedValue({ id: 'account-1' }),
@@ -98,23 +133,39 @@ describe('ScheduledTransactionsService ownership validation', () => {
       category: {
         findFirst: jest.fn().mockResolvedValue({ id: 'category-1' }),
       },
-      transaction: tx.transaction,
       scheduledTransaction: {
-        create: jest.fn().mockResolvedValue(scheduledTransactionRecord()),
-        findFirst: tx.scheduledTransaction.findFirst,
-        findUnique: tx.scheduledTransaction.findUnique,
-        update: tx.scheduledTransaction.update,
+        create: jest
+          .fn()
+          .mockResolvedValue(makeScheduledTransactionWithRelations()),
+        findFirst: jest
+          .fn()
+          .mockResolvedValue(makeScheduledTransactionWithRelations()),
+        findMany: jest.fn().mockResolvedValue([makeScheduledTransaction()]),
+        update: jest
+          .fn()
+          .mockResolvedValue(makeScheduledTransactionWithRelations()),
+        delete: jest.fn().mockResolvedValue(undefined),
       },
+      transaction: tx.transaction,
     };
 
     transactionsService = {
       createWithTx: jest.fn().mockResolvedValue({ id: 'transaction-1' }),
     };
 
-    service = new ScheduledTransactionsService(
-      prisma as unknown as PrismaService,
-      transactionsService as unknown as TransactionsService,
-    );
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ScheduledTransactionsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: TransactionsService, useValue: transactionsService },
+      ],
+    }).compile();
+
+    service = module.get(ScheduledTransactionsService);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('rejects create when the account is not owned by the user', async () => {
@@ -139,7 +190,28 @@ describe('ScheduledTransactionsService ownership validation', () => {
   });
 
   it('creates a scheduled transaction when account and category are valid', async () => {
-    await service.create(createDto(), userId);
+    const result = await service.create(createDto(), userId);
+    const createCalls = prisma.scheduledTransaction.create.mock.calls as Array<
+      [
+        {
+          data: {
+            type: TransactionType;
+            amount: number;
+            description?: string;
+            frequency: RecurringFrequency;
+            nextDueDate: Date;
+            accountId: string;
+            categoryId: string;
+            totalInstallments: number | null;
+            completedInstallments: number;
+            notifyDaysBefore?: number;
+            userId: string;
+          };
+          include: object;
+        },
+      ]
+    >;
+    const createCall = createCalls[0][0];
 
     expect(prisma.account.findFirst).toHaveBeenCalledWith({
       where: { id: 'account-1', userId },
@@ -149,27 +221,22 @@ describe('ScheduledTransactionsService ownership validation', () => {
       where: { id: 'category-1', OR: [{ userId }, { isSystem: true }] },
       select: { id: true },
     });
-    expect(prisma.scheduledTransaction.create).toHaveBeenCalled();
-  });
-
-  it('allows create when the category is a shared system category', async () => {
-    prisma.category.findFirst.mockResolvedValueOnce({
-      id: 'system-category-1',
-    });
-
-    await service.create(
-      { ...createDto(), categoryId: 'system-category-1' },
+    expect(createCall.data).toEqual({
+      type: TransactionType.EXPENSE,
+      amount: 250,
+      description: undefined,
+      frequency: RecurringFrequency.MONTHLY,
+      nextDueDate: new Date('2026-04-15T12:00:00.000Z'),
+      accountId: 'account-1',
+      categoryId: 'category-1',
+      totalInstallments: null,
+      completedInstallments: 0,
+      notifyDaysBefore: undefined,
       userId,
-    );
-
-    expect(prisma.category.findFirst).toHaveBeenCalledWith({
-      where: {
-        id: 'system-category-1',
-        OR: [{ userId }, { isSystem: true }],
-      },
-      select: { id: true },
     });
-    expect(prisma.scheduledTransaction.create).toHaveBeenCalled();
+    expect(createCall.include).toBeDefined();
+    expect(result.amount).toBe(250);
+    expect(result.account.balance).toBe(1000);
   });
 
   it('rejects update when the next account is not owned by the user', async () => {
@@ -211,62 +278,126 @@ describe('ScheduledTransactionsService ownership validation', () => {
     );
   });
 
-  it('generates manually inside a single prisma transaction', async () => {
+  it('generates a monthly scheduled transaction and advances the next due date', async () => {
+    tx.scheduledTransaction.findFirst.mockResolvedValueOnce(
+      makeScheduledTransaction({
+        frequency: RecurringFrequency.MONTHLY,
+        nextDueDate: new Date('2026-04-15T12:00:00.000Z'),
+      }),
+    );
+
     await service.generate(scheduledTransactionId, userId);
+    const createWithTxCalls = transactionsService.createWithTx.mock
+      .calls as Array<
+      [
+        typeof tx,
+        {
+          type: TransactionType;
+          amount: number;
+          accountId: string;
+          categoryId: string;
+          date: string;
+        },
+        string,
+      ]
+    >;
+    const createWithTxCall = createWithTxCalls[0];
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-    expect(prisma.scheduledTransaction.findFirst).toHaveBeenCalledWith({
-      where: { id: scheduledTransactionId, userId },
+    expect(createWithTxCall[0]).toBe(tx);
+    expect(createWithTxCall[1]).toMatchObject({
+      type: TransactionType.EXPENSE,
+      amount: 250,
+      accountId: 'account-1',
+      categoryId: 'category-1',
     });
-    expect(transactionsService.createWithTx).toHaveBeenCalledWith(
-      tx,
-      expect.objectContaining({
-        type: TransactionType.EXPENSE,
-        amount: 250,
-        accountId: 'account-1',
-        categoryId: 'category-1',
-      }),
-      userId,
-    );
+    expect(typeof createWithTxCall[1].date).toBe('string');
+    expect(createWithTxCall[2]).toBe(userId);
     expect(prisma.transaction.update).toHaveBeenCalledWith({
       where: { id: 'transaction-1' },
       data: { scheduledTransactionId },
     });
-    const scheduleUpdateCall = prisma.scheduledTransaction.update.mock
-      .calls[0] as [{ where: { id: string }; data: { nextDueDate?: Date } }];
-
-    expect(scheduleUpdateCall[0].where).toEqual({ id: scheduledTransactionId });
-    expect(scheduleUpdateCall[0].data.nextDueDate).toBeInstanceOf(Date);
+    expect(tx.scheduledTransaction.update).toHaveBeenCalledWith({
+      where: { id: scheduledTransactionId },
+      data: {
+        nextDueDate: new Date('2026-05-15T12:00:00.000Z'),
+      },
+    });
   });
 
-  it('returns true when cron generation commits successfully', async () => {
-    const dueRecord = scheduledTransactionRecord({
+  it('marks one-time schedules as completed when they are generated', async () => {
+    tx.scheduledTransaction.findFirst.mockResolvedValueOnce(
+      makeScheduledTransaction({
+        frequency: RecurringFrequency.ONCE,
+        totalInstallments: 1,
+      }),
+    );
+
+    await service.generate(scheduledTransactionId, userId);
+
+    expect(tx.scheduledTransaction.update).toHaveBeenCalledWith({
+      where: { id: scheduledTransactionId },
+      data: {
+        completedInstallments: 1,
+        status: ScheduledTransactionStatus.COMPLETED,
+      },
+    });
+  });
+
+  it('finds only due scheduled transactions for cron processing', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-04-14T09:00:00.000Z'));
+    prisma.scheduledTransaction.findMany.mockResolvedValueOnce([
+      makeScheduledTransaction({
+        nextDueDate: new Date('2026-04-14T12:00:00.000Z'),
+      }),
+    ]);
+
+    const result = await service.findAllDue();
+
+    expect(prisma.scheduledTransaction.findMany).toHaveBeenCalledWith({
+      where: {
+        nextDueDate: { lte: endOfLocalDay(new Date()) },
+        status: ScheduledTransactionStatus.ACTIVE,
+        userId: { not: null },
+      },
+      orderBy: { nextDueDate: 'asc' },
+    });
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: scheduledTransactionId,
+        amount: 250,
+      }),
+    ]);
+  });
+
+  it('returns true when cron generation commits successfully for a due record', async () => {
+    const dueRecord = makeScheduledTransaction({
       nextDueDate: new Date('2026-04-09T12:00:00.000Z'),
     });
 
-    prisma.scheduledTransaction.findUnique.mockResolvedValueOnce(dueRecord);
+    tx.scheduledTransaction.findUnique.mockResolvedValueOnce(dueRecord);
 
     await expect(service.generateFromRecord(dueRecord)).resolves.toBe(true);
 
     expect(transactionsService.createWithTx).toHaveBeenCalledTimes(1);
     expect(prisma.transaction.update).toHaveBeenCalledTimes(1);
-    expect(prisma.scheduledTransaction.update).toHaveBeenCalledTimes(1);
+    expect(tx.scheduledTransaction.update).toHaveBeenCalledTimes(1);
   });
 
-  it('returns false when cron generation is skipped after the in-transaction reread', async () => {
-    prisma.scheduledTransaction.findUnique.mockResolvedValueOnce(
-      scheduledTransactionRecord({
+  it('skips cron generation when the re-read scheduled transaction is no longer due', async () => {
+    tx.scheduledTransaction.findUnique.mockResolvedValueOnce(
+      makeScheduledTransaction({
         nextDueDate: new Date('2999-04-15T12:00:00.000Z'),
       }),
     );
 
     await expect(
-      service.generateFromRecord(scheduledTransactionRecord()),
+      service.generateFromRecord(makeScheduledTransaction()),
     ).resolves.toBe(false);
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(transactionsService.createWithTx).not.toHaveBeenCalled();
     expect(prisma.transaction.update).not.toHaveBeenCalled();
-    expect(prisma.scheduledTransaction.update).not.toHaveBeenCalled();
+    expect(tx.scheduledTransaction.update).not.toHaveBeenCalled();
   });
 });

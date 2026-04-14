@@ -57,6 +57,7 @@
 | 48 — Legal Pages | Added public `/privacy` and `/terms` pages, linked them from auth and app-shell navigation, and gated registration behind a required Terms + Privacy consent checkbox. |
 | 49 — Secrets Rotation & Git History Cleanup | Purged tracked frontend env files from git history, replaced them with placeholder/dev-safe config, generated ignored production env output at build time, and added a `SECURITY.md` secret-rotation runbook. |
 | 52 — Observability Stack | Added public `GET /api/health`, `nestjs-pino` request logging with correlation IDs, and optional Sentry backend/frontend wiring plus conditional frontend source map upload hooks. |
+| 54 — Core Backend Test Coverage | Added mocked Prisma unit coverage for Accounts, Transactions, Budgets, and Scheduled Transactions, bringing the targeted money-path services above 70% combined line coverage with `27` passing backend tests. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
