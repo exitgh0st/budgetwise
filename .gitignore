@@ -5,6 +5,10 @@
 .env.production
 **/.env
 **/.env.production
-/budgetwise-ui/src/environments
+/budgetwise-ui/src/environments/*
+!/budgetwise-ui/src/environments/
+!/budgetwise-ui/src/environments/environment.ts
+!/budgetwise-ui/src/environments/environment.prod.example.ts
+/budgetwise-ui/src/environments/environment.prod.ts
 /tickets
 

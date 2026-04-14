@@ -1,6 +1,6 @@
 export const environment = {
-  production: true,
-  apiUrl: 'https://your-api-host/api',
+  production: false,
+  apiUrl: 'http://localhost:3000/api',
   supabaseUrl: 'https://your-project.supabase.co',
   supabaseAnonKey: 'your-anon-key',
   sentryDsn: '',

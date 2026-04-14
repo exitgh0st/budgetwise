@@ -11,6 +11,7 @@ const examplePath = resolve(environmentsDir, 'environment.prod.example.ts');
 const apiUrl = process.env.BUDGETWISE_API_URL?.trim();
 const supabaseUrl = process.env.SUPABASE_URL?.trim();
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY?.trim();
+const sentryDsn = process.env.SENTRY_DSN?.trim() ?? '';
 
 mkdirSync(dirname(targetPath), { recursive: true });
 
@@ -20,6 +21,7 @@ if (apiUrl && supabaseUrl && supabaseAnonKey) {
   apiUrl: ${JSON.stringify(apiUrl)},
   supabaseUrl: ${JSON.stringify(supabaseUrl)},
   supabaseAnonKey: ${JSON.stringify(supabaseAnonKey)},
+  sentryDsn: ${JSON.stringify(sentryDsn)},
 };
 `;
 

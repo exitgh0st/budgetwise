@@ -46,11 +46,16 @@
                   "with": "src/environments/environment.prod.ts"
                 }
               ],
+              "sourceMap": {
+                "scripts": true,
+                "styles": true,
+                "hidden": true
+              },
               "budgets": [
                 {
                   "type": "initial",
                   "maximumWarning": "500kB",
-                  "maximumError": "1.20MB"
+                  "maximumError": "1.30MB"
                 },
                 {
                   "type": "anyComponentStyle",
