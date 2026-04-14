@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { verifyEmailGuard } from './core/guards/verify-email.guard';
 
 export const routes: Routes = [
   // Auth routes (unprotected, guest-only)
@@ -48,6 +49,7 @@ export const routes: Routes = [
   {
     path: 'verify-email',
     title: 'Verify Email | BudgetWise',
+    canActivate: [verifyEmailGuard],
     loadComponent: () =>
       import('./pages/auth/verify-email/verify-email.component').then(
         (m) => m.VerifyEmailComponent,

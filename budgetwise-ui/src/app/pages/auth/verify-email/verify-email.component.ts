@@ -135,6 +135,7 @@ export class VerifyEmailComponent implements OnInit {
 
     this.redirectInProgress = true;
     this.isLoading.set(true);
+    await this.auth.refreshSession();
     await this.auth.onboard();
     await this.router.navigate(['/dashboard']);
   }

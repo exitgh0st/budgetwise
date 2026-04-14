@@ -7,7 +7,9 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 type SupabaseJwtPayload = {
   sub: string;
   email: string;
-  email_confirmed_at?: string | null;
+  user_metadata: {
+    email_verified: boolean;
+  };
 };
 
 @Injectable()
@@ -29,7 +31,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   validate(payload: SupabaseJwtPayload) {
-    if (!payload.email_confirmed_at) {
+    console.log('Validating JWT payload:', payload);
+
+    if (!payload.user_metadata.email_verified) {
       throw new UnauthorizedException({
         statusCode: 401,
         message: 'Email not verified',

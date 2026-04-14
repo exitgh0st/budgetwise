@@ -47,6 +47,7 @@ export class AuthService {
       return { ...data, requiresEmailVerification: true };
     }
 
+    await this.refreshSession();
     await this.onboard();
     return { ...data, requiresEmailVerification: false };
   }
@@ -125,19 +126,32 @@ export class AuthService {
     }
   }
 
+  async refreshSession(): Promise<void> {
+    const {
+      data: { session },
+    } = await this.supabase.client.auth.getSession();
+
+    if (!session?.refresh_token) {
+      return;
+    }
+
+    const { data, error } = await this.supabase.client.auth.refreshSession({
+      refresh_token: session.refresh_token,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    this.currentUser.set(data.user ?? data.session?.user ?? this.currentUser());
+  }
+
   isUserEmailVerified(user: User | null | undefined): boolean {
     if (!user) return false;
 
-    if (
+    return (
       typeof user.email_confirmed_at === 'string' &&
       user.email_confirmed_at.length > 0
-    ) {
-      return true;
-    }
-
-    return (
-      user.user_metadata?.['email_verified'] === true ||
-      user.app_metadata?.['email_verified'] === true
     );
   }
 

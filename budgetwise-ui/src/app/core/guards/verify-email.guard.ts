@@ -2,14 +2,21 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const verifyEmailGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  const resolveRoute = () =>
-    auth.isAuthenticated()
-      ? true
-      : router.createUrlTree([auth.hasSession() ? '/verify-email' : '/login']);
+  const resolveRoute = (): true | UrlTree => {
+    if (!auth.hasSession()) {
+      return router.createUrlTree(['/login']);
+    }
+
+    if (auth.isAuthenticated()) {
+      return router.createUrlTree(['/dashboard']);
+    }
+
+    return true;
+  };
 
   if (auth.isLoading()) {
     return new Promise<true | UrlTree>((resolve) => {
