@@ -1,7 +1,17 @@
 {
+  "env": {
+    "BASH_MAX_OUTPUT_LENGTH": "150000"
+  },
   "permissions": {
     "allow": [
       "Bash(npx nest:*)"
+    ],
+    "deny": [
+      "Read(budgetwise-api/node_modules/**)",
+      "Read(budgetwise-ui/node_modules/**)",
+      "Read(budgetwise-api/dist/**)",
+      "Read(budgetwise-ui/dist/**)",
+      "Read(budgetwise-api/generated/**)"
     ]
   }
 }
