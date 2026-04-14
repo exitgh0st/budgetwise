@@ -69,12 +69,23 @@
             </div>
           }
 
+          <mat-checkbox formControlName="agreeToTerms" class="terms-checkbox">
+            I agree to the
+            <a routerLink="/terms" target="_blank" rel="noopener">Terms of Service</a>
+            and
+            <a routerLink="/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+          </mat-checkbox>
+
+          @if (form.controls.agreeToTerms.invalid && form.controls.agreeToTerms.touched) {
+            <div class="checkbox-error">You must agree before creating an account.</div>
+          }
+
           <button
             mat-flat-button
             color="primary"
             type="submit"
             class="full-width submit-btn"
-            [disabled]="isLoading() || isGoogleLoading()">
+            [disabled]="form.invalid || isLoading() || isGoogleLoading()">
             @if (isLoading()) {
               <mat-spinner diameter="20"></mat-spinner>
             } @else {
@@ -116,6 +127,11 @@
           Already have an account?
           <a routerLink="/login">Log in</a>
         </p>
+        <div class="legal-links">
+          <a routerLink="/privacy">Privacy Policy</a>
+          <span>&middot;</span>
+          <a routerLink="/terms">Terms of Service</a>
+        </div>
       </mat-card-footer>
     }
   </mat-card>

@@ -159,3 +159,22 @@ mat-card-content {
     }
   }
 }
+
+.legal-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--app-auth-subtitle);
+
+  a {
+    color: var(--app-auth-link);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

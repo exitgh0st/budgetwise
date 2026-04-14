@@ -53,6 +53,22 @@ export const routes: Routes = [
         (m) => m.VerifyEmailComponent,
       ),
   },
+  {
+    path: 'privacy',
+    title: 'Privacy Policy | BudgetWise',
+    loadComponent: () =>
+      import('./pages/legal/privacy-policy/privacy-policy.component').then(
+        (m) => m.PrivacyPolicyComponent,
+      ),
+  },
+  {
+    path: 'terms',
+    title: 'Terms of Service | BudgetWise',
+    loadComponent: () =>
+      import('./pages/legal/terms-of-service/terms-of-service.component').then(
+        (m) => m.TermsOfServiceComponent,
+      ),
+  },
 
   // Protected routes (require auth)
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },

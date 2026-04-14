@@ -54,6 +54,7 @@
 | 45 — Markdown Pipe XSS Hardening | Replaced `bypassSecurityTrustHtml()` in the chat markdown pipe with Angular HTML sanitization so assistant replies keep the lightweight markdown subset without disabling framework XSS protection. |
 | 46 — Enforce Email Verification | Rejects unverified Supabase JWTs with `EMAIL_NOT_VERIFIED`, routes signed-in unverified users to `/verify-email`, and adds resend/auto-redirect verification UX. |
 | 47 — User Settings, Data Export, and Account Deletion | Added `/settings`, Supabase email/password update flows, `GET /api/user/export`, and `DELETE /api/user` for permanent account removal plus JSON portability export. |
+| 48 — Legal Pages | Added public `/privacy` and `/terms` pages, linked them from auth and app-shell navigation, and gated registration behind a required Terms + Privacy consent checkbox. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -108,7 +109,8 @@ Manual changes outside the numbered ticket flow:
 
 ### Frontend (`budgetwise-ui/`)
 - **Auth shell:** Login/register/forgot/reset/callback/verify-email pages, JWT interceptor, auth/guest guards, and signed-in unverified-user redirects
-- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings
+- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings, Privacy Policy, Terms of Service
+- **Legal UX:** Public `/privacy` and `/terms` routes, auth-page legal footer links, required registration consent checkbox, and authenticated sidenav footer links
 - **Transactions page:** Filtered list, searchable filters/dialog selects, transfer-aware dialog, client-side CSV export
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow
 - **Settings page:** Responsive profile/security/data/danger-zone sections with Supabase email/password dialogs, export download flow, and typed-confirmation account deletion

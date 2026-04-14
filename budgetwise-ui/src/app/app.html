@@ -1,55 +1,65 @@
 @if (auth.isAuthenticated()) {
 <mat-sidenav-container class="app-container">
   <mat-sidenav #sidenav [mode]="isMobile ? 'over' : 'side'" [opened]="!isMobile">
-    <div class="sidenav-header">
-      <h2>BudgetWise</h2>
+    <div class="sidenav-shell">
+      <div class="sidenav-header">
+        <h2>BudgetWise</h2>
+      </div>
+      <mat-nav-list class="sidenav-nav">
+        <a mat-list-item routerLink="/dashboard" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>dashboard</mat-icon>
+          <span matListItemTitle>Dashboard</span>
+        </a>
+
+        <a mat-list-item routerLink="/accounts" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
+          <span matListItemTitle>Accounts</span>
+        </a>
+
+        <a mat-list-item routerLink="/transactions" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>swap_horiz</mat-icon>
+          <span matListItemTitle>Transactions</span>
+        </a>
+
+        <a mat-list-item routerLink="/scheduled-transactions" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>event_repeat</mat-icon>
+          <span matListItemTitle>Upcoming</span>
+        </a>
+
+        <a mat-list-item routerLink="/budgets" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>account_balance</mat-icon>
+          <span matListItemTitle>Budgets</span>
+        </a>
+
+        <a mat-list-item routerLink="/goals" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>flag</mat-icon>
+          <span matListItemTitle>Goals</span>
+        </a>
+
+        <a mat-list-item routerLink="/reports" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>insights</mat-icon>
+          <span matListItemTitle>Reports</span>
+        </a>
+
+        <a mat-list-item routerLink="/categories" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>label</mat-icon>
+          <span matListItemTitle>Categories</span>
+        </a>
+
+        <a mat-list-item routerLink="/settings" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>settings</mat-icon>
+          <span matListItemTitle>Settings</span>
+        </a>
+      </mat-nav-list>
+
+      <div class="sidenav-footer">
+        <span class="sidenav-footer-label">Legal</span>
+        <div class="sidenav-footer-links">
+          <a routerLink="/privacy" (click)="isMobile && sidenav.close()">Privacy Policy</a>
+          <a routerLink="/terms" (click)="isMobile && sidenav.close()">Terms of Service</a>
+        </div>
+      </div>
     </div>
-    <mat-nav-list>
-      <a mat-list-item routerLink="/dashboard" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>dashboard</mat-icon>
-        <span matListItemTitle>Dashboard</span>
-      </a>
-
-      <a mat-list-item routerLink="/accounts" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
-        <span matListItemTitle>Accounts</span>
-      </a>
-
-      <a mat-list-item routerLink="/transactions" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>swap_horiz</mat-icon>
-        <span matListItemTitle>Transactions</span>
-      </a>
-
-      <a mat-list-item routerLink="/scheduled-transactions" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>event_repeat</mat-icon>
-        <span matListItemTitle>Upcoming</span>
-      </a>
-
-      <a mat-list-item routerLink="/budgets" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>account_balance</mat-icon>
-        <span matListItemTitle>Budgets</span>
-      </a>
-
-      <a mat-list-item routerLink="/goals" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>flag</mat-icon>
-        <span matListItemTitle>Goals</span>
-      </a>
-
-      <a mat-list-item routerLink="/reports" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>insights</mat-icon>
-        <span matListItemTitle>Reports</span>
-      </a>
-
-      <a mat-list-item routerLink="/categories" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>label</mat-icon>
-        <span matListItemTitle>Categories</span>
-      </a>
-
-      <a mat-list-item routerLink="/settings" routerLinkActive="active" (click)="isMobile && sidenav.close()">
-        <mat-icon matListItemIcon>settings</mat-icon>
-        <span matListItemTitle>Settings</span>
-      </a>
-    </mat-nav-list>
   </mat-sidenav>
 
   <mat-sidenav-content>
