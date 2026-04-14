@@ -1,0 +1,26 @@
+<div class="not-found-page">
+  <mat-card class="not-found-card">
+    <span class="status-chip">Error 404</span>
+
+    <div class="hero-icon-wrap">
+      <mat-icon class="hero-icon">explore_off</mat-icon>
+    </div>
+
+    <div class="copy-block">
+      <p class="eyebrow">Lost track of this page?</p>
+      <h1>Page not found</h1>
+      <p class="message">
+        The page you were trying to open does not exist, may have moved, or the
+        link may be outdated.
+      </p>
+    </div>
+
+    <a
+      mat-flat-button
+      color="primary"
+      class="primary-action"
+      [routerLink]="primaryAction().link">
+      {{ primaryAction().label }}
+    </a>
+  </mat-card>
+</div>

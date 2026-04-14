@@ -58,6 +58,7 @@
 | 49 — Secrets Rotation & Git History Cleanup | Purged tracked frontend env files from git history, replaced them with placeholder/dev-safe config, generated ignored production env output at build time, and added a `SECURITY.md` secret-rotation runbook. |
 | 52 — Observability Stack | Added public `GET /api/health`, `nestjs-pino` request logging with correlation IDs, and optional Sentry backend/frontend wiring plus conditional frontend source map upload hooks. |
 | 54 — Core Backend Test Coverage | Added mocked Prisma unit coverage for Accounts, Transactions, Budgets, and Scheduled Transactions, bringing the targeted money-path services above 70% combined line coverage with `27` passing backend tests. |
+| 55 — 404 Error Page & SEO Meta Tags | Added a public wildcard not-found page with auth-aware recovery actions, plus frontend SEO/social meta tags and generated OG/iOS/favicon PNG assets for richer previews. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -114,8 +115,9 @@ Manual changes outside the numbered ticket flow:
 
 ### Frontend (`budgetwise-ui/`)
 - **Auth shell:** Login/register/forgot/reset/callback/verify-email pages, JWT interceptor, auth/guest guards, and signed-in unverified-user redirects
-- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings, Privacy Policy, Terms of Service
+- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings, Privacy Policy, Terms of Service, Not Found
 - **Legal UX:** Public `/privacy` and `/terms` routes, auth-page legal footer links, required registration consent checkbox, and authenticated sidenav footer links
+- **SEO/share metadata:** `index.html` now ships description/keywords, Open Graph, Twitter Card, theme-color, Apple touch icon, and PNG favicon tags backed by generated brand assets
 - **Observability:** Optional `@sentry/angular` bootstrap + `ErrorHandler` integration, tracked safe development env template, and hidden production source maps with conditional `sentry-cli` upload support
 - **Transactions page:** Filtered list, searchable filters/dialog selects, transfer-aware dialog, client-side CSV export
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow

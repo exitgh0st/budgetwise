@@ -148,4 +148,12 @@ export const routes: Routes = [
         (m) => m.SettingsComponent,
       ),
   },
+  {
+    path: '**',
+    title: 'Page Not Found | BudgetWise',
+    loadComponent: () =>
+      import('./pages/not-found/not-found.component').then(
+        (m) => m.NotFoundComponent,
+      ),
+  },
 ];
