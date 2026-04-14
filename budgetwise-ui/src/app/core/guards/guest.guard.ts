@@ -6,14 +6,18 @@ export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  const redirect = () => {
+    void router.navigate([auth.isAuthenticated() ? '/dashboard' : '/verify-email']);
+    return false;
+  };
+
   if (auth.isLoading()) {
     return new Promise<boolean>((resolve) => {
       const interval = setInterval(() => {
         if (!auth.isLoading()) {
           clearInterval(interval);
-          if (auth.isAuthenticated()) {
-            router.navigate(['/dashboard']);
-            resolve(false);
+          if (auth.hasSession()) {
+            resolve(redirect());
           } else {
             resolve(true);
           }
@@ -22,9 +26,8 @@ export const guestGuard: CanActivateFn = () => {
     });
   }
 
-  if (auth.isAuthenticated()) {
-    router.navigate(['/dashboard']);
-    return false;
+  if (auth.hasSession()) {
+    return redirect();
   }
   return true;
 };

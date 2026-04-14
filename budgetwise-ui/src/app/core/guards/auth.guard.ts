@@ -6,6 +6,11 @@ export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  const redirect = () => {
+    void router.navigate([auth.hasSession() ? '/verify-email' : '/login']);
+    return false;
+  };
+
   if (auth.isLoading()) {
     return new Promise<boolean>((resolve) => {
       const interval = setInterval(() => {
@@ -14,8 +19,7 @@ export const authGuard: CanActivateFn = () => {
           if (auth.isAuthenticated()) {
             resolve(true);
           } else {
-            router.navigate(['/login']);
-            resolve(false);
+            resolve(redirect());
           }
         }
       }, 50);
@@ -23,6 +27,5 @@ export const authGuard: CanActivateFn = () => {
   }
 
   if (auth.isAuthenticated()) return true;
-  router.navigate(['/login']);
-  return false;
+  return redirect();
 };

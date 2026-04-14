@@ -45,11 +45,13 @@ export class LoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set('');
     try {
-      await this.auth.signInWithEmail(
+      const result = await this.auth.signInWithEmail(
         this.form.value.email!,
         this.form.value.password!,
       );
-      this.router.navigate(['/dashboard']);
+      await this.router.navigate([
+        result.requiresEmailVerification ? '/verify-email' : '/dashboard',
+      ]);
     } catch (error: any) {
       this.errorMessage.set(error.message || 'Login failed. Please try again.');
     } finally {

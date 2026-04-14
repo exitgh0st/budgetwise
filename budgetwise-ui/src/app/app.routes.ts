@@ -8,29 +8,50 @@ export const routes: Routes = [
     path: 'login',
     title: 'Login | BudgetWise',
     canActivate: [guestGuard],
-    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+    loadComponent: () =>
+      import('./pages/auth/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'register',
     title: 'Register | BudgetWise',
     canActivate: [guestGuard],
-    loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent),
+    loadComponent: () =>
+      import('./pages/auth/register/register.component').then(
+        (m) => m.RegisterComponent,
+      ),
   },
   {
     path: 'forgot-password',
     title: 'Forgot Password | BudgetWise',
     canActivate: [guestGuard],
-    loadComponent: () => import('./pages/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+    loadComponent: () =>
+      import('./pages/auth/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent,
+      ),
   },
   {
     path: 'auth/callback',
     title: 'Signing In... | BudgetWise',
-    loadComponent: () => import('./pages/auth/callback/callback.component').then(m => m.CallbackComponent),
+    loadComponent: () =>
+      import('./pages/auth/callback/callback.component').then(
+        (m) => m.CallbackComponent,
+      ),
   },
   {
     path: 'auth/reset-password',
     title: 'Reset Password | BudgetWise',
-    loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
+    loadComponent: () =>
+      import('./pages/auth/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
+  },
+  {
+    path: 'verify-email',
+    title: 'Verify Email | BudgetWise',
+    loadComponent: () =>
+      import('./pages/auth/verify-email/verify-email.component').then(
+        (m) => m.VerifyEmailComponent,
+      ),
   },
 
   // Protected routes (require auth)
@@ -39,13 +60,17 @@ export const routes: Routes = [
     path: 'dashboard',
     title: 'Dashboard | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    loadComponent: () =>
+      import('./pages/dashboard/dashboard.component').then(
+        (m) => m.DashboardComponent,
+      ),
   },
   {
     path: 'accounts',
     title: 'Accounts | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/accounts/accounts.component').then(m => m.AccountsComponent),
+    loadComponent: () =>
+      import('./pages/accounts/accounts.component').then((m) => m.AccountsComponent),
   },
   {
     path: 'scheduled-transactions',
@@ -53,7 +78,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/scheduled-transactions/scheduled-transactions.component').then(
-        m => m.ScheduledTransactionsComponent,
+        (m) => m.ScheduledTransactionsComponent,
       ),
   },
   { path: 'bills', redirectTo: 'scheduled-transactions', pathMatch: 'full' },
@@ -61,30 +86,39 @@ export const routes: Routes = [
     path: 'goals',
     title: 'Goals | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/goals/goals.component').then(m => m.GoalsComponent),
+    loadComponent: () =>
+      import('./pages/goals/goals.component').then((m) => m.GoalsComponent),
   },
   {
     path: 'transactions',
     title: 'Transactions | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/transactions/transactions.component').then(m => m.TransactionsComponent),
+    loadComponent: () =>
+      import('./pages/transactions/transactions.component').then(
+        (m) => m.TransactionsComponent,
+      ),
   },
   {
     path: 'budgets',
     title: 'Budgets | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/budgets/budgets.component').then(m => m.BudgetsComponent),
+    loadComponent: () =>
+      import('./pages/budgets/budgets.component').then((m) => m.BudgetsComponent),
   },
   {
     path: 'reports',
     title: 'Reports | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent),
+    loadComponent: () =>
+      import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
   },
   {
     path: 'categories',
     title: 'Categories | BudgetWise',
     canActivate: [authGuard],
-    loadComponent: () => import('./pages/categories/categories.component').then(m => m.CategoriesComponent),
+    loadComponent: () =>
+      import('./pages/categories/categories.component').then(
+        (m) => m.CategoriesComponent,
+      ),
   },
 ];

@@ -1,0 +1,71 @@
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <mat-card-header class="auth-header">
+      <div class="logo-section">
+        <mat-icon class="logo-icon">mark_email_unread</mat-icon>
+        <h1 class="app-title">Verify your email</h1>
+        <p class="app-subtitle">One quick step before you can start budgeting.</p>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (isLoading()) {
+        <div class="loading-state">
+          <mat-spinner diameter="36"></mat-spinner>
+          <p>Checking your verification status...</p>
+        </div>
+      } @else {
+        <div class="verify-copy">
+          <p>
+            We sent a verification link to
+            <strong>{{ email() || 'your email address' }}</strong>.
+          </p>
+          <p>
+            Open the message, click the link, and we'll bring you straight into
+            BudgetWise.
+          </p>
+        </div>
+
+        @if (resent()) {
+          <div class="success-message">
+            <mat-icon>mark_email_read</mat-icon>
+            <div>
+              <strong>Verification email sent</strong>
+              <p>Give it a minute to arrive, then check your inbox and spam folder.</p>
+            </div>
+          </div>
+        }
+
+        @if (resendError()) {
+          <div class="error-message">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ resendError() }}</span>
+          </div>
+        }
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          class="full-width action-btn"
+          [disabled]="resending() || cooldownSeconds() > 0 || !email()"
+          (click)="resendEmail()">
+          @if (resending()) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else if (cooldownSeconds() > 0) {
+            Resend in {{ cooldownSeconds() }}s
+          } @else {
+            Resend verification email
+          }
+        </button>
+      }
+    </mat-card-content>
+
+    <mat-card-footer class="auth-footer">
+      <p class="help-copy">
+        Need to use a different account?
+        <button type="button" class="text-btn" (click)="signOut()">Sign out</button>
+      </p>
+    </mat-card-footer>
+  </mat-card>
+</div>

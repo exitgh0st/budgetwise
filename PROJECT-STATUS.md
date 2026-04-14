@@ -52,6 +52,7 @@
 | 43 — Copy Budgets from Last Month | Added atomic `POST /api/budgets/copy` plus budgets-page copy actions that pull prior-month amount/spillover values into the current month without overwriting existing categories. |
 | 44 — Backend Security Hardening | Added Helmet headers, global IP rate limiting with stricter caps for onboarding/chat, and a production-safe global exception filter that preserves normal HTTP responses while hiding unhandled error details. |
 | 45 — Markdown Pipe XSS Hardening | Replaced `bypassSecurityTrustHtml()` in the chat markdown pipe with Angular HTML sanitization so assistant replies keep the lightweight markdown subset without disabling framework XSS protection. |
+| 46 — Enforce Email Verification | Rejects unverified Supabase JWTs with `EMAIL_NOT_VERIFIED`, routes signed-in unverified users to `/verify-email`, and adds resend/auto-redirect verification UX. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -83,6 +84,7 @@ Manual changes outside the numbered ticket flow:
 | **Transactions row metadata refresh** — transaction list now emphasizes account/category metadata with pill styling instead of the earlier leading icon treatment | `transactions.component.ts/html/scss` |
 | **Budget copy preview + selective copy** — the copy-from-last-month flow now previews source rows and can submit only selected category IDs to `/api/budgets/copy` | budgets page files, `copy-budgets-dialog.component.ts`, `copy-budgets.dto.ts`, `budgets.service.ts` |
 | **Chat markdown sanitization hardening** — `MarkdownPipe` now returns sanitized HTML strings instead of bypassing Angular security trust checks | `shared/pipes/markdown.pipe.ts` |
+| **Email verification enforcement** — unverified Supabase sessions are blocked at the API boundary, redirected to `/verify-email`, and can resend confirmation emails with a 60-second client cooldown | `jwt.strategy.ts`, auth guards/interceptor/service, `verify-email.component.*` |
 
 ---
 
@@ -90,7 +92,7 @@ Manual changes outside the numbered ticket flow:
 
 ### Backend (`budgetwise-api/`)
 - **Modules:** Auth, Prisma, Accounts, Categories, Transactions, ScheduledTransactions, Notifications, Budgets, Reports, Chat, Goals
-- **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via JWKS, `@Public()` + `@CurrentUser()`, plus `InternalAdminGuard` for manual ops hooks
+- **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via JWKS, verified-email enforcement via `EMAIL_NOT_VERIFIED`, `@Public()` + `@CurrentUser()`, plus `InternalAdminGuard` for manual ops hooks
 - **API hardening:** Helmet security headers, trusted-proxy-aware IP throttling (`100/min` global, tighter onboard/chat caps), and a global exception filter that sanitizes unhandled production `500`s
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
@@ -102,7 +104,7 @@ Manual changes outside the numbered ticket flow:
 - **Seed/onboarding:** Template categories cloned per user; starter accounts created by `POST /api/auth/onboard`
 
 ### Frontend (`budgetwise-ui/`)
-- **Auth shell:** Login/register/forgot/reset/callback pages, JWT interceptor, auth/guest guards
+- **Auth shell:** Login/register/forgot/reset/callback/verify-email pages, JWT interceptor, auth/guest guards, and signed-in unverified-user redirects
 - **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals
 - **Transactions page:** Filtered list, searchable filters/dialog selects, transfer-aware dialog, client-side CSV export
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow

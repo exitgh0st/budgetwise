@@ -1,10 +1,12 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { from, switchMap, catchError, throwError } from 'rxjs';
+import { Router } from '@angular/router';
+import { catchError, from, switchMap, throwError } from 'rxjs';
 import { SupabaseService } from '../services/supabase.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const supabase = inject(SupabaseService);
+  const router = inject(Router);
 
   return from(supabase.client.auth.getSession()).pipe(
     switchMap(({ data }) => {
@@ -18,7 +20,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     }),
     catchError((error) => {
       if (error instanceof HttpErrorResponse && error.status === 401) {
-        supabase.client.auth.signOut();
+        if (error.error?.code === 'EMAIL_NOT_VERIFIED') {
+          void router.navigate(['/verify-email']);
+        } else {
+          void supabase.client.auth.signOut();
+        }
       }
       return throwError(() => error);
     }),
