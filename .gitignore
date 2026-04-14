@@ -6,4 +6,5 @@
 **/.env
 **/.env.production
 /budgetwise-ui/src/environments
+/tickets
 
