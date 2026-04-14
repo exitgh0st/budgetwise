@@ -5,4 +5,5 @@
 .env.production
 **/.env
 **/.env.production
-budgetwise-ui/src/environments/environment.prod.ts
+/budgetwise-ui/src/environments
+
