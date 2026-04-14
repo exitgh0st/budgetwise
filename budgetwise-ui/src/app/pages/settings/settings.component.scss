@@ -1,0 +1,129 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 3vw, 2.5rem);
+}
+
+.page-header p {
+  margin: 0;
+  max-width: 720px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.section-card {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--mat-sys-surface-container-low) 78%, transparent),
+      var(--mat-sys-surface)
+    );
+}
+
+.section-avatar {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+  color: var(--mat-sys-primary);
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.detail-value {
+  font-size: 1rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.section-copy {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.6;
+}
+
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+}
+
+.danger-card {
+  border-color: color-mix(in srgb, #f44336 28%, var(--mat-sys-outline-variant));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #f44336 10%, var(--mat-sys-surface-container-low)),
+      var(--mat-sys-surface)
+    );
+}
+
+.danger-avatar {
+  background: color-mix(in srgb, #f44336 14%, transparent);
+  color: #f44336;
+}
+
+.state-card {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 48px 24px;
+  text-align: center;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+  background: var(--mat-sys-surface-container-low);
+}
+
+.state-card h2,
+.state-card p {
+  margin: 0;
+}
+
+.state-card mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.settings-page-compact .settings-grid {
+  grid-template-columns: 1fr;
+}
+
+.settings-page-compact .section-actions {
+  justify-content: stretch;
+}
+
+.settings-page-compact .section-actions button {
+  width: 100%;
+}
+
+@media (max-width: 959px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}

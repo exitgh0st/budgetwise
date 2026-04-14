@@ -77,6 +77,14 @@ export class AuthService {
     await this.supabase.client.auth.signOut();
   }
 
+  async clearSession() {
+    const { error } = await this.supabase.client.auth.signOut({
+      scope: 'local',
+    });
+    if (error) throw error;
+    this.currentUser.set(null);
+  }
+
   async resetPassword(email: string) {
     const { error } = await this.supabase.client.auth.resetPasswordForEmail(
       email,
@@ -92,6 +100,16 @@ export class AuthService {
       password: newPassword,
     });
     if (error) throw error;
+  }
+
+  async updateEmail(email: string) {
+    const { data, error } = await this.supabase.client.auth.updateUser(
+      { email },
+      { emailRedirectTo: this.getEmailRedirectUrl() },
+    );
+    if (error) throw error;
+    this.currentUser.set(data.user ?? this.currentUser());
+    return data;
   }
 
   async getAccessToken(): Promise<string | null> {

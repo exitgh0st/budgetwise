@@ -53,6 +53,7 @@
 | 44 — Backend Security Hardening | Added Helmet headers, global IP rate limiting with stricter caps for onboarding/chat, and a production-safe global exception filter that preserves normal HTTP responses while hiding unhandled error details. |
 | 45 — Markdown Pipe XSS Hardening | Replaced `bypassSecurityTrustHtml()` in the chat markdown pipe with Angular HTML sanitization so assistant replies keep the lightweight markdown subset without disabling framework XSS protection. |
 | 46 — Enforce Email Verification | Rejects unverified Supabase JWTs with `EMAIL_NOT_VERIFIED`, routes signed-in unverified users to `/verify-email`, and adds resend/auto-redirect verification UX. |
+| 47 — User Settings, Data Export, and Account Deletion | Added `/settings`, Supabase email/password update flows, `GET /api/user/export`, and `DELETE /api/user` for permanent account removal plus JSON portability export. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -91,10 +92,12 @@ Manual changes outside the numbered ticket flow:
 ## What Exists
 
 ### Backend (`budgetwise-api/`)
-- **Modules:** Auth, Prisma, Accounts, Categories, Transactions, ScheduledTransactions, Notifications, Budgets, Reports, Chat, Goals
+- **Modules:** Auth, Prisma, Accounts, Categories, Transactions, ScheduledTransactions, Notifications, Budgets, Reports, Chat, Goals, User
 - **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via JWKS, verified-email enforcement via `EMAIL_NOT_VERIFIED`, `@Public()` + `@CurrentUser()`, plus `InternalAdminGuard` for manual ops hooks
 - **API hardening:** Helmet security headers, trusted-proxy-aware IP throttling (`100/min` global, tighter onboard/chat caps), and a global exception filter that sanitizes unhandled production `500`s
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
+- **User data portability:** `GET /api/user/export` assembles a JSON attachment with owned records across accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat history, normalizing Decimal fields to numbers
+- **Account deletion:** `DELETE /api/user` is throttled, deletes owned data in Prisma transaction order, then removes the Supabase auth user with the server-side service role key
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
 - **Transactions:** Support income, expense, and transfer flows with atomic balance sync
 - **Scheduled transactions:** Full CRUD with owned account/category validation + atomic `POST :id/generate` + atomic hourly cron generation + `/process-due` manual trigger
@@ -105,9 +108,10 @@ Manual changes outside the numbered ticket flow:
 
 ### Frontend (`budgetwise-ui/`)
 - **Auth shell:** Login/register/forgot/reset/callback/verify-email pages, JWT interceptor, auth/guest guards, and signed-in unverified-user redirects
-- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals
+- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings
 - **Transactions page:** Filtered list, searchable filters/dialog selects, transfer-aware dialog, client-side CSV export
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow
+- **Settings page:** Responsive profile/security/data/danger-zone sections with Supabase email/password dialogs, export download flow, and typed-confirmation account deletion
 - **Notifications UI:** Toolbar bell with unread polling, recent menu, mark-read/mark-all-read, deep-link to `/scheduled-transactions`
 - **Budgets UX:** Spillover toggle in dialog, spillover chip, base/carry/effective breakdowns, and copy-from-last-month actions with preview/selective-copy flow
 - **Goals UX:** Searchable account/category selects in goal and contribution dialogs, date-only target-date handling

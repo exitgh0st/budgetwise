@@ -1,0 +1,141 @@
+<section
+  class="settings-page"
+  [class.settings-page-compact]="isCompact()"
+>
+  <div class="page-header">
+    <div>
+      <h1>Settings</h1>
+      <p>Manage your profile, account security, data export, and permanent account deletion.</p>
+    </div>
+  </div>
+
+  @if (auth.isLoading()) {
+    <div class="state-card">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Loading your account settings...</p>
+    </div>
+  } @else if (!auth.currentUser()) {
+    <div class="state-card">
+      <mat-icon>person_off</mat-icon>
+      <h2>We couldn't load your profile</h2>
+      <p>Sign in again to manage your account settings.</p>
+    </div>
+  } @else {
+    <div class="settings-grid">
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div mat-card-avatar class="section-avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div>
+            <mat-card-title>Profile</mat-card-title>
+            <mat-card-subtitle>Review the email tied to your BudgetWise account.</mat-card-subtitle>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="detail-row">
+            <span class="detail-label">Email address</span>
+            <span class="detail-value">{{ auth.currentUser()?.email || 'No email on file' }}</span>
+          </div>
+        </mat-card-content>
+        <mat-divider></mat-divider>
+        <mat-card-actions class="section-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="openChangeEmailDialog()"
+            [disabled]="updatingEmail()"
+          >
+            {{ updatingEmail() ? 'Updating...' : 'Change Email' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div mat-card-avatar class="section-avatar">
+            <mat-icon>lock</mat-icon>
+          </div>
+          <div>
+            <mat-card-title>Security</mat-card-title>
+            <mat-card-subtitle>Keep your account protected with a fresh password.</mat-card-subtitle>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="section-copy">
+            Password updates are handled through your Supabase account and apply to future sign-ins right away.
+          </p>
+        </mat-card-content>
+        <mat-divider></mat-divider>
+        <mat-card-actions class="section-actions">
+          <button
+            mat-stroked-button
+            type="button"
+            (click)="openChangePasswordDialog()"
+            [disabled]="updatingPassword()"
+          >
+            {{ updatingPassword() ? 'Updating...' : 'Change Password' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div mat-card-avatar class="section-avatar">
+            <mat-icon>download</mat-icon>
+          </div>
+          <div>
+            <mat-card-title>Data</mat-card-title>
+            <mat-card-subtitle>Download a full JSON export of your BudgetWise records.</mat-card-subtitle>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="section-copy">
+            Your export includes accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat history.
+          </p>
+        </mat-card-content>
+        <mat-divider></mat-divider>
+        <mat-card-actions class="section-actions">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="exportAllData()"
+            [disabled]="exporting()"
+          >
+            {{ exporting() ? 'Exporting...' : 'Export All Data' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <mat-card class="section-card danger-card">
+        <mat-card-header>
+          <div mat-card-avatar class="section-avatar danger-avatar">
+            <mat-icon>warning</mat-icon>
+          </div>
+          <div>
+            <mat-card-title>Danger Zone</mat-card-title>
+            <mat-card-subtitle>Delete your account and remove all stored data permanently.</mat-card-subtitle>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="section-copy">
+            This action is irreversible. It removes your accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat sessions.
+          </p>
+        </mat-card-content>
+        <mat-divider></mat-divider>
+        <mat-card-actions class="section-actions">
+          <button
+            mat-flat-button
+            color="warn"
+            type="button"
+            (click)="openDeleteAccountDialog()"
+            [disabled]="deleting()"
+          >
+            {{ deleting() ? 'Deleting...' : 'Delete Account' }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  }
+</section>

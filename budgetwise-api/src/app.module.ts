@@ -15,6 +15,7 @@ import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ScheduledTransactionsModule } from './scheduled-transactions/scheduled-transactions.module';
 import { GoalsModule } from './goals/goals.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { GoalsModule } from './goals/goals.module';
     NotificationsModule,
     ScheduledTransactionsModule,
     GoalsModule,
+    UserModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
