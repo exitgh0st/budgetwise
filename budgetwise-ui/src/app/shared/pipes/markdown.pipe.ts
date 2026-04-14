@@ -1,11 +1,11 @@
-import { Pipe, PipeTransform } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Pipe, PipeTransform, SecurityContext } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Pipe({ name: 'markdown', standalone: true })
 export class MarkdownPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {}
 
-  transform(value: string): SafeHtml {
+  transform(value: string): string | null {
     if (!value) return '';
     let html = this.escapeHtml(value);
 
@@ -27,7 +27,7 @@ export class MarkdownPipe implements PipeTransform {
     // Line breaks
     html = html.replace(/\n/g, '<br>');
 
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    return this.sanitizer.sanitize(SecurityContext.HTML, html);
   }
 
   private escapeHtml(text: string): string {

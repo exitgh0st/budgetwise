@@ -51,6 +51,7 @@
 | 42 — Decimal Normalization in API Responses | Added response mappers for accounts, transactions, budgets, and scheduled transactions so Decimal money fields, including nested account balances, now return plain JSON numbers. |
 | 43 — Copy Budgets from Last Month | Added atomic `POST /api/budgets/copy` plus budgets-page copy actions that pull prior-month amount/spillover values into the current month without overwriting existing categories. |
 | 44 — Backend Security Hardening | Added Helmet headers, global IP rate limiting with stricter caps for onboarding/chat, and a production-safe global exception filter that preserves normal HTTP responses while hiding unhandled error details. |
+| 45 — Markdown Pipe XSS Hardening | Replaced `bypassSecurityTrustHtml()` in the chat markdown pipe with Angular HTML sanitization so assistant replies keep the lightweight markdown subset without disabling framework XSS protection. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -81,6 +82,7 @@ Manual changes outside the numbered ticket flow:
 | **Searchable Material selects added to finance forms** — `ngx-mat-select-search` powers account/category pickers in transaction, scheduled-transaction, and goal dialogs plus key list filters | `package.json`, transaction/scheduled-transaction/goal dialog files, transactions page files |
 | **Transactions row metadata refresh** — transaction list now emphasizes account/category metadata with pill styling instead of the earlier leading icon treatment | `transactions.component.ts/html/scss` |
 | **Budget copy preview + selective copy** — the copy-from-last-month flow now previews source rows and can submit only selected category IDs to `/api/budgets/copy` | budgets page files, `copy-budgets-dialog.component.ts`, `copy-budgets.dto.ts`, `budgets.service.ts` |
+| **Chat markdown sanitization hardening** — `MarkdownPipe` now returns sanitized HTML strings instead of bypassing Angular security trust checks | `shared/pipes/markdown.pipe.ts` |
 
 ---
 
@@ -110,6 +112,7 @@ Manual changes outside the numbered ticket flow:
 - **Reports UX:** Doughnut + bar charts plus effective-budget status cards
 - **Accounts UX:** Provider picker for BANK / EWALLET / CREDIT_CARD / LOAN with refreshed local brand assets
 - **Shared:** `ConfirmDialogComponent`, `NotificationBellComponent`, `ChatPanelComponent`, `MarkdownPipe`
+- **Chat rendering security:** `MarkdownPipe` escapes raw input, converts the supported markdown subset, then sanitizes HTML before the chat panel binds it with `[innerHTML]`
 - **Production URL:** `https://budgetwise-api-k9z9.onrender.com/api`
 
 ### Chat Agent
