@@ -29,6 +29,7 @@
     "@angular/material": "^20.2.14",
     "@angular/platform-browser": "^20.1.0",
     "@angular/router": "^20.1.0",
+    "@angular/service-worker": "^20.1.0",
     "@sentry/angular": "^10.48.0",
     "@supabase/supabase-js": "^2.101.0",
     "angular-calendar": "^0.31.1",

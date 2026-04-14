@@ -1,0 +1,14 @@
+@if (isOffline()) {
+  <section class="offline-banner" role="status" aria-live="polite">
+    <div class="offline-banner__content">
+      <mat-icon>cloud_off</mat-icon>
+      <div class="offline-banner__copy">
+        <p class="offline-banner__title">You're offline</p>
+        <p class="offline-banner__message">
+          BudgetWise can keep the app shell available, but live balances, synced data,
+          and AI chat need a connection.
+        </p>
+      </div>
+    </div>
+  </section>
+}
