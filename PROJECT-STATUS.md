@@ -62,6 +62,7 @@
 | 56 — PWA Support | Added Angular service-worker/manifest support, installable app metadata + icons, and a global offline banner while keeping financial API traffic out of the service-worker cache. |
 | 57 — Landing Page | Added a public marketing homepage at `/` with responsive feature sections, a dashboard preview mockup, AI advisor messaging, and guest-to-register CTAs while authenticated users are redirected into the app. |
 | 58 — Onboarding Tutorial & Help Page | Added a first-run dashboard onboarding overlay with guided shell highlights plus a public `/help` FAQ page linked from the authenticated sidenav. |
+| 59 — Global Transaction Search | Added debounced description search to `GET /api/transactions` plus transactions-page search and CSV export support for matching results. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -109,7 +110,7 @@ Manual changes outside the numbered ticket flow:
 - **User data portability:** `GET /api/user/export` assembles a JSON attachment with owned records across accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat history, normalizing Decimal fields to numbers
 - **Account deletion:** `DELETE /api/user` is throttled, deletes owned data in Prisma transaction order, then removes the Supabase auth user with the server-side service role key
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
-- **Transactions:** Support income, expense, and transfer flows with atomic balance sync
+- **Transactions:** Support income, expense, and transfer flows with atomic balance sync, date-range filters, and case-insensitive description search
 - **Scheduled transactions:** Full CRUD with owned account/category validation + atomic `POST :id/generate` + atomic hourly cron generation + `/process-due` manual trigger
 - **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss
 - **Reports:** Exclude system categories and transfers; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
@@ -126,7 +127,7 @@ Manual changes outside the numbered ticket flow:
 - **PWA support:** Angular service worker now ships in production builds with an installable manifest, branded icon set, shell-only asset caching, and a global offline banner for repeat visits
 - **Landing page:** Public `/` route now introduces BudgetWise with a hero, feature highlights, AI advisor callout, dashboard mockup preview, and conversion links into `/register`
 - **Observability:** Optional `@sentry/angular` bootstrap + `ErrorHandler` integration, tracked safe development env template, and hidden production source maps with conditional `sentry-cli` upload support
-- **Transactions page:** Filtered list, searchable filters/dialog selects, transfer-aware dialog, client-side CSV export
+- **Transactions page:** Filtered list, debounced description search, searchable filters/dialog selects, transfer-aware dialog, and client-side CSV export that respects active search/filter state
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow
 - **Settings page:** Responsive profile/security/data/danger-zone sections with Supabase email/password dialogs, export download flow, and typed-confirmation account deletion
 - **Notifications UI:** Toolbar bell with unread polling, recent menu, mark-read/mark-all-read, deep-link to `/scheduled-transactions`

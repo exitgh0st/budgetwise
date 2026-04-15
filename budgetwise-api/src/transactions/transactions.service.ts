@@ -93,6 +93,7 @@ export class TransactionsService {
     userId: string,
   ): Promise<PaginatedTransactionsResponse> {
     const where: Prisma.TransactionWhereInput = { userId };
+    const search = filters.search?.trim();
 
     if (filters.accountId) {
       where.OR = [
@@ -112,6 +113,12 @@ export class TransactionsService {
         dateFilter.lte = parseDateBoundary(filters.endDate, 'end');
       }
       where.date = dateFilter;
+    }
+    if (search) {
+      where.description = {
+        contains: search,
+        mode: 'insensitive',
+      };
     }
 
     const [data, total]: [TransactionWithRelations[], number] =

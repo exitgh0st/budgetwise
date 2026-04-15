@@ -36,6 +36,13 @@ export class FilterTransactionsDto {
   @IsDateString()
   endDate?: string;
 
+  @ApiPropertyOptional({
+    description: 'Search transactions by description (case-insensitive)',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
   @ApiPropertyOptional({ default: 20, minimum: 1 })
   @IsOptional()
   @Type(() => Number)

@@ -36,6 +36,25 @@
 
   @if (!isMobile) {
     <div class="filter-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search transactions</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          [formControl]="searchControl"
+          placeholder="e.g. grocery, rent..." />
+        @if (searchControl.value.trim()) {
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Clear search"
+            (click)="clearSearch()">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+
       <mat-form-field appearance="outline">
         <mat-label>Account</mat-label>
         <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">
@@ -107,6 +126,25 @@
         </mat-expansion-panel-header>
 
         <div class="mobile-filters">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search transactions</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input
+              matInput
+              [formControl]="searchControl"
+              placeholder="e.g. grocery, rent..." />
+            @if (searchControl.value.trim()) {
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                aria-label="Clear search"
+                (click)="clearSearch()">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+
           <mat-form-field appearance="outline">
             <mat-label>Account</mat-label>
             <mat-select [(ngModel)]="filterAccountId" (selectionChange)="onFilterChange()">

@@ -10,6 +10,7 @@ export interface TransactionFilters {
   type?: TransactionType;
   startDate?: string;
   endDate?: string;
+  search?: string;
   limit?: number;
   offset?: number;
 }

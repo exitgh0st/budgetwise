@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
@@ -27,6 +28,7 @@ import {
   fromDateOnlyString,
   toDateOnlyString,
 } from '../../core/utils/date.util';
+import { debounceTime, distinctUntilChanged, map } from 'rxjs';
 import { TransactionDialogComponent, TransactionDialogData } from './transaction-dialog/transaction-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -67,6 +69,7 @@ export class TransactionsComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
+  private destroyRef = inject(DestroyRef);
 
   accounts: Account[] = [];
   categories: Category[] = [];
@@ -84,8 +87,9 @@ export class TransactionsComponent implements OnInit {
   filterStartDate: Date | null = null;
   filterEndDate: Date | null = null;
 
-  accountSearchCtrl = new FormControl('');
-  categorySearchCtrl = new FormControl('');
+  searchControl = new FormControl('', { nonNullable: true });
+  accountSearchCtrl = new FormControl('', { nonNullable: true });
+  categorySearchCtrl = new FormControl('', { nonNullable: true });
 
   get filteredAccounts(): Account[] {
     const s = (this.accountSearchCtrl.value || '').toLowerCase();
@@ -98,10 +102,23 @@ export class TransactionsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.breakpointObserver.observe([Breakpoints.Handset]).subscribe(result => {
-      this.isMobile = result.matches;
-      this.pageSize = this.isMobile ? 10 : 20;
-    });
+    this.breakpointObserver
+      .observe([Breakpoints.Handset])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(result => {
+        this.isMobile = result.matches;
+        this.pageSize = this.isMobile ? 10 : 20;
+      });
+
+    this.searchControl.valueChanges
+      .pipe(
+        map(value => value.trim()),
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => this.onFilterChange());
+
     this.loadDropdowns();
     this.loadTransactions();
   }
@@ -117,19 +134,7 @@ export class TransactionsComponent implements OnInit {
 
   loadTransactions() {
     this.loading = true;
-    const filters: TransactionFilters = {
-      limit: this.pageSize,
-      offset: this.pageIndex * this.pageSize,
-    };
-    if (this.filterAccountId) filters.accountId = this.filterAccountId;
-    if (this.filterCategoryId) filters.categoryId = this.filterCategoryId;
-    if (this.filterType) filters.type = this.filterType as TransactionType;
-    if (this.filterStartDate) {
-      filters.startDate = toDateOnlyString(this.filterStartDate) ?? undefined;
-    }
-    if (this.filterEndDate) {
-      filters.endDate = toDateOnlyString(this.filterEndDate) ?? undefined;
-    }
+    const filters = this.buildFilters();
 
     this.transactionsService.getAll(filters).subscribe({
       next: result => {
@@ -155,11 +160,19 @@ export class TransactionsComponent implements OnInit {
     this.filterType = '';
     this.filterStartDate = null;
     this.filterEndDate = null;
+    this.searchControl.setValue('', { emitEvent: false });
     this.onFilterChange();
   }
 
   get hasActiveFilters(): boolean {
-    return !!(this.filterAccountId || this.filterCategoryId || this.filterType || this.filterStartDate || this.filterEndDate);
+    return !!(
+      this.filterAccountId ||
+      this.filterCategoryId ||
+      this.filterType ||
+      this.filterStartDate ||
+      this.filterEndDate ||
+      this.searchControl.value.trim()
+    );
   }
 
   onPageChange(event: PageEvent) {
@@ -320,19 +333,11 @@ export class TransactionsComponent implements OnInit {
   }
 
   private buildExportFilters(): Omit<TransactionFilters, 'limit' | 'offset'> {
-    const filters: Omit<TransactionFilters, 'limit' | 'offset'> = {};
+    return this.buildFilters({ includePagination: false });
+  }
 
-    if (this.filterAccountId) filters.accountId = this.filterAccountId;
-    if (this.filterCategoryId) filters.categoryId = this.filterCategoryId;
-    if (this.filterType) filters.type = this.filterType as TransactionType;
-    if (this.filterStartDate) {
-      filters.startDate = toDateOnlyString(this.filterStartDate) ?? undefined;
-    }
-    if (this.filterEndDate) {
-      filters.endDate = toDateOnlyString(this.filterEndDate) ?? undefined;
-    }
-
-    return filters;
+  clearSearch() {
+    this.searchControl.setValue('');
   }
 
   private buildCsv(transactions: Transaction[]): string {
@@ -404,5 +409,31 @@ export class TransactionsComponent implements OnInit {
     const amount = Number(value);
 
     return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
+  }
+
+  private buildFilters(options: { includePagination?: boolean } = {}): TransactionFilters {
+    const { includePagination = true } = options;
+    const filters: TransactionFilters = {};
+    const search = this.searchControl.value.trim();
+
+    if (includePagination) {
+      filters.limit = this.pageSize;
+      filters.offset = this.pageIndex * this.pageSize;
+    }
+
+    if (this.filterAccountId) filters.accountId = this.filterAccountId;
+    if (this.filterCategoryId) filters.categoryId = this.filterCategoryId;
+    if (this.filterType) filters.type = this.filterType as TransactionType;
+    if (this.filterStartDate) {
+      filters.startDate = toDateOnlyString(this.filterStartDate) ?? undefined;
+    }
+    if (this.filterEndDate) {
+      filters.endDate = toDateOnlyString(this.filterEndDate) ?? undefined;
+    }
+    if (search) {
+      filters.search = search;
+    }
+
+    return filters;
   }
 }

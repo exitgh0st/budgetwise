@@ -29,6 +29,10 @@ describe('TransactionsService', () => {
   };
   let prisma: {
     $transaction: jest.Mock;
+    transaction: {
+      findMany: jest.Mock;
+      count: jest.Mock;
+    };
   };
 
   const makeAccount = (id: string, balance: number) => ({
@@ -113,6 +117,10 @@ describe('TransactionsService', () => {
             callback: (transactionClient: typeof tx) => Promise<unknown>,
           ) => callback(tx),
         ),
+      transaction: {
+        findMany: jest.fn().mockResolvedValue([]),
+        count: jest.fn().mockResolvedValue(0),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -366,6 +374,50 @@ describe('TransactionsService', () => {
     expect(deleteCall.where).toEqual({ id: 'transaction-1' });
     expect(deleteCall.include).toBeDefined();
     expect(result.amount).toBe(120);
+  });
+
+  it('filters transactions by description search', async () => {
+    prisma.transaction.findMany.mockResolvedValueOnce([
+      makeTransactionRecord({
+        description: 'Coffee beans',
+      }),
+    ]);
+    prisma.transaction.count.mockResolvedValueOnce(1);
+
+    const result = await service.findAll(
+      { search: '  coffee  ', limit: 20, offset: 0 },
+      userId,
+    );
+
+    expect(prisma.transaction.findMany).toHaveBeenCalledWith({
+      where: {
+        userId,
+        description: {
+          contains: 'coffee',
+          mode: 'insensitive',
+        },
+      },
+      include: {
+        account: true,
+        fromAccount: true,
+        toAccount: true,
+        category: true,
+      },
+      orderBy: { date: 'desc' },
+      take: 20,
+      skip: 0,
+    });
+    expect(prisma.transaction.count).toHaveBeenCalledWith({
+      where: {
+        userId,
+        description: {
+          contains: 'coffee',
+          mode: 'insensitive',
+        },
+      },
+    });
+    expect(result.total).toBe(1);
+    expect(result.data[0]?.description).toBe('Coffee beans');
   });
 
   it('keeps balance updates inside the prisma transaction when creation fails', async () => {
