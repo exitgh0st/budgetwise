@@ -1,0 +1,159 @@
+<div class="landing-page">
+  @if (isAuthLoading()) {
+    <section class="loading-state">
+      <mat-progress-spinner mode="indeterminate" diameter="48"></mat-progress-spinner>
+      <p>Loading BudgetWise...</p>
+    </section>
+  } @else {
+    <header class="landing-nav landing-shell">
+      <a class="brand-link" routerLink="/">
+        <span class="brand-mark">BW</span>
+        <span class="brand-text">BudgetWise</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Landing navigation">
+        <a routerLink="/privacy">Privacy</a>
+        <a routerLink="/terms">Terms</a>
+        <a mat-stroked-button routerLink="/login">Sign In</a>
+        <a mat-flat-button color="primary" routerLink="/register">
+          {{ isHandset() ? 'Start Free' : 'Get Started Free' }}
+        </a>
+      </nav>
+    </header>
+
+    <main class="landing-shell">
+      <section class="hero-section">
+        <div class="hero-copy">
+          <span class="eyebrow">Smart personal budgeting for real life</span>
+          <h1>Take control of your money without losing your peace of mind.</h1>
+          <p class="hero-subtitle">
+            BudgetWise brings accounts, budgets, reports, scheduled transactions,
+            and an AI-powered financial advisor into one calm, responsive workspace.
+          </p>
+
+          <div class="hero-actions">
+            <a mat-flat-button color="primary" routerLink="/register">
+              Sign Up Free
+            </a>
+            <a mat-stroked-button routerLink="/login">I already have an account</a>
+          </div>
+
+          <div class="highlight-row" aria-label="Feature highlights">
+            @for (highlight of heroHighlights(); track highlight) {
+              <span class="highlight-pill">{{ highlight }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="preview-card">
+            <div class="preview-header">
+              <span class="preview-label">Dashboard preview</span>
+              <span class="preview-chip">Responsive and installable</span>
+            </div>
+
+            <img
+              ngSrc="assets/landing/dashboard-preview.png"
+              width="1320"
+              height="900"
+              priority
+              alt="BudgetWise dashboard preview showing balances, budgets, trends, and an AI advisor panel." />
+
+            <div class="preview-footer">
+              <strong>Made for everyday money habits in Philippine Peso.</strong>
+              <span>Clear balances, budget health, and upcoming bills in a single view.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section">
+        <div class="section-intro">
+          <span class="section-label">Everything in one place</span>
+          <h2>Plan, track, and adjust before small money leaks become stressful.</h2>
+          <p>
+            Built for personal finance workflows that need structure, clarity, and fast
+            answers on both desktop and mobile.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          @for (feature of features; track feature.title) {
+            <article class="feature-card">
+              <mat-icon>{{ feature.icon }}</mat-icon>
+              <h3>{{ feature.title }}</h3>
+              <p>{{ feature.description }}</p>
+            </article>
+          }
+        </div>
+      </section>
+
+      <section class="advisor-section">
+        <div class="advisor-copy">
+          <span class="section-label">AI Financial Advisor</span>
+          <h2>Your budgeting assistant can answer questions and help you act.</h2>
+          <p>
+            Ask about overspending, prepare for due dates, explore savings options, or
+            manage your finances through natural conversation.
+          </p>
+
+          <a mat-flat-button color="primary" routerLink="/register">Create Free Account</a>
+        </div>
+
+        <div class="advisor-panel" aria-label="AI advisor examples">
+          <p class="panel-label">Try prompts like:</p>
+
+          <div class="prompt-list">
+            @for (prompt of aiPrompts; track prompt) {
+              <div class="prompt-chip">{{ prompt }}</div>
+            }
+          </div>
+
+          <div class="advisor-response">
+            <span class="response-label">Sample response</span>
+            <p>
+              You still have room in groceries this month, but dining out is trending
+              high. Moving PHP 2,000 into your bills account this week keeps your due
+              dates covered.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-section">
+        <div class="cta-copy">
+          <span class="section-label">Ready when you are</span>
+          <h2>Start budgeting smarter today.</h2>
+          <p>
+            Set up your accounts, organize categories, and get a clear view of your
+            money in minutes.
+          </p>
+        </div>
+
+        <div class="cta-actions">
+          <a mat-flat-button color="primary" routerLink="/register">Create Free Account</a>
+          <a mat-stroked-button routerLink="/login">Sign In</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="landing-footer landing-shell">
+      <div class="footer-brand">
+        <span class="brand-mark">BW</span>
+        <div>
+          <strong>BudgetWise</strong>
+          <p>Personal budgeting with calm dashboards and AI guidance.</p>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <a routerLink="/privacy">Privacy Policy</a>
+        <a routerLink="/terms">Terms of Service</a>
+        <a routerLink="/login">Login</a>
+        <a routerLink="/register">Register</a>
+      </div>
+
+      <p class="footer-copy">&copy; {{ currentYear }} BudgetWise</p>
+    </footer>
+  }
+</div>

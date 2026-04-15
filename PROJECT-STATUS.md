@@ -60,6 +60,7 @@
 | 54 — Core Backend Test Coverage | Added mocked Prisma unit coverage for Accounts, Transactions, Budgets, and Scheduled Transactions, bringing the targeted money-path services above 70% combined line coverage with `27` passing backend tests. |
 | 55 — 404 Error Page & SEO Meta Tags | Added a public wildcard not-found page with auth-aware recovery actions, plus frontend SEO/social meta tags and generated OG/iOS/favicon PNG assets for richer previews. |
 | 56 — PWA Support | Added Angular service-worker/manifest support, installable app metadata + icons, and a global offline banner while keeping financial API traffic out of the service-worker cache. |
+| 57 — Landing Page | Added a public marketing homepage at `/` with responsive feature sections, a dashboard preview mockup, AI advisor messaging, and guest-to-register CTAs while authenticated users are redirected into the app. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -120,6 +121,7 @@ Manual changes outside the numbered ticket flow:
 - **Legal UX:** Public `/privacy` and `/terms` routes, auth-page legal footer links, required registration consent checkbox, and authenticated sidenav footer links
 - **SEO/share metadata:** `index.html` now ships description/keywords, Open Graph, Twitter Card, theme-color, Apple touch icon, and PNG favicon tags backed by generated brand assets
 - **PWA support:** Angular service worker now ships in production builds with an installable manifest, branded icon set, shell-only asset caching, and a global offline banner for repeat visits
+- **Landing page:** Public `/` route now introduces BudgetWise with a hero, feature highlights, AI advisor callout, dashboard mockup preview, and conversion links into `/register`
 - **Observability:** Optional `@sentry/angular` bootstrap + `ErrorHandler` integration, tracked safe development env template, and hidden production source maps with conditional `sentry-cli` upload support
 - **Transactions page:** Filtered list, searchable filters/dialog selects, transfer-aware dialog, client-side CSV export
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow

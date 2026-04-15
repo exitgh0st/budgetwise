@@ -72,8 +72,16 @@ export const routes: Routes = [
       ),
   },
 
+  {
+    path: '',
+    title: 'BudgetWise | Smart Personal Budgeting',
+    loadComponent: () =>
+      import('./pages/landing/landing.component').then(
+        (m) => m.LandingComponent,
+      ),
+  },
+
   // Protected routes (require auth)
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   {
     path: 'dashboard',
     title: 'Dashboard | BudgetWise',
