@@ -1,5 +1,4 @@
 ﻿import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CurrencyPipe } from '@angular/common';
 import { Component, effect, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,8 +15,10 @@ import {
   CategoryBreakdown,
   SummaryReport,
 } from '../../core/models/report.model';
+import { CurrencyService } from '../../core/services/currency.service';
 import { ReportsService } from '../../core/services/reports.service';
 import { ThemeService } from '../../core/services/theme.service';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 Chart.register(...registerables);
 
@@ -31,7 +32,7 @@ interface MonthOption {
   selector: 'app-reports',
   standalone: true,
   imports: [
-    CurrencyPipe,
+    AppCurrencyPipe,
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -50,6 +51,7 @@ export class ReportsComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private breakpointObserver = inject(BreakpointObserver);
   private themeService = inject(ThemeService);
+  private currencyService = inject(CurrencyService);
 
   isMobile = false;
   loading = true;
@@ -79,10 +81,7 @@ export class ReportsComponent implements OnInit {
       legend: { position: 'right' },
       tooltip: {
         callbacks: {
-          label: (ctx) =>
-            `${ctx.label}: PHP${Number(ctx.parsed).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-            })}`,
+          label: (ctx) => `${ctx.label}: ${this.formatChartCurrency(ctx.parsed)}`,
         },
       },
     },
@@ -107,7 +106,7 @@ export class ReportsComponent implements OnInit {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: (value) => 'PHP' + Number(value).toLocaleString(),
+          callback: (value) => this.formatChartCurrency(value),
         },
         grid: {},
       },
@@ -117,9 +116,7 @@ export class ReportsComponent implements OnInit {
       tooltip: {
         callbacks: {
           label: (ctx) =>
-            `${ctx.dataset.label}: PHP${(ctx.parsed.y ?? 0).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-            })}`,
+            `${ctx.dataset.label}: ${this.formatChartCurrency(ctx.parsed.y ?? 0)}`,
         },
       },
     },
@@ -337,7 +334,7 @@ export class ReportsComponent implements OnInit {
           beginAtZero: true,
           ticks: {
             color: mutedColor,
-            callback: (value) => 'PHP' + Number(value).toLocaleString(),
+            callback: (value) => this.formatChartCurrency(value),
           },
           grid: { color: gridColor },
         },
@@ -384,5 +381,9 @@ export class ReportsComponent implements OnInit {
       .getPropertyValue(name)
       .trim();
     return value || fallback;
+  }
+
+  private formatChartCurrency(value: unknown): string {
+    return this.currencyService.format(Number(value ?? 0));
   }
 }

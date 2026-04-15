@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
@@ -9,6 +8,7 @@ import {
 } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 
 export interface CopyBudgetPreviewItem {
   categoryId: string;
@@ -30,7 +30,7 @@ export interface CopyBudgetsDialogData {
   selector: 'app-copy-budgets-dialog',
   standalone: true,
   imports: [
-    CurrencyPipe,
+    AppCurrencyPipe,
     MatButtonModule,
     MatChipsModule,
     MatDialogModule,
@@ -77,7 +77,7 @@ export interface CopyBudgetsDialogData {
                 <span>{{ item.categoryName }}</span>
               </div>
               <div class="preview-meta">
-                {{ item.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                {{ item.amount | appCurrency }}
                 <span class="meta-divider">&middot;</span>
                 {{ item.spillover ? 'Spillover on' : 'Spillover off' }}
               </div>

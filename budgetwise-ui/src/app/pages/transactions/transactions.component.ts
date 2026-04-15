@@ -1,6 +1,5 @@
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CurrencyPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
@@ -29,8 +28,10 @@ import {
   toDateOnlyString,
 } from '../../core/utils/date.util';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs';
+import { CurrencyService } from '../../core/services/currency.service';
 import { TransactionDialogComponent, TransactionDialogData } from './transaction-dialog/transaction-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 export interface DateGroup {
   date: string;
@@ -42,7 +43,7 @@ export interface DateGroup {
   selector: 'app-transactions',
   standalone: true,
   imports: [
-    CurrencyPipe,
+    AppCurrencyPipe,
     FormsModule,
     MatCardModule,
     MatButtonModule,
@@ -70,6 +71,7 @@ export class TransactionsComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
+  private currencyService = inject(CurrencyService);
 
   accounts: Account[] = [];
   categories: Category[] = [];
@@ -341,7 +343,14 @@ export class TransactionsComponent implements OnInit {
   }
 
   private buildCsv(transactions: Transaction[]): string {
-    const headers = ['Date', 'Type', 'Amount', 'Account', 'Category', 'Description'];
+    const headers = [
+      'Date',
+      'Type',
+      `Amount (${this.currencyService.code()})`,
+      'Account',
+      'Category',
+      'Description',
+    ];
     const rows = transactions.map(transaction => [
       this.formatDate(transaction.date),
       transaction.type,
@@ -355,7 +364,7 @@ export class TransactionsComponent implements OnInit {
   }
 
   private buildFilename(): string {
-    const parts = ['transactions'];
+    const parts = ['transactions', this.currencyService.code().toLowerCase()];
 
     if (this.filterStartDate) {
       parts.push(this.formatDate(this.filterStartDate));

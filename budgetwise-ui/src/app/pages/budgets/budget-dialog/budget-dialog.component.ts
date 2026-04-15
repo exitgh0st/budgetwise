@@ -18,6 +18,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Category } from '../../../core/models/category.model';
+import { CurrencyService } from '../../../core/services/currency.service';
 
 export interface BudgetDialogData {
   categories: Category[];
@@ -76,7 +77,7 @@ export interface BudgetDialogData {
             min="1"
             step="0.01"
           />
-          <span matTextPrefix>PHP&nbsp;</span>
+          <span matTextPrefix>{{ currencyService.symbol() }}&nbsp;</span>
         </mat-form-field>
 
         <mat-slide-toggle formControlName="spillover">
@@ -124,6 +125,7 @@ export interface BudgetDialogData {
 export class BudgetDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<BudgetDialogComponent>);
+  readonly currencyService = inject(CurrencyService);
   data = inject<BudgetDialogData>(MAT_DIALOG_DATA);
 
   form!: FormGroup;

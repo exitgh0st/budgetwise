@@ -249,7 +249,7 @@
               </div>
               <div class="transaction-actions">
                 <span class="amount" [class.income]="t.type === 'INCOME'" [class.expense]="t.type === 'EXPENSE'" [class.transfer]="t.type === 'TRANSFER'">
-                  {{ getAmountPrefix(t.type) }}{{ t.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  {{ getAmountPrefix(t.type) }}{{ t.amount | appCurrency }}
                 </span>
                 <div class="action-buttons">
                   <button mat-icon-button (click)="openEditDialog(t)" aria-label="Edit">

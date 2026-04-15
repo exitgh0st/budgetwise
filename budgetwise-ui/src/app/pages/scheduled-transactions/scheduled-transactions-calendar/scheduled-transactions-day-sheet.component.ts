@@ -1,4 +1,4 @@
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import {
   MAT_BOTTOM_SHEET_DATA,
@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { ScheduledTransaction } from '../../../core/models/scheduled-transaction.model';
+import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 
 export interface ScheduledTransactionsDaySheetData {
   date: Date;
@@ -25,7 +26,7 @@ export interface ScheduledTransactionsDaySheetAction {
   standalone: true,
   imports: [
     CommonModule,
-    CurrencyPipe,
+    AppCurrencyPipe,
     DatePipe,
     MatBottomSheetModule,
     MatButtonModule,
@@ -52,7 +53,7 @@ export interface ScheduledTransactionsDaySheetAction {
             {{ record.description || record.category.name }}
           </span>
           <span matListItemLine class="sheet-meta">
-            {{ record.amount | currency: 'PHP': 'symbol-narrow': '1.2-2' }}
+            {{ record.amount | appCurrency }}
             · {{ record.account.name }}
             · {{ record.category.name }}
           </span>

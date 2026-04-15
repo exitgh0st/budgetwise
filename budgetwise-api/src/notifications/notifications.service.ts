@@ -10,10 +10,15 @@ import {
   startOfLocalDay,
 } from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
+import { formatCurrencyAmount } from '../user/currency.constants';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+  ) {}
 
   async listForUser(
     userId: string,
@@ -143,6 +148,9 @@ export class NotificationsService {
       scheduledTransaction.type === TransactionType.INCOME
         ? 'income'
         : 'expense';
+    const currencyCode = await this.userService.getCurrencyCode(
+      scheduledTransaction.userId,
+    );
 
     await this.prisma.notification.create({
       data: {
@@ -150,17 +158,8 @@ export class NotificationsService {
         scheduledTransactionId: scheduledTransaction.id,
         type: NotificationType.SCHEDULED_TX_DUE,
         title: `Upcoming ${label}: ${scheduledTransaction.description ?? '(no description)'}`,
-        body: `Due in ${daysUntilDue} day(s) - ${this.formatCurrency(Number(scheduledTransaction.amount))}`,
+        body: `Due in ${daysUntilDue} day(s) - ${formatCurrencyAmount(Number(scheduledTransaction.amount), currencyCode)}`,
       },
     });
-  }
-
-  private formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
   }
 }

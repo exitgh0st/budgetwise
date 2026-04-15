@@ -37,7 +37,7 @@
               <div class="category-row">
                 <span class="category-name">{{ cat.categoryName }}</span>
                 <span class="category-amount">
-                  {{ cat.totalSpent | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  {{ cat.totalSpent | appCurrency }}
                   <span class="category-percent">({{ cat.percentage }}%)</span>
                 </span>
               </div>
@@ -59,7 +59,7 @@
           <div>
             <span class="summary-label">Income</span>
             <span class="summary-value">
-              {{ (summary?.totalIncome || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              {{ (summary?.totalIncome || 0) | appCurrency }}
             </span>
           </div>
         </mat-card-content>
@@ -71,7 +71,7 @@
           <div>
             <span class="summary-label">Expenses</span>
             <span class="summary-value">
-              {{ (summary?.totalExpenses || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              {{ (summary?.totalExpenses || 0) | appCurrency }}
             </span>
           </div>
         </mat-card-content>
@@ -87,7 +87,7 @@
           <div>
             <span class="summary-label">Net Balance</span>
             <span class="summary-value">
-              {{ (summary?.netBalance || 0) >= 0 ? '+' : '' }}{{ (summary?.netBalance || 0) | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              {{ (summary?.netBalance || 0) >= 0 ? '+' : '' }}{{ (summary?.netBalance || 0) | appCurrency }}
             </span>
           </div>
         </mat-card-content>
@@ -133,8 +133,8 @@
                   }
                 </div>
                 <span class="budget-status-amount">
-                  {{ status.spent | currency:'PHP':'symbol-narrow':'1.2-2' }}
-                  / {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  {{ status.spent | appCurrency }}
+                  / {{ status.effectiveBudget | appCurrency }}
                 </span>
               </div>
 
@@ -147,21 +147,21 @@
 
               <div class="budget-status-meta">
                 <span class="budget-breakdown">
-                  Base {{ status.baseBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  Base {{ status.baseBudget | appCurrency }}
                   + Carry
                   <span [class]="getCarryAmountClass(status.carriedAmount)">
-                    {{ status.carriedAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                    {{ status.carriedAmount | appCurrency }}
                   </span>
-                  = Effective {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                  = Effective {{ status.effectiveBudget | appCurrency }}
                 </span>
 
                 @if (status.isOver) {
                   <span class="budget-remaining over">
-                    {{ (status.spent - status.effectiveBudget) | currency:'PHP':'symbol-narrow':'1.2-2' }} over budget
+                    {{ (status.spent - status.effectiveBudget) | appCurrency }} over budget
                   </span>
                 } @else {
                   <span class="budget-remaining ok">
-                    {{ status.remaining | currency:'PHP':'symbol-narrow':'1.2-2' }} remaining
+                    {{ status.remaining | appCurrency }} remaining
                   </span>
                 }
               </div>

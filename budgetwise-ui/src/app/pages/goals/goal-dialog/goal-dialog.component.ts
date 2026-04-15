@@ -19,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Account } from '../../../core/models/account.model';
 import { Goal, GoalType } from '../../../core/models/goal.model';
+import { CurrencyService } from '../../../core/services/currency.service';
 import {
   fromDateOnlyString,
   toDateOnlyString,
@@ -69,7 +70,7 @@ export interface GoalDialogData {
             formControlName="targetAmount"
             placeholder="0.00"
           />
-          <span matTextPrefix>₱&nbsp;</span>
+          <span matTextPrefix>{{ currencyService.symbol() }}&nbsp;</span>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -126,6 +127,7 @@ export interface GoalDialogData {
 export class GoalDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<GoalDialogComponent>);
+  readonly currencyService = inject(CurrencyService);
   data = inject<GoalDialogData>(MAT_DIALOG_DATA);
 
   accountSearchCtrl = new FormControl('');

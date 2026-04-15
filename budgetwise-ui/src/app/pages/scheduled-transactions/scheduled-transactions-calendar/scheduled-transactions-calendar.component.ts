@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -43,6 +43,7 @@ import {
 } from '../../../core/models/scheduled-transaction.model';
 import { AccountsService } from '../../../core/services/accounts.service';
 import { CategoriesService } from '../../../core/services/categories.service';
+import { CurrencyService } from '../../../core/services/currency.service';
 import { ScheduledTransactionsService } from '../../../core/services/scheduled-transactions.service';
 import {
   ConfirmDialogComponent,
@@ -57,6 +58,7 @@ import {
   ScheduledTransactionsDaySheetComponent,
   ScheduledTransactionsDaySheetData,
 } from './scheduled-transactions-day-sheet.component';
+import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 
 type ScheduledTransactionCalendarEvent = CalendarEvent<{
   record: ScheduledTransaction;
@@ -68,7 +70,7 @@ type ScheduledTransactionCalendarEvent = CalendarEvent<{
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
-    CurrencyPipe,
+    AppCurrencyPipe,
     DatePipe,
     CalendarModule,
     MatBottomSheetModule,
@@ -87,6 +89,7 @@ export class ScheduledTransactionsCalendarComponent {
   );
   private readonly accountsService = inject(AccountsService);
   private readonly categoriesService = inject(CategoriesService);
+  private readonly currencyService = inject(CurrencyService);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly bottomSheet = inject(MatBottomSheet);
   private readonly dialog = inject(MatDialog);
@@ -426,11 +429,6 @@ export class ScheduledTransactionsCalendarComponent {
   }
 
   private formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Number(amount));
+    return this.currencyService.format(Number(amount));
   }
 }

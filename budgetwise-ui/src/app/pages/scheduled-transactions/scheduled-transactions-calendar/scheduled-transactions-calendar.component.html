@@ -91,7 +91,7 @@
                     <span matListItemLine class="day-panel-meta">
                       {{
                         record.amount
-                          | currency: 'PHP': 'symbol-narrow': '1.2-2'
+                          | appCurrency
                       }}
                       · {{ record.account.name }}
                       · {{ record.category.name }}

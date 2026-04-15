@@ -45,7 +45,7 @@ export class LandingComponent {
   protected readonly features: readonly FeatureCard[] = [
     {
       icon: 'account_balance_wallet',
-      title: 'See every peso clearly',
+      title: 'See every balance clearly',
       description:
         'Track balances, income, expenses, and transfers across cash, banks, e-wallets, cards, and loans.',
     },
@@ -89,7 +89,7 @@ export class LandingComponent {
     this.isHandset()
       ? ['Track cash flow', 'Plan budgets', 'Stay ahead']
       : [
-          'Track cash flow in PHP',
+          'Track cash flow your way',
           'Plan budgets with confidence',
           'Stay ahead of recurring bills',
           'Ask the AI advisor for next steps',

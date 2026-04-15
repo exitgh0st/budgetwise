@@ -1,5 +1,4 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,12 +12,13 @@ import { BUDGETWISE_ONBOARDING_STORAGE_KEY } from '../../core/services/onboardin
 import { Transaction } from '../../core/models/transaction.model';
 import { SummaryReport, BudgetStatus } from '../../core/models/report.model';
 import { OnboardingComponent } from '../../shared/components/onboarding/onboarding.component';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CurrencyPipe,
+    AppCurrencyPipe,
     RouterLink,
     MatCardModule,
     MatIconModule,

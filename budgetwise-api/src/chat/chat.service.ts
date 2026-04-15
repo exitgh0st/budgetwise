@@ -6,8 +6,12 @@ import { toolDefinitions } from './tools/tool-definitions';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { GuardrailsService } from './guardrails.service';
 import { PendingConfirmationService } from './pending-confirmation.service';
+import { describeCurrency } from '../user/currency.constants';
+import { UserService } from '../user/user.service';
 
-const SYSTEM_PROMPT = `You are BudgetWise AI, a friendly and proactive personal financial advisor.
+const buildSystemPrompt = (
+  currencyCode: string,
+) => `You are BudgetWise AI, a friendly and proactive personal financial advisor.
 You have full access to the user's budgeting app through 40 tool calls. You can
 create, read, update, and delete accounts, categories, transactions, budgets,
 scheduled transactions, and goals. You can also pull reports, check
@@ -29,7 +33,8 @@ BEHAVIOR:
   category. If they are above 80%, warn them. If over 100%, alert them.
 - When the user asks about their finances, pull the relevant data first
   with tool calls before answering. Never make up numbers.
-- Be conversational and concise. Use Philippine Peso (₱) for all amounts.
+- The user's preferred currency is ${describeCurrency(currencyCode)}. Format all amounts using that currency and do not perform exchange-rate conversion.
+- Be conversational and concise.
 - If the user's request is ambiguous (e.g., which account?), ask for
   clarification.
 - When listing data, format it cleanly with amounts and labels.
@@ -61,6 +66,7 @@ export class ChatService {
     private toolExecutor: ToolExecutor,
     private guardrails: GuardrailsService,
     private pendingConfirmation: PendingConfirmationService,
+    private userService: UserService,
   ) {
     this.client = new OpenAI({
       apiKey: process.env.DEEPSEEK_API_KEY,
@@ -197,6 +203,7 @@ export class ChatService {
 
   private async buildMessageArray(
     sessionId: string,
+    systemPrompt: string,
   ): Promise<ChatCompletionMessageParam[]> {
     const history = await this.prisma.chatMessage.findMany({
       where: { sessionId },
@@ -204,7 +211,7 @@ export class ChatService {
     });
 
     const messages: ChatCompletionMessageParam[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
     ];
 
     // Track tool_call_ids we expect to see tool responses for
@@ -328,7 +335,11 @@ export class ChatService {
     }
 
     // 2. Build the full message array from history
-    const messages = await this.buildMessageArray(sessionId);
+    const currencyCode = await this.userService.getCurrencyCode(userId);
+    const messages = await this.buildMessageArray(
+      sessionId,
+      buildSystemPrompt(currencyCode),
+    );
 
     // 3. Call DeepSeek and process tool calls in a loop
     const rawResponse = await this.processWithToolLoop(

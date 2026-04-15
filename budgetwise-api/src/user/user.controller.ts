@@ -1,8 +1,17 @@
-import { Controller, Delete, Get, HttpCode, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Patch,
+  Res,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { UpdateUserPreferencesDto } from './dto/update-user-preferences.dto';
 import { UserService } from './user.service';
 
 @ApiTags('User')
@@ -10,6 +19,23 @@ import { UserService } from './user.service';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('preferences')
+  @ApiOperation({ summary: 'Get the current user preferences' })
+  getPreferences(
+    @CurrentUser() user: { userId: string; currency?: string },
+  ): Promise<{ currency: string }> {
+    return this.userService.getPreferences(user.userId, user.currency);
+  }
+
+  @Patch('preferences')
+  @ApiOperation({ summary: 'Update the current user preferences' })
+  updatePreferences(
+    @CurrentUser() user: { userId: string },
+    @Body() dto: UpdateUserPreferencesDto,
+  ): Promise<{ currency: string }> {
+    return this.userService.updatePreferences(user.userId, dto);
+  }
 
   @Get('export')
   @ApiOperation({ summary: 'Export all user data as JSON' })

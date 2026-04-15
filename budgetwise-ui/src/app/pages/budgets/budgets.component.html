@@ -88,25 +88,25 @@
           </mat-progress-bar>
           <div class="budget-details">
             <span class="spent-label">
-              {{ status.spent | currency:'PHP':'symbol-narrow':'1.2-2' }}
-              / {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              {{ status.spent | appCurrency }}
+              / {{ status.effectiveBudget | appCurrency }}
               <span class="percent">({{ status.percentUsed / 100 | percent:'1.0-0' }})</span>
             </span>
             <span class="budget-breakdown">
-              Base {{ status.baseBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              Base {{ status.baseBudget | appCurrency }}
               + Carry
               <span [class]="getCarryAmountClass(status.carriedAmount)">
-                {{ status.carriedAmount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                {{ status.carriedAmount | appCurrency }}
               </span>
-              = Effective {{ status.effectiveBudget | currency:'PHP':'symbol-narrow':'1.2-2' }}
+              = Effective {{ status.effectiveBudget | appCurrency }}
             </span>
             @if (status.isOver) {
               <span class="remaining over">
-                {{ (status.spent - status.effectiveBudget) | currency:'PHP':'symbol-narrow':'1.2-2' }} over budget!
+                {{ (status.spent - status.effectiveBudget) | appCurrency }} over budget!
               </span>
             } @else {
               <span class="remaining ok">
-                {{ status.remaining | currency:'PHP':'symbol-narrow':'1.2-2' }} remaining
+                {{ status.remaining | appCurrency }} remaining
               </span>
             }
           </div>

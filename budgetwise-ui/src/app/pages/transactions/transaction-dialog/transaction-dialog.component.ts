@@ -21,6 +21,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { Transaction, TransactionType } from '../../../core/models/transaction.model';
 import { Account } from '../../../core/models/account.model';
 import { Category } from '../../../core/models/category.model';
+import { CurrencyService } from '../../../core/services/currency.service';
 import {
   fromDateOnlyString,
   toDateOnlyString,
@@ -74,7 +75,7 @@ interface NonTransferSnapshot {
         <mat-form-field appearance="outline">
           <mat-label>Amount</mat-label>
           <input matInput type="number" formControlName="amount" placeholder="0.00" min="0.01" step="0.01" />
-          <span matTextPrefix>₱&nbsp;</span>
+          <span matTextPrefix>{{ currencyService.symbol() }}&nbsp;</span>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -185,6 +186,7 @@ interface NonTransferSnapshot {
 export class TransactionDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<TransactionDialogComponent>);
+  readonly currencyService = inject(CurrencyService);
   data = inject<TransactionDialogData>(MAT_DIALOG_DATA);
 
   form!: FormGroup;

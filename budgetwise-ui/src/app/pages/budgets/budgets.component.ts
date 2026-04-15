@@ -1,5 +1,5 @@
 ﻿import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CurrencyPipe, PercentPipe } from '@angular/common';
+import { PercentPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -34,12 +34,13 @@ import {
   CopyBudgetPreviewItem,
   CopyBudgetsDialogComponent,
 } from './copy-budgets-dialog/copy-budgets-dialog.component';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 @Component({
   selector: 'app-budgets',
   standalone: true,
   imports: [
-    CurrencyPipe,
+    AppCurrencyPipe,
     PercentPipe,
     MatCardModule,
     MatButtonModule,

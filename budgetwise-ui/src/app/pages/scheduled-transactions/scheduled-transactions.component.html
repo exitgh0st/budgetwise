@@ -214,7 +214,7 @@
                   <span class="summary-filter-suffix">{{ getSummaryFilterSuffix('EXPENSE') }}</span>
                 }
               </span>
-              <span class="summary-value">{{ totalExpense | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+              <span class="summary-value">{{ totalExpense | appCurrency }}</span>
             </mat-card-content>
           </mat-card>
         </div>
@@ -246,7 +246,7 @@
             <ng-container matColumnDef="amount">
               <mat-header-cell *matHeaderCellDef mat-sort-header>Amount</mat-header-cell>
               <mat-cell *matCellDef="let bill">
-                <span class="amount expense">{{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+                <span class="amount expense">{{ bill.amount | appCurrency }}</span>
               </mat-cell>
             </ng-container>
 
@@ -317,7 +317,7 @@
                       </div>
                     </div>
                     <span class="amount expense">
-                      {{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                      {{ bill.amount | appCurrency }}
                     </span>
                   </div>
 
@@ -576,7 +576,7 @@
                   <span class="summary-filter-suffix">{{ getSummaryFilterSuffix('INCOME') }}</span>
                 }
               </span>
-              <span class="summary-value">{{ totalIncome | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+              <span class="summary-value">{{ totalIncome | appCurrency }}</span>
             </mat-card-content>
           </mat-card>
         </div>
@@ -608,7 +608,7 @@
             <ng-container matColumnDef="amount">
               <mat-header-cell *matHeaderCellDef mat-sort-header>Amount</mat-header-cell>
               <mat-cell *matCellDef="let bill">
-                <span class="amount income">{{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}</span>
+                <span class="amount income">{{ bill.amount | appCurrency }}</span>
               </mat-cell>
             </ng-container>
 
@@ -679,7 +679,7 @@
                       </div>
                     </div>
                     <span class="amount income">
-                      {{ bill.amount | currency:'PHP':'symbol-narrow':'1.2-2' }}
+                      {{ bill.amount | appCurrency }}
                     </span>
                   </div>
 

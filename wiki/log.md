@@ -66,3 +66,5 @@
 ## [2026-04-15] ticket | #58 completed — wiki ingest pending
 
 ## [2026-04-15] ticket | #59 completed â€” wiki ingest pending
+
+## [2026-04-15] ticket | #60 completed — wiki ingest pending

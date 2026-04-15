@@ -32,7 +32,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           maintainingBalance: {
             type: 'number',
             description:
-              'Optional maintaining balance amount in PHP. Most useful for bank accounts.',
+              'Optional maintaining balance amount in the user preferred currency. Most useful for bank accounts.',
           },
         },
         required: ['name', 'type'],
@@ -86,7 +86,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           maintainingBalance: {
             anyOf: [{ type: 'number' }, { type: 'null' }],
             description:
-              'Optional maintaining balance amount in PHP. Use null only when explicitly clearing it.',
+              'Optional maintaining balance amount in the user preferred currency. Use null only when explicitly clearing it.',
           },
         },
         required: ['id'],
@@ -124,7 +124,8 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           newBalance: {
             type: 'number',
-            description: 'The desired new balance amount in PHP',
+            description:
+              'The desired new balance amount in the user preferred currency',
           },
         },
         required: ['accountId', 'newBalance'],
@@ -226,7 +227,8 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           amount: {
             type: 'number',
-            description: 'Transaction amount in PHP (always positive)',
+            description:
+              'Transaction amount in the user preferred currency (always positive)',
           },
           description: {
             type: 'string',
@@ -262,7 +264,8 @@ export const toolDefinitions: ChatCompletionTool[] = [
         properties: {
           amount: {
             type: 'number',
-            description: 'Transfer amount in PHP. Must be positive.',
+            description:
+              'Transfer amount in the user preferred currency. Must be positive.',
           },
           fromAccountId: {
             type: 'string',
@@ -387,7 +390,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           amount: {
             type: 'number',
-            description: 'Monthly budget limit in PHP',
+            description: 'Monthly budget limit in the user preferred currency',
           },
           month: {
             type: 'number',
@@ -445,7 +448,10 @@ export const toolDefinitions: ChatCompletionTool[] = [
         type: 'object',
         properties: {
           id: { type: 'string', description: 'The budget ID to update' },
-          amount: { type: 'number', description: 'New budget amount in PHP' },
+          amount: {
+            type: 'number',
+            description: 'New budget amount in the user preferred currency',
+          },
           spillover: {
             type: 'boolean',
             description:
@@ -492,7 +498,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           targetAmount: {
             type: 'number',
-            description: 'Target amount in PHP',
+            description: 'Target amount in the user preferred currency',
           },
           targetDate: {
             type: 'string',
@@ -543,7 +549,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           name: { type: 'string', description: 'New goal name' },
           targetAmount: {
             type: 'number',
-            description: 'New target amount in PHP',
+            description: 'New target amount in the user preferred currency',
           },
           targetDate: {
             type: 'string',
@@ -590,7 +596,7 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           amount: {
             type: 'number',
-            description: 'Contribution amount in PHP',
+            description: 'Contribution amount in the user preferred currency',
           },
           fromAccountId: {
             type: 'string',
@@ -709,7 +715,8 @@ export const toolDefinitions: ChatCompletionTool[] = [
           },
           amount: {
             type: 'number',
-            description: 'Amount in PHP (always positive)',
+            description:
+              'Amount in the user preferred currency (always positive)',
           },
           description: {
             type: 'string',

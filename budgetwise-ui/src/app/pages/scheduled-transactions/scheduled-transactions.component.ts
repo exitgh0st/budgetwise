@@ -1,5 +1,5 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
@@ -28,6 +28,7 @@ import {
 import { Category } from '../../core/models/category.model';
 import { AccountsService } from '../../core/services/accounts.service';
 import { CategoriesService } from '../../core/services/categories.service';
+import { CurrencyService } from '../../core/services/currency.service';
 import { ScheduledTransactionsService } from '../../core/services/scheduled-transactions.service';
 import {
   ConfirmDialogComponent,
@@ -38,6 +39,7 @@ import {
   ScheduledTransactionDialogData,
 } from './scheduled-transaction-dialog/scheduled-transaction-dialog.component';
 import { ScheduledTransactionsCalendarComponent } from './scheduled-transactions-calendar/scheduled-transactions-calendar.component';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 @Component({
   selector: 'app-scheduled-transactions',
@@ -58,7 +60,7 @@ import { ScheduledTransactionsCalendarComponent } from './scheduled-transactions
     MatTableModule,
     MatChipsModule,
     MatTabsModule,
-    CurrencyPipe,
+    AppCurrencyPipe,
     DatePipe,
     ScheduledTransactionsCalendarComponent,
     ReactiveFormsModule,
@@ -71,6 +73,7 @@ export class ScheduledTransactionsComponent implements OnInit {
   private scheduledTransactionsService = inject(ScheduledTransactionsService);
   private accountsService = inject(AccountsService);
   private categoriesService = inject(CategoriesService);
+  private currencyService = inject(CurrencyService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
@@ -410,14 +413,12 @@ export class ScheduledTransactionsComponent implements OnInit {
       scheduledTransaction.type === 'EXPENSE'
         ? 'Failed to record scheduled payment'
         : 'Failed to record scheduled income';
-    const amount = scheduledTransaction.amount.toLocaleString('en-PH', {
-      minimumFractionDigits: 2,
-    });
+    const amount = this.currencyService.format(scheduledTransaction.amount);
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
         title: actionLabel,
-        message: `${actionLabel} "${label}" worth PHP ${amount}? This amount will be ${direction} ${scheduledTransaction.account.name}.`,
+        message: `${actionLabel} "${label}" worth ${amount}? This amount will be ${direction} ${scheduledTransaction.account.name}.`,
         confirmText: actionLabel,
       } as ConfirmDialogData,
     });

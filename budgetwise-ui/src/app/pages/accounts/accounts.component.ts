@@ -1,5 +1,4 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CurrencyPipe } from '@angular/common';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -25,12 +24,13 @@ import {
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 @Component({
   selector: 'app-accounts',
   standalone: true,
   imports: [
-    CurrencyPipe,
+    AppCurrencyPipe,
     MatCardModule,
     MatButtonModule,
     MatIconModule,

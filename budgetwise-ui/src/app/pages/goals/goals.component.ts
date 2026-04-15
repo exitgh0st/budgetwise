@@ -1,5 +1,5 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -34,6 +34,7 @@ import {
   TransactionDialogComponent,
   TransactionDialogData,
 } from '../transactions/transaction-dialog/transaction-dialog.component';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 @Component({
   selector: 'app-goals',
@@ -45,7 +46,7 @@ import {
     MatIconModule,
     MatProgressBarModule,
     MatTableModule,
-    CurrencyPipe,
+    AppCurrencyPipe,
     DatePipe,
   ],
   templateUrl: './goals.component.html',

@@ -4,12 +4,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { SupportedCurrencyCode } from '../../core/models/user-preferences.model';
 import { AuthService } from '../../core/services/auth.service';
+import { CurrencyService } from '../../core/services/currency.service';
 import { UserService } from '../../core/services/user.service';
 import { ChangeEmailDialogComponent } from './change-email-dialog.component';
 import { ChangePasswordDialogComponent } from './change-password-dialog.component';
@@ -22,8 +26,10 @@ import { DeleteAccountDialogComponent } from './delete-account-dialog.component'
     MatButtonModule,
     MatCardModule,
     MatDividerModule,
+    MatFormFieldModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatSelectModule,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -31,6 +37,7 @@ import { DeleteAccountDialogComponent } from './delete-account-dialog.component'
 })
 export class SettingsComponent {
   readonly auth = inject(AuthService);
+  readonly currencyService = inject(CurrencyService);
 
   private readonly userService = inject(UserService);
   private readonly dialog = inject(MatDialog);
@@ -41,6 +48,7 @@ export class SettingsComponent {
   readonly isCompact = signal(false);
   readonly updatingEmail = signal(false);
   readonly updatingPassword = signal(false);
+  readonly updatingCurrency = signal(false);
   readonly exporting = signal(false);
   readonly deleting = signal(false);
 
@@ -125,6 +133,36 @@ export class SettingsComponent {
       );
     } finally {
       this.exporting.set(false);
+    }
+  }
+
+  async updateCurrency(currency: SupportedCurrencyCode): Promise<void> {
+    if (currency === this.currencyService.code()) {
+      return;
+    }
+
+    this.updatingCurrency.set(true);
+
+    try {
+      const preferences = await firstValueFrom(
+        this.userService.updatePreferences({
+          currency,
+        }),
+      );
+
+      this.currencyService.setCurrency(preferences.currency);
+      await this.auth.refreshSession();
+      this.snackBar.open('Currency preference updated.', 'Dismiss', {
+        duration: 3000,
+      });
+    } catch (error: any) {
+      this.snackBar.open(
+        error?.error?.message || error?.message || 'Failed to update your currency',
+        'Dismiss',
+        { duration: 4000 },
+      );
+    } finally {
+      this.updatingCurrency.set(false);
     }
   }
 

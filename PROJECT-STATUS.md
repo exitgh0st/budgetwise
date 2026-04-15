@@ -63,6 +63,7 @@
 | 57 — Landing Page | Added a public marketing homepage at `/` with responsive feature sections, a dashboard preview mockup, AI advisor messaging, and guest-to-register CTAs while authenticated users are redirected into the app. |
 | 58 — Onboarding Tutorial & Help Page | Added a first-run dashboard onboarding overlay with guided shell highlights plus a public `/help` FAQ page linked from the authenticated sidenav. |
 | 59 — Global Transaction Search | Added debounced description search to `GET /api/transactions` plus transactions-page search and CSV export support for matching results. |
+| 60 — Multi-Currency Support | Added persisted user currency preferences via Supabase metadata, dynamic money formatting across frontend pages/forms/charts/CSV, and currency-aware chat + notification context without exchange-rate conversion. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -108,13 +109,14 @@ Manual changes outside the numbered ticket flow:
 - **Observability:** Public `GET /api/health` database probe, `nestjs-pino` structured request/response logging with `x-request-id` correlation IDs, and optional Sentry error capture when `SENTRY_DSN` is set
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **User data portability:** `GET /api/user/export` assembles a JSON attachment with owned records across accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat history, normalizing Decimal fields to numbers
+- **User preferences:** `GET/PATCH /api/user/preferences` persists the preferred currency in Supabase `user_metadata`, defaults new users to `PHP`, and includes the preference in export payloads
 - **Account deletion:** `DELETE /api/user` is throttled, deletes owned data in Prisma transaction order, then removes the Supabase auth user with the server-side service role key
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
 - **Transactions:** Support income, expense, and transfer flows with atomic balance sync, date-range filters, and case-insensitive description search
 - **Scheduled transactions:** Full CRUD with owned account/category validation + atomic `POST :id/generate` + atomic hourly cron generation + `/process-due` manual trigger
 - **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss
 - **Reports:** Exclude system categories and transfers; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
-- **Chat:** DeepSeek V3 via OpenAI SDK, 40 tools total, guardrails, destructive confirmation, history pagination, goal management, read-only notifications
+- **Chat:** DeepSeek V3 via OpenAI SDK, 40 tools total, guardrails, destructive confirmation, history pagination, goal management, read-only notifications, and user-currency-aware response formatting
 - **Seed/onboarding:** Template categories cloned per user; starter accounts created by `POST /api/auth/onboard`
 
 ### Frontend (`budgetwise-ui/`)
@@ -127,22 +129,22 @@ Manual changes outside the numbered ticket flow:
 - **PWA support:** Angular service worker now ships in production builds with an installable manifest, branded icon set, shell-only asset caching, and a global offline banner for repeat visits
 - **Landing page:** Public `/` route now introduces BudgetWise with a hero, feature highlights, AI advisor callout, dashboard mockup preview, and conversion links into `/register`
 - **Observability:** Optional `@sentry/angular` bootstrap + `ErrorHandler` integration, tracked safe development env template, and hidden production source maps with conditional `sentry-cli` upload support
-- **Transactions page:** Filtered list, debounced description search, searchable filters/dialog selects, transfer-aware dialog, and client-side CSV export that respects active search/filter state
+- **Transactions page:** Filtered list, debounced description search, searchable filters/dialog selects, transfer-aware dialog, and client-side CSV export that respects active search/filter state and includes the selected currency code in the amount header / filename
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow
-- **Settings page:** Responsive profile/security/data/danger-zone sections with Supabase email/password dialogs, export download flow, and typed-confirmation account deletion
+- **Settings page:** Responsive profile/security/data/danger-zone sections with currency selection, Supabase email/password dialogs, export download flow, and typed-confirmation account deletion
 - **Notifications UI:** Toolbar bell with unread polling, recent menu, mark-read/mark-all-read, deep-link to `/scheduled-transactions`
 - **Budgets UX:** Spillover toggle in dialog, spillover chip, base/carry/effective breakdowns, and copy-from-last-month actions with preview/selective-copy flow
 - **Goals UX:** Searchable account/category selects in goal and contribution dialogs, date-only target-date handling
 - **Reports UX:** Doughnut + bar charts plus effective-budget status cards
 - **Accounts UX:** Provider picker for BANK / EWALLET / CREDIT_CARD / LOAN with refreshed local brand assets
-- **Shared:** `ConfirmDialogComponent`, `NotificationBellComponent`, `ChatPanelComponent`, `MarkdownPipe`
+- **Shared:** `ConfirmDialogComponent`, `NotificationBellComponent`, `ChatPanelComponent`, `MarkdownPipe`, `CurrencyService`, `AppCurrencyPipe`
 - **Chat rendering security:** `MarkdownPipe` escapes raw input, converts the supported markdown subset, then sanitizes HTML before the chat panel binds it with `[innerHTML]`
 - **Production URL:** `https://budgetwise-api-k9z9.onrender.com/api`
 
 ### Chat Agent
 - Full end-to-end flow with accounts/categories/transactions/budgets/reports/scheduled-transactions/goals/notifications tools
 - Destructive tools require explicit confirmation, including `delete_goal`
-- Transfer-aware, scheduled-transaction-aware, goal-aware, and notification-aware tool set
+- Transfer-aware, scheduled-transaction-aware, goal-aware, notification-aware, and user-currency-aware tool set
 
 ---
 

@@ -24,6 +24,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Account } from '../../../core/models/account.model';
 import { Category } from '../../../core/models/category.model';
+import { CurrencyService } from '../../../core/services/currency.service';
 import { ScheduledTransaction } from '../../../core/models/scheduled-transaction.model';
 import {
   fromDateOnlyString,
@@ -82,7 +83,7 @@ export interface ScheduledTransactionDialogData {
             min="0.01"
             step="0.01"
           />
-          <span matTextPrefix>PHP&nbsp;</span>
+          <span matTextPrefix>{{ currencyService.symbol() }}&nbsp;</span>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
@@ -242,6 +243,7 @@ export class ScheduledTransactionDialogComponent implements OnInit {
   private dialogRef = inject(
     MatDialogRef<ScheduledTransactionDialogComponent>,
   );
+  readonly currencyService = inject(CurrencyService);
   data = inject<ScheduledTransactionDialogData>(MAT_DIALOG_DATA);
 
   form!: FormGroup;

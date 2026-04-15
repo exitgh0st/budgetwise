@@ -2,10 +2,18 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  DEFAULT_CURRENCY_CODE,
+  normalizeCurrencyCode,
+} from './currency.constants';
+import { UpdateUserPreferencesDto } from './dto/update-user-preferences.dto';
 
 type ExportDataResponse = {
   exportedAt: string;
   userId: string;
+  preferences: {
+    currency: string;
+  };
   accounts: unknown[];
   categories: unknown[];
   transactions: unknown[];
@@ -25,7 +33,49 @@ export class UserService {
     private readonly configService: ConfigService,
   ) {}
 
-  async exportData(userId: string): Promise<ExportDataResponse> {
+  async getPreferences(
+    userId: string,
+    fallbackCurrency: string = DEFAULT_CURRENCY_CODE,
+  ): Promise<{ currency: string }> {
+    const authUser = await this.fetchSupabaseAuthUser(userId);
+
+    return {
+      currency: normalizeCurrencyCode(
+        authUser.user_metadata?.currency,
+        normalizeCurrencyCode(fallbackCurrency),
+      ),
+    };
+  }
+
+  async getCurrencyCode(
+    userId: string,
+    fallbackCurrency: string = DEFAULT_CURRENCY_CODE,
+  ): Promise<string> {
+    const preferences = await this.getPreferences(userId, fallbackCurrency);
+    return preferences.currency;
+  }
+
+  async updatePreferences(
+    userId: string,
+    dto: UpdateUserPreferencesDto,
+  ): Promise<{ currency: string }> {
+    const authUser = await this.fetchSupabaseAuthUser(userId);
+
+    await this.updateSupabaseAuthUser(userId, {
+      ...(authUser.user_metadata ?? {}),
+      currency: normalizeCurrencyCode(dto.currency),
+    });
+
+    return {
+      currency: normalizeCurrencyCode(dto.currency),
+    };
+  }
+
+  async exportData(
+    userId: string,
+    fallbackCurrency: string = DEFAULT_CURRENCY_CODE,
+  ): Promise<ExportDataResponse> {
+    const preferences = await this.getPreferences(userId, fallbackCurrency);
     const [
       accounts,
       categories,
@@ -90,6 +140,7 @@ export class UserService {
     return this.normalizeForExport({
       exportedAt: new Date().toISOString(),
       userId,
+      preferences,
       accounts,
       categories,
       transactions,
@@ -184,6 +235,66 @@ export class UserService {
     }
 
     return { supabaseUrl, serviceRoleKey };
+  }
+
+  private async fetchSupabaseAuthUser(userId: string): Promise<{
+    user_metadata?: Record<string, unknown>;
+  }> {
+    const { supabaseUrl, serviceRoleKey } = this.getSupabaseAdminConfig();
+    const baseUrl = supabaseUrl.endsWith('/') ? supabaseUrl : `${supabaseUrl}/`;
+    const endpoint = new URL(
+      `auth/v1/admin/users/${encodeURIComponent(userId)}`,
+      baseUrl,
+    );
+
+    const response = await fetch(endpoint, {
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new InternalServerErrorException(
+        'Failed to load the authentication user from Supabase.',
+      );
+    }
+
+    const payload = (await response.json()) as {
+      user?: { user_metadata?: Record<string, unknown> };
+    };
+
+    return payload.user ?? {};
+  }
+
+  private async updateSupabaseAuthUser(
+    userId: string,
+    userMetadata: Record<string, unknown>,
+  ): Promise<void> {
+    const { supabaseUrl, serviceRoleKey } = this.getSupabaseAdminConfig();
+    const baseUrl = supabaseUrl.endsWith('/') ? supabaseUrl : `${supabaseUrl}/`;
+    const endpoint = new URL(
+      `auth/v1/admin/users/${encodeURIComponent(userId)}`,
+      baseUrl,
+    );
+
+    const response = await fetch(endpoint, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+      },
+      body: JSON.stringify({
+        user_metadata: userMetadata,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new InternalServerErrorException(
+        'Failed to update the authentication user in Supabase.',
+      );
+    }
   }
 
   private async deleteSupabaseAuthUser(

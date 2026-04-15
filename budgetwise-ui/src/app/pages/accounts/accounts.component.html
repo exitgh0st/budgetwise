@@ -56,22 +56,16 @@
   <div class="total-liquid">
     <span>Total Liquid</span>
     <span class="total-amount">
-      {{
-        totalUsableLiquidBalance | currency: "PHP" : "symbol-narrow" : "1.2-2"
-      }}
+      {{ totalUsableLiquidBalance | appCurrency }}
       <span class="total-gross"
-        >({{
-          totalLiquidBalance | currency: "PHP" : "symbol-narrow" : "1.2-2"
-        }})</span
+        >({{ totalLiquidBalance | appCurrency }})</span
       >
     </span>
   </div>
 
   <div class="total-credit">
     <span>Total Credit</span>
-    <span class="total-amount">{{
-      totalCreditCardDebt | currency: "PHP" : "symbol-narrow" : "1.2-2"
-    }}</span>
+    <span class="total-amount">{{ totalCreditCardDebt | appCurrency }}</span>
   </div>
 </div>
 
@@ -102,16 +96,13 @@
             class="balance"
             [class.balance-below]="isBelowMaintaining(account)"
           >
-            {{ account.balance | currency: "PHP" : "symbol-narrow" : "1.2-2" }}
+            {{ account.balance | appCurrency }}
           </p>
           @if (account.maintainingBalance != null) {
             <div class="maintaining-row">
               <span class="maintaining-label"
                 >Maintaining:
-                {{
-                  account.maintainingBalance
-                    | currency: "PHP" : "symbol-narrow" : "1.2-2"
-                }}</span
+                {{ account.maintainingBalance | appCurrency }}</span
               >
               @if (isBelowMaintaining(account)) {
                 <span class="below-tag">Below Maintaining</span>

@@ -15,6 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { Account, AccountType } from '../../../core/models/account.model';
+import { CurrencyService } from '../../../core/services/currency.service';
 import {
   ACCOUNT_PROVIDERS,
   AccountProvider,
@@ -112,7 +113,7 @@ const PROVIDER_TYPES: AccountType[] = [
             formControlName="balance"
             placeholder="0.00"
           />
-          <span matTextPrefix>&#8369;&nbsp;</span>
+          <span matTextPrefix>{{ currencyService.symbol() }}&nbsp;</span>
         </mat-form-field>
 
         @if (isBank) {
@@ -124,7 +125,7 @@ const PROVIDER_TYPES: AccountType[] = [
               formControlName="maintainingBalance"
               placeholder="0.00"
             />
-            <span matTextPrefix>&#8369;&nbsp;</span>
+            <span matTextPrefix>{{ currencyService.symbol() }}&nbsp;</span>
             <mat-hint>Minimum balance required by the bank</mat-hint>
           </mat-form-field>
         }
@@ -168,6 +169,7 @@ const PROVIDER_TYPES: AccountType[] = [
 export class AccountDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<AccountDialogComponent>);
+  readonly currencyService = inject(CurrencyService);
   data = inject<AccountDialogData>(MAT_DIALOG_DATA);
 
   accountTypes: { value: AccountType; label: string }[] = [

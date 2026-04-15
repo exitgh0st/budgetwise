@@ -3,12 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import * as jwksRsa from 'jwks-rsa';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { normalizeCurrencyCode } from '../user/currency.constants';
 
 type SupabaseJwtPayload = {
   sub: string;
   email: string;
-  user_metadata: {
+  user_metadata?: {
     email_verified: boolean;
+    currency?: string;
   };
 };
 
@@ -33,7 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   validate(payload: SupabaseJwtPayload) {
     console.log('Validating JWT payload:', payload);
 
-    if (!payload.user_metadata.email_verified) {
+    if (!payload.user_metadata?.email_verified) {
       throw new UnauthorizedException({
         statusCode: 401,
         message: 'Email not verified',
@@ -41,6 +43,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       });
     }
 
-    return { userId: payload.sub, email: payload.email };
+    return {
+      userId: payload.sub,
+      email: payload.email,
+      currency: normalizeCurrencyCode(payload.user_metadata?.currency),
+    };
   }
 }
