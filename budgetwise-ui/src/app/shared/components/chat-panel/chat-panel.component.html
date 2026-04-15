@@ -1,5 +1,10 @@
 <!-- FAB button — visible on all pages -->
-<button mat-fab class="chat-fab" (click)="togglePanel()" [class.hidden]="isPanelOpen">
+<button
+  mat-fab
+  class="chat-fab"
+  (click)="togglePanel()"
+  [class.hidden]="isPanelOpen"
+  [class.onboarding-highlight]="onboardingUi.activeHighlight() === 'ai'">
   <mat-icon>chat</mat-icon>
 </button>
 

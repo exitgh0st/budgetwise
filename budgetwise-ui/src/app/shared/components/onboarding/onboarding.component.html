@@ -1,0 +1,36 @@
+<div class="onboarding-overlay" aria-label="BudgetWise onboarding tutorial">
+  <div class="onboarding-backdrop"></div>
+
+  <mat-card class="onboarding-card">
+    <p class="onboarding-eyebrow">Quick Start Guide</p>
+
+    <mat-stepper
+      class="onboarding-stepper"
+      [selectedIndex]="currentStep"
+      [orientation]="stepperOrientation"
+      (selectionChange)="onStepChange($event.selectedIndex)">
+      @for (step of steps; track step.title) {
+        <mat-step [label]="step.label">
+          <div class="step-content">
+            <div class="step-icon">
+              <mat-icon>{{ step.icon }}</mat-icon>
+            </div>
+
+            <div class="step-copy">
+              <h2>{{ step.title }}</h2>
+              <p>{{ step.description }}</p>
+            </div>
+
+            <div class="step-footer">
+              <button mat-button type="button" (click)="skip()">Skip</button>
+              <span class="step-counter">{{ currentStep + 1 }} / {{ steps.length }}</span>
+              <button mat-flat-button color="primary" type="button" (click)="next()">
+                {{ currentStep === steps.length - 1 ? 'Finish' : 'Next' }}
+              </button>
+            </div>
+          </div>
+        </mat-step>
+      }
+    </mat-stepper>
+  </mat-card>
+</div>

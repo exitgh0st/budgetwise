@@ -1,0 +1,66 @@
+<section class="help-page">
+  <mat-card class="help-hero">
+    <p class="help-eyebrow">Support</p>
+    <div class="hero-heading">
+      <div>
+        <h1>Help & FAQ</h1>
+        <p class="hero-copy">
+          Find quick answers about setup, account tracking, budgets, recurring transactions,
+          and the BudgetWise AI advisor.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <a mat-stroked-button routerLink="/dashboard">
+          <mat-icon>dashboard</mat-icon>
+          <span>Open Dashboard</span>
+        </a>
+        <a mat-flat-button color="primary" href="mailto:support@budgetwise.app">
+          <mat-icon>mail</mat-icon>
+          <span>Contact Support</span>
+        </a>
+      </div>
+    </div>
+  </mat-card>
+
+  <div class="help-sections">
+    @for (section of sections; track section.title) {
+      <mat-card class="help-section-card">
+        <div class="section-header">
+          <div class="section-icon">
+            <mat-icon>{{ section.icon }}</mat-icon>
+          </div>
+          <div>
+            <h2>{{ section.title }}</h2>
+            <p>{{ section.description }}</p>
+          </div>
+        </div>
+
+        <mat-accordion class="help-accordion">
+          @for (item of section.items; track item.question) {
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>{{ item.question }}</mat-panel-title>
+              </mat-expansion-panel-header>
+              <p>{{ item.answer }}</p>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      </mat-card>
+    }
+  </div>
+
+  <mat-card class="contact-card">
+    <div class="contact-copy">
+      <h2>Need more help?</h2>
+      <p>
+        Send us a note and include as much detail as you can about the page, action, or
+        issue you ran into.
+      </p>
+    </div>
+
+    <a class="support-link" href="mailto:support@budgetwise.app">
+      support@budgetwise.app
+    </a>
+  </mat-card>
+</section>

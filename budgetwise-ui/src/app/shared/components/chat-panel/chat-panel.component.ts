@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subscription } from 'rxjs';
 import { ChatService } from '../../../core/services/chat.service';
+import { OnboardingUiService } from '../../../core/services/onboarding-ui.service';
 import { ChatMessage, ChatSession } from '../../../core/models/chat.model';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
@@ -56,6 +57,7 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   @ViewChild('messageContainer') messageContainer!: ElementRef;
 
   private chatService = inject(ChatService);
+  readonly onboardingUi = inject(OnboardingUiService);
   private snackBar = inject(MatSnackBar);
   private shouldScroll = false;
   private subscriptions = new Subscription();

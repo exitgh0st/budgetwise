@@ -61,6 +61,7 @@
 | 55 — 404 Error Page & SEO Meta Tags | Added a public wildcard not-found page with auth-aware recovery actions, plus frontend SEO/social meta tags and generated OG/iOS/favicon PNG assets for richer previews. |
 | 56 — PWA Support | Added Angular service-worker/manifest support, installable app metadata + icons, and a global offline banner while keeping financial API traffic out of the service-worker cache. |
 | 57 — Landing Page | Added a public marketing homepage at `/` with responsive feature sections, a dashboard preview mockup, AI advisor messaging, and guest-to-register CTAs while authenticated users are redirected into the app. |
+| 58 — Onboarding Tutorial & Help Page | Added a first-run dashboard onboarding overlay with guided shell highlights plus a public `/help` FAQ page linked from the authenticated sidenav. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -117,8 +118,10 @@ Manual changes outside the numbered ticket flow:
 
 ### Frontend (`budgetwise-ui/`)
 - **Auth shell:** Login/register/forgot/reset/callback/verify-email pages, JWT interceptor, auth/guest guards, and signed-in unverified-user redirects
-- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings, Privacy Policy, Terms of Service, Not Found
+- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings, Help, Privacy Policy, Terms of Service, Not Found
+- **Onboarding:** First-run dashboard tutorial overlay with five guided steps, `localStorage` completion state, and highlight cues for Dashboard, Accounts, Transactions, Budgets, and the AI chat entry point
 - **Legal UX:** Public `/privacy` and `/terms` routes, auth-page legal footer links, required registration consent checkbox, and authenticated sidenav footer links
+- **Help page:** Public `/help` FAQ route with expandable sections for getting started, accounts, transactions, budgets, scheduled transactions, and AI chat, plus a support email CTA
 - **SEO/share metadata:** `index.html` now ships description/keywords, Open Graph, Twitter Card, theme-color, Apple touch icon, and PNG favicon tags backed by generated brand assets
 - **PWA support:** Angular service worker now ships in production builds with an installable manifest, branded icon set, shell-only asset caching, and a global offline banner for repeat visits
 - **Landing page:** Public `/` route now introduces BudgetWise with a hero, feature highlights, AI advisor callout, dashboard mockup preview, and conversion links into `/register`

@@ -14,6 +14,7 @@ import { NotificationBellComponent } from './shared/components/notification-bell
 import { OfflineBannerComponent } from './shared/components/offline-banner/offline-banner.component';
 import { AuthService } from './core/services/auth.service';
 import { ThemeService } from './core/services/theme.service';
+import { OnboardingUiService } from './core/services/onboarding-ui.service';
 
 @Component({
   selector: 'app-root',
@@ -40,6 +41,7 @@ export class App {
   isMobile = false;
   auth = inject(AuthService);
   themeService = inject(ThemeService);
+  onboardingUi = inject(OnboardingUiService);
 
   private breakpointObserver = inject(BreakpointObserver);
 

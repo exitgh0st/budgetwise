@@ -1,5 +1,9 @@
 <h1 class="page-title">Dashboard</h1>
 
+@if (showOnboarding) {
+  <app-onboarding (dismissed)="onOnboardingDismissed()"></app-onboarding>
+}
+
 @if (loading) {
   <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 }

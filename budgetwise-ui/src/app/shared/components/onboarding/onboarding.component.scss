@@ -1,0 +1,127 @@
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.onboarding-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(76, 175, 80, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 152, 0, 0.16), transparent 24%),
+    rgba(11, 16, 20, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.onboarding-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 760px);
+  border-radius: 28px !important;
+  border: 1px solid color-mix(in srgb, var(--app-card-border) 72%, white 28%);
+  background: color-mix(in srgb, var(--app-card-bg) 96%, white 4%);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.28) !important;
+  padding: 28px 28px 24px;
+  pointer-events: auto;
+}
+
+.onboarding-eyebrow {
+  margin: 0 0 18px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mat-sys-outline);
+}
+
+.onboarding-stepper {
+  background: transparent;
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 12px 4px 4px;
+}
+
+.step-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--app-accent-5) 82%, white 18%), var(--app-income));
+  color: white;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.18);
+
+  mat-icon {
+    font-size: 34px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+.step-copy {
+  h2 {
+    margin: 0;
+    font-size: clamp(1.7rem, 4vw, 2.3rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+  }
+
+  p {
+    margin: 12px 0 0;
+    max-width: 56ch;
+    color: var(--mat-sys-on-surface-variant);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+}
+
+.step-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+}
+
+.step-counter {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--mat-sys-outline);
+}
+
+@media (max-width: 719px) {
+  .onboarding-overlay {
+    padding: 16px;
+    align-items: end;
+  }
+
+  .onboarding-card {
+    padding: 20px 18px 18px;
+    border-radius: 24px !important;
+  }
+
+  .step-content {
+    gap: 18px;
+    padding-inline: 0;
+  }
+
+  .step-footer {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .step-counter {
+    margin-right: auto;
+  }
+}

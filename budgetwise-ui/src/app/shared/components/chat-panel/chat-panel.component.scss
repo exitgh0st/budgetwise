@@ -9,6 +9,13 @@
     opacity: 0;
     pointer-events: none;
   }
+
+  &.onboarding-highlight {
+    box-shadow:
+      0 0 0 10px rgba(255, 152, 0, 0.18),
+      0 18px 36px rgba(0, 0, 0, 0.24);
+    animation: fabPulse 1.8s ease-in-out infinite;
+  }
 }
 
 .chat-backdrop {
@@ -224,6 +231,17 @@
 @keyframes typing {
   0%, 60%, 100% { transform: translateY(0); }
   30% { transform: translateY(-6px); }
+}
+
+@keyframes fabPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
 }
 
 // Empty chat state

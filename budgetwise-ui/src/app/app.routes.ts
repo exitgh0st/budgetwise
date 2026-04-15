@@ -71,6 +71,12 @@ export const routes: Routes = [
         (m) => m.TermsOfServiceComponent,
       ),
   },
+  {
+    path: 'help',
+    title: 'Help | BudgetWise',
+    loadComponent: () =>
+      import('./pages/help/help.component').then((m) => m.HelpComponent),
+  },
 
   {
     path: '',

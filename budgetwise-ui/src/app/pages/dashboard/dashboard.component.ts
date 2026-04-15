@@ -9,8 +9,10 @@ import { forkJoin } from 'rxjs';
 import { AccountsService } from '../../core/services/accounts.service';
 import { TransactionsService } from '../../core/services/transactions.service';
 import { ReportsService } from '../../core/services/reports.service';
+import { BUDGETWISE_ONBOARDING_STORAGE_KEY } from '../../core/services/onboarding-ui.service';
 import { Transaction } from '../../core/models/transaction.model';
 import { SummaryReport, BudgetStatus } from '../../core/models/report.model';
+import { OnboardingComponent } from '../../shared/components/onboarding/onboarding.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,6 +24,7 @@ import { SummaryReport, BudgetStatus } from '../../core/models/report.model';
     MatIconModule,
     MatButtonModule,
     MatProgressBarModule,
+    OnboardingComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -36,6 +39,7 @@ export class DashboardComponent implements OnInit {
   summary: SummaryReport | null = null;
   budgetStatuses: BudgetStatus[] = [];
   recentTransactions: Transaction[] = [];
+  showOnboarding = this.shouldShowOnboarding();
 
   ngOnInit() {
     const now = new Date();
@@ -84,5 +88,14 @@ export class DashboardComponent implements OnInit {
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  onOnboardingDismissed() {
+    this.showOnboarding = false;
+  }
+
+  private shouldShowOnboarding() {
+    return typeof localStorage !== 'undefined'
+      && !localStorage.getItem(BUDGETWISE_ONBOARDING_STORAGE_KEY);
   }
 }

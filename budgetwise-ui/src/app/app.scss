@@ -78,8 +78,32 @@
   background-color: var(--app-nav-active) !important;
 }
 
+.onboarding-highlight {
+  position: relative;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--app-warning) 20%, transparent), transparent 72%),
+    color-mix(in srgb, var(--app-nav-active) 72%, white 28%) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-warning) 55%, transparent);
+  animation: onboardingPulse 1.8s ease-in-out infinite;
+}
+
 .toolbar-spacer {
   flex: 1 1 auto;
+}
+
+@keyframes onboardingPulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--app-warning) 48%, transparent),
+      0 0 0 0 rgba(255, 152, 0, 0.2);
+  }
+
+  50% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--app-warning) 72%, transparent),
+      0 0 0 10px rgba(255, 152, 0, 0);
+  }
 }
 
 .user-email-item {

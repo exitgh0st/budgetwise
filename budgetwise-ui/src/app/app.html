@@ -8,17 +8,17 @@
         <h2>BudgetWise</h2>
       </div>
       <mat-nav-list class="sidenav-nav">
-        <a mat-list-item routerLink="/dashboard" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+        <a mat-list-item routerLink="/dashboard" routerLinkActive="active" [class.onboarding-highlight]="onboardingUi.activeHighlight() === 'dashboard'" (click)="isMobile && sidenav.close()">
           <mat-icon matListItemIcon>dashboard</mat-icon>
           <span matListItemTitle>Dashboard</span>
         </a>
 
-        <a mat-list-item routerLink="/accounts" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+        <a mat-list-item routerLink="/accounts" routerLinkActive="active" [class.onboarding-highlight]="onboardingUi.activeHighlight() === 'accounts'" (click)="isMobile && sidenav.close()">
           <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
           <span matListItemTitle>Accounts</span>
         </a>
 
-        <a mat-list-item routerLink="/transactions" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+        <a mat-list-item routerLink="/transactions" routerLinkActive="active" [class.onboarding-highlight]="onboardingUi.activeHighlight() === 'transactions'" (click)="isMobile && sidenav.close()">
           <mat-icon matListItemIcon>swap_horiz</mat-icon>
           <span matListItemTitle>Transactions</span>
         </a>
@@ -28,7 +28,7 @@
           <span matListItemTitle>Upcoming</span>
         </a>
 
-        <a mat-list-item routerLink="/budgets" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+        <a mat-list-item routerLink="/budgets" routerLinkActive="active" [class.onboarding-highlight]="onboardingUi.activeHighlight() === 'budgets'" (click)="isMobile && sidenav.close()">
           <mat-icon matListItemIcon>account_balance</mat-icon>
           <span matListItemTitle>Budgets</span>
         </a>
@@ -51,6 +51,11 @@
         <a mat-list-item routerLink="/settings" routerLinkActive="active" (click)="isMobile && sidenav.close()">
           <mat-icon matListItemIcon>settings</mat-icon>
           <span matListItemTitle>Settings</span>
+        </a>
+
+        <a mat-list-item routerLink="/help" routerLinkActive="active" (click)="isMobile && sidenav.close()">
+          <mat-icon matListItemIcon>help_outline</mat-icon>
+          <span matListItemTitle>Help</span>
         </a>
       </mat-nav-list>
 
