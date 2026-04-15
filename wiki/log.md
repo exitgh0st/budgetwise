@@ -1,5 +1,7 @@
 # Wiki Log
 
+## [2026-04-15] ticket | #63 completed â€” wiki ingest pending
+
 ## [2026-04-11] ingest | Delta b6a5861..546bcd4 - tickets 36-43, guarded process-due, date-only normalization, decimal response normalization, budget copy preview, opening-balance transactions
 - Updated pages: [[index]], [[overview]], [[project-structure]], [[api-routes]], [[chat-agent-flow]], [[data-flow]], [[account]], [[budget]], [[transaction]], [[scheduled-transaction]], [[accounts]], [[auth]], [[budgets]], [[chat]], [[goals]], [[notifications]], [[reports]], [[scheduled-transactions]], [[transactions]], [[accounts-page]], [[budgets-page]], [[goals-page]], [[scheduled-transactions-page]], [[transactions-page]], [[core-models]], [[core-services]], [[tickets-overview]], [[decisions]], [[known-issues]]
 - Marker bumped from `b6a5861` to `546bcd4`
@@ -51,22 +53,22 @@
 ## [2026-04-14] ticket | #44 completed â€” wiki ingest pending
 ## [2026-04-14] ticket | #45 completed â€” wiki ingest pending
 ## [2026-04-14] ticket | #46 completed â€” wiki ingest pending
-## [2026-04-14] ticket | #47 completed — wiki ingest pending
+## [2026-04-14] ticket | #47 completed ï¿½ wiki ingest pending
 
-## [2026-04-14] ticket | #48 completed — wiki ingest pending
+## [2026-04-14] ticket | #48 completed ï¿½ wiki ingest pending
 ## [2026-04-14] ticket | #49 completed â€” wiki ingest pending
 
 
-## [2026-04-14] ticket | #52 completed — wiki ingest pending
-## [2026-04-14] ticket | #54 completed — wiki ingest pending
-## [2026-04-14] ticket | #55 completed — wiki ingest pending
+## [2026-04-14] ticket | #52 completed ï¿½ wiki ingest pending
+## [2026-04-14] ticket | #54 completed ï¿½ wiki ingest pending
+## [2026-04-14] ticket | #55 completed ï¿½ wiki ingest pending
 ## [2026-04-14] ticket | #56 completed â€” wiki ingest pending
 
 ## [2026-04-15] ticket | #57 completed â€” wiki ingest pending
-## [2026-04-15] ticket | #58 completed — wiki ingest pending
+## [2026-04-15] ticket | #58 completed ï¿½ wiki ingest pending
 
 ## [2026-04-15] ticket | #59 completed â€” wiki ingest pending
 
-## [2026-04-15] ticket | #60 completed — wiki ingest pending
+## [2026-04-15] ticket | #60 completed ï¿½ wiki ingest pending
 
 ## [2026-04-15] ticket | #61 completed â€” wiki ingest pending
