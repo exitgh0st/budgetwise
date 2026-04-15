@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReportCacheService } from '../reports/report-cache.service';
 import { BudgetsService } from './budgets.service';
 import { CopyBudgetsDto } from './dto/copy-budgets.dto';
 import { CreateBudgetDto } from './dto/create-budget.dto';
@@ -24,6 +25,9 @@ describe('BudgetsService', () => {
     budget: {
       upsert: jest.Mock;
     };
+  };
+  let reportCache: {
+    invalidateUser: jest.Mock;
   };
 
   const makeBudgetRecord = (
@@ -74,9 +78,16 @@ describe('BudgetsService', () => {
         upsert: jest.fn().mockResolvedValue(makeBudgetRecord()),
       },
     };
+    reportCache = {
+      invalidateUser: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [BudgetsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        BudgetsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ReportCacheService, useValue: reportCache },
+      ],
     }).compile();
 
     service = module.get(BudgetsService);

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { getUtcMonthRange } from '../common/date.util';
+import { ReportCacheService } from './report-cache.service';
 import {
   SummaryReport,
   CategoryBreakdown,
@@ -11,7 +12,10 @@ import {
 
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private reportCache: ReportCacheService,
+  ) {}
 
   private getResolvedMonthYear(month?: number, year?: number) {
     const now = new Date();
@@ -44,11 +48,29 @@ export class ReportsService {
     const cats = await this.prisma.category.findMany({
       where: { isSystem: true },
       select: { id: true },
+      take: 50,
     });
     return cats.map((c) => c.id);
   }
 
   async getSummary(
+    month?: number,
+    year?: number,
+    userId?: string,
+  ): Promise<SummaryReport> {
+    if (!userId) {
+      return this.computeSummary(month, year);
+    }
+
+    return this.reportCache.remember(
+      userId,
+      'summary',
+      [month ?? 'current', year ?? 'current'],
+      () => this.computeSummary(month, year, userId),
+    );
+  }
+
+  private async computeSummary(
     month?: number,
     year?: number,
     userId?: string,
@@ -93,6 +115,23 @@ export class ReportsService {
     year?: number,
     userId?: string,
   ): Promise<CategoryBreakdown[]> {
+    if (!userId) {
+      return this.computeSpendingByCategory(month, year);
+    }
+
+    return this.reportCache.remember(
+      userId,
+      'spending-by-category',
+      [month ?? 'current', year ?? 'current'],
+      () => this.computeSpendingByCategory(month, year, userId),
+    );
+  }
+
+  private async computeSpendingByCategory(
+    month?: number,
+    year?: number,
+    userId?: string,
+  ): Promise<CategoryBreakdown[]> {
     const { month: m, year: y } = this.getResolvedMonthYear(month, year);
     const { startDate, endDate } = getUtcMonthRange(m, y);
 
@@ -124,6 +163,12 @@ export class ReportsService {
     const categoryIds = groupedResults.map((r) => r.categoryId);
     const categories = await this.prisma.category.findMany({
       where: { id: { in: categoryIds } },
+      select: {
+        id: true,
+        name: true,
+        icon: true,
+      },
+      take: categoryIds.length || 1,
     });
     const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
@@ -154,6 +199,23 @@ export class ReportsService {
     year?: number,
     userId?: string,
   ): Promise<BudgetStatus[]> {
+    if (!userId) {
+      return this.computeBudgetStatus(month, year);
+    }
+
+    return this.reportCache.remember(
+      userId,
+      'budget-status',
+      [month ?? 'current', year ?? 'current'],
+      () => this.computeBudgetStatus(month, year, userId),
+    );
+  }
+
+  private async computeBudgetStatus(
+    month?: number,
+    year?: number,
+    userId?: string,
+  ): Promise<BudgetStatus[]> {
     const { month: m, year: y } = this.getResolvedMonthYear(month, year);
     const { startDate, endDate } = getUtcMonthRange(m, y);
 
@@ -162,7 +224,22 @@ export class ReportsService {
 
     const budgets = await this.prisma.budget.findMany({
       where: budgetWhere,
-      include: { category: true },
+      orderBy: { category: { name: 'asc' } },
+      select: {
+        id: true,
+        categoryId: true,
+        month: true,
+        year: true,
+        amount: true,
+        spillover: true,
+        category: {
+          select: {
+            name: true,
+            icon: true,
+          },
+        },
+      },
+      take: 250,
     });
     const budgetCache = new Map<
       string,
@@ -355,6 +432,22 @@ export class ReportsService {
   }
 
   async getMonthlyTrend(
+    months?: number,
+    userId?: string,
+  ): Promise<MonthlyTrend[]> {
+    if (!userId) {
+      return this.computeMonthlyTrend(months);
+    }
+
+    return this.reportCache.remember(
+      userId,
+      'monthly-trend',
+      [months ?? 6],
+      () => this.computeMonthlyTrend(months, userId),
+    );
+  }
+
+  private async computeMonthlyTrend(
     months?: number,
     userId?: string,
   ): Promise<MonthlyTrend[]> {

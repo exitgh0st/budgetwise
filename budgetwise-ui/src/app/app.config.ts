@@ -13,8 +13,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { createErrorHandler } from '@sentry/angular';
-import { CalendarModule, DateAdapter } from 'angular-calendar';
-import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
@@ -27,13 +25,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
-    importProvidersFrom(
-      MatNativeDateModule,
-      CalendarModule.forRoot({
-        provide: DateAdapter,
-        useFactory: adapterFactory,
-      }),
-    ),
+    importProvidersFrom(MatNativeDateModule),
     {
       provide: MAT_ICON_DEFAULT_OPTIONS,
       useValue: {

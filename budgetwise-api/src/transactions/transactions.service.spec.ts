@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AccountType, Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReportCacheService } from '../reports/report-cache.service';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 
@@ -33,6 +34,9 @@ describe('TransactionsService', () => {
       findMany: jest.Mock;
       count: jest.Mock;
     };
+  };
+  let reportCache: {
+    invalidateUser: jest.Mock;
   };
 
   const makeAccount = (id: string, balance: number) => ({
@@ -122,11 +126,15 @@ describe('TransactionsService', () => {
         count: jest.fn().mockResolvedValue(0),
       },
     };
+    reportCache = {
+      invalidateUser: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: ReportCacheService, useValue: reportCache },
       ],
     }).compile();
 

@@ -11,17 +11,66 @@ import { ContributeGoalDto } from './dto/contribute-goal.dto';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 
+const goalAccountSelect = {
+  id: true,
+  name: true,
+  type: true,
+  balance: true,
+  maintainingBalance: true,
+  providerId: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.AccountSelect;
+
+const goalCategorySelect = {
+  id: true,
+  name: true,
+  icon: true,
+  isSystem: true,
+  userId: true,
+  createdAt: true,
+} satisfies Prisma.CategorySelect;
+
+const goalTransactionSelect = {
+  id: true,
+  type: true,
+  amount: true,
+  description: true,
+  date: true,
+  accountId: true,
+  fromAccountId: true,
+  toAccountId: true,
+  categoryId: true,
+  scheduledTransactionId: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+  category: {
+    select: goalCategorySelect,
+  },
+  account: {
+    select: goalAccountSelect,
+  },
+  fromAccount: {
+    select: goalAccountSelect,
+  },
+  toAccount: {
+    select: goalAccountSelect,
+  },
+} satisfies Prisma.TransactionSelect;
+
 const goalInclude = {
-  account: true,
+  account: {
+    select: goalAccountSelect,
+  },
   contributions: {
-    include: {
+    orderBy: {
+      createdAt: 'asc',
+    },
+    select: {
       transaction: {
-        include: {
-          account: true,
-          fromAccount: true,
-          toAccount: true,
-          category: true,
-        },
+        select: goalTransactionSelect,
       },
     },
   },
@@ -121,6 +170,7 @@ export class GoalsService {
       where: { userId },
       include: goalInclude,
       orderBy: [{ targetDate: 'asc' }, { createdAt: 'desc' }],
+      take: 100,
     });
 
     return goals.map((goal) => this.toResponse(goal));

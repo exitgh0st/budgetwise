@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AccountType, Prisma, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReportCacheService } from '../reports/report-cache.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -36,6 +37,9 @@ describe('AccountsService', () => {
   };
   let transactionsService: {
     createWithTx: jest.Mock;
+  };
+  let reportCache: {
+    invalidateUser: jest.Mock;
   };
 
   const makeAccountRecord = (
@@ -109,12 +113,16 @@ describe('AccountsService', () => {
     transactionsService = {
       createWithTx: jest.fn().mockResolvedValue({ id: 'transaction-1' }),
     };
+    reportCache = {
+      invalidateUser: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AccountsService,
         { provide: PrismaService, useValue: prisma },
         { provide: TransactionsService, useValue: transactionsService },
+        { provide: ReportCacheService, useValue: reportCache },
       ],
     }).compile();
 
@@ -259,6 +267,7 @@ describe('AccountsService', () => {
     expect(prisma.account.findMany).toHaveBeenCalledWith({
       where: { userId },
       orderBy: { createdAt: 'asc' },
+      take: 250,
     });
     expect(result).toEqual([
       expect.objectContaining({ id: 'account-1', balance: 25 }),

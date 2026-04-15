@@ -19,7 +19,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { CalendarEvent, CalendarModule } from 'angular-calendar';
+import { CalendarEvent, CalendarModule, DateAdapter } from 'angular-calendar';
+import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import {
   addDays,
   addMonths,
@@ -68,6 +69,12 @@ type ScheduledTransactionCalendarEvent = CalendarEvent<{
   selector: 'app-scheduled-transactions-calendar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    {
+      provide: DateAdapter,
+      useFactory: adapterFactory,
+    },
+  ],
   imports: [
     CommonModule,
     AppCurrencyPipe,

@@ -106,6 +106,7 @@ export class ScheduledTransactionsService {
         },
         include: scheduledTransactionInclude,
         orderBy: { nextDueDate: 'asc' },
+        take: 250,
       });
 
     return scheduledTransactions.map((scheduledTransaction) =>

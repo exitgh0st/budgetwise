@@ -30,6 +30,7 @@ export class CategoriesService {
         OR: [{ userId }, { isSystem: true }],
       },
       orderBy: { name: 'asc' },
+      take: 250,
     });
   }
 

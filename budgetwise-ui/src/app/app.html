@@ -85,7 +85,13 @@
         aria-label="Toggle dark mode">
         <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>
-      <app-notification-bell></app-notification-bell>
+      @defer (on idle) {
+        <app-notification-bell></app-notification-bell>
+      } @placeholder {
+        <button mat-icon-button disabled aria-label="Notifications loading">
+          <mat-icon>notifications</mat-icon>
+        </button>
+      }
       <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
         <mat-icon>person</mat-icon>
       </button>
@@ -107,7 +113,9 @@
 </mat-sidenav-container>
 
 <!-- Chat panel — outside the sidenav container, always available -->
-<app-chat-panel></app-chat-panel>
+@defer (on idle) {
+  <app-chat-panel></app-chat-panel>
+}
 } @else {
 <!-- Unauthenticated: full-page router outlet for login/register pages -->
 <router-outlet></router-outlet>

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Account, TransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReportCacheService } from '../reports/report-cache.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -22,6 +23,7 @@ export class AccountsService {
   constructor(
     private prisma: PrismaService,
     private transactionsService: TransactionsService,
+    private reportCache: ReportCacheService,
   ) {}
 
   async create(
@@ -81,6 +83,7 @@ export class AccountsService {
 
       return updatedAccount;
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(account);
   }
@@ -89,6 +92,7 @@ export class AccountsService {
     const accounts = await this.prisma.account.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
+      take: 250,
     });
 
     return accounts.map((account) => this.toResponse(account));
@@ -117,6 +121,7 @@ export class AccountsService {
       where: { id },
       data: dto,
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(account);
   }
@@ -125,6 +130,7 @@ export class AccountsService {
     await this.findOne(id, userId);
 
     const account = await this.prisma.account.delete({ where: { id } });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(account);
   }
@@ -176,6 +182,7 @@ export class AccountsService {
         data: { balance: newBalance },
       });
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(account);
   }

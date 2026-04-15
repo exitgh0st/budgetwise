@@ -6,6 +6,7 @@ import {
 import { Prisma, TransactionType } from '@prisma/client';
 import { parseDateBoundary, parseDateOnly } from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReportCacheService } from '../reports/report-cache.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { FilterTransactionsDto } from './dto/filter-transactions.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -55,7 +56,10 @@ export interface PaginatedTransactionsResponse {
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private reportCache: ReportCacheService,
+  ) {}
 
   async create(
     dto: CreateTransactionDto,
@@ -64,6 +68,7 @@ export class TransactionsService {
     const transaction = await this.prisma.$transaction((tx) =>
       this.createRawInTransaction(tx, dto, userId),
     );
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(transaction);
   }
@@ -74,6 +79,7 @@ export class TransactionsService {
     userId: string,
   ): Promise<TransactionResponse> {
     const transaction = await this.createRawInTransaction(tx, dto, userId);
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(transaction);
   }
@@ -84,6 +90,7 @@ export class TransactionsService {
     userId: string,
   ): Promise<TransactionResponse> {
     const transaction = await this.createRawInTransaction(tx, dto, userId);
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(transaction);
   }
@@ -94,6 +101,8 @@ export class TransactionsService {
   ): Promise<PaginatedTransactionsResponse> {
     const where: Prisma.TransactionWhereInput = { userId };
     const search = filters.search?.trim();
+    const limit = Math.min(filters.limit ?? 20, 100);
+    const offset = filters.offset ?? 0;
 
     if (filters.accountId) {
       where.OR = [
@@ -127,8 +136,8 @@ export class TransactionsService {
           where,
           include: transactionInclude,
           orderBy: { date: 'desc' },
-          take: filters.limit,
-          skip: filters.offset,
+          take: limit,
+          skip: offset,
         }),
         this.prisma.transaction.count({ where }),
       ]);
@@ -136,8 +145,8 @@ export class TransactionsService {
     return {
       data: data.map((transaction) => this.toResponse(transaction)),
       total,
-      limit: filters.limit,
-      offset: filters.offset,
+      limit,
+      offset,
     };
   }
 
@@ -228,6 +237,7 @@ export class TransactionsService {
 
       return updated;
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(transaction);
   }
@@ -248,6 +258,7 @@ export class TransactionsService {
         include: transactionInclude,
       });
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(transaction);
   }

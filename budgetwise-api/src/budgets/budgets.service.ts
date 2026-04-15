@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReportCacheService } from '../reports/report-cache.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { CopyBudgetsDto } from './dto/copy-budgets.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
@@ -19,7 +20,10 @@ export type BudgetResponse = Omit<BudgetWithCategory, 'amount'> & {
 
 @Injectable()
 export class BudgetsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private reportCache: ReportCacheService,
+  ) {}
 
   async create(dto: CreateBudgetDto, userId: string): Promise<BudgetResponse> {
     const category = await this.prisma.category.findFirst({
@@ -56,6 +60,7 @@ export class BudgetsService {
       },
       include: budgetInclude,
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(budget);
   }
@@ -74,6 +79,7 @@ export class BudgetsService {
       where,
       include: budgetInclude,
       orderBy: { category: { name: 'asc' } },
+      take: 250,
     });
 
     return budgets.map((budget) => this.toResponse(budget));
@@ -107,6 +113,7 @@ export class BudgetsService {
       },
       include: budgetInclude,
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(budget);
   }
@@ -118,6 +125,7 @@ export class BudgetsService {
       where: { id },
       include: budgetInclude,
     });
+    await this.reportCache.invalidateUser(userId);
 
     return this.toResponse(budget);
   }
@@ -126,7 +134,7 @@ export class BudgetsService {
     dto: CopyBudgetsDto,
     userId: string,
   ): Promise<{ copied: number; skipped: number; sourceTotal: number }> {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const selectedCategoryIds = dto.categoryIds?.length
         ? new Set(dto.categoryIds)
         : null;
@@ -168,6 +176,12 @@ export class BudgetsService {
         sourceTotal: sourceBudgets.length,
       };
     });
+
+    if (result.copied > 0) {
+      await this.reportCache.invalidateUser(userId);
+    }
+
+    return result;
   }
 
   private toResponse(budget: BudgetWithCategory): BudgetResponse {
