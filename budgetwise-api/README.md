@@ -1,98 +1,157 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# BudgetWise API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS backend for BudgetWise, a personal budgeting app with JWT-protected budgeting workflows, scheduled transaction automation, reporting, notifications, user settings, and an AI-powered financial advisor.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
 
-## Description
+- NestJS 11
+- Prisma ORM + PostgreSQL
+- Supabase JWT auth via JWKS
+- DeepSeek V3 through the `openai` SDK
+- Resend for reminder emails
+- `nestjs-pino` request logging
+- Swagger in non-production environments
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## What This Service Provides
 
-## Project setup
+- `/api`-prefixed REST API for accounts, categories, transactions, budgets, reports, goals, notifications, scheduled transactions, chat, user settings, and health checks
+- Global Supabase JWT auth with verified-email enforcement
+- User-scoped multi-tenant data access with 404 responses for ownership violations
+- Decimal-to-number normalization at the API boundary
+- Scheduled transaction generation, reminders, and optional email delivery
+- In-memory per-user report caching with invalidation on financial writes
+- AI chat orchestration backed by 40 tools and destructive-action confirmation
+- Structured request logging, Helmet, compression, throttling, and optional Sentry
 
-```bash
-$ npm install
+## Main Modules
+
+- `auth` - JWT validation, onboarding, verified-email enforcement, internal admin guard
+- `accounts` - account CRUD and balance adjustments
+- `categories` - user, template, and system categories
+- `transactions` - income, expense, and transfer flows with search and pagination
+- `scheduled-transactions` - recurring and one-time future templates plus due processing
+- `notifications` - in-app reminders
+- `budgets` - monthly budgets with spillover and copy-from-last-month
+- `reports` - summary, spending by category, budget status, monthly trend
+- `goals` - savings and debt-payoff goals with contribution flows
+- `chat` - AI advisor chat sessions, history, and tool execution
+- `user` - preferences, usage limits, export, unsubscribe, and account deletion
+- `email` - Resend-backed reminder delivery
+- `health` - public database connectivity probe
+
+## Requirements
+
+- Node.js 20+
+- npm 10+
+- PostgreSQL
+- Supabase project for auth
+
+Optional integrations:
+
+- DeepSeek API key for chat
+- Resend API key for reminder emails
+- Sentry DSN for backend error reporting
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in the values you need.
+
+```env
+PORT=3000
+ORIGIN=http://localhost:4200
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/budgetwise
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+DEEPSEEK_API_KEY=your-deepseek-api-key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_GUARDRAIL_MODEL=deepseek-chat
+INTERNAL_ADMIN_SECRET=replace-with-a-long-random-secret
+RESEND_API_KEY=re_xxxxxxxxxxxx
+EMAIL_FROM=BudgetWise <reminders@budgetwise.app>
+EMAIL_UNSUBSCRIBE_SECRET=replace-with-a-long-random-secret
+LOG_LEVEL=debug
+SENTRY_DSN=
 ```
 
-## Compile and run the project
+### Notes
+
+- `ORIGIN` controls CORS for the frontend.
+- All routes are prefixed with `/api`.
+- Swagger is available at `/api/docs` when `NODE_ENV` is not `production`.
+- `INTERNAL_ADMIN_SECRET` is required for `POST /api/scheduled-transactions/process-due`.
+- If DeepSeek or Resend credentials are missing, the related features will not work end-to-end.
+
+## Local Setup
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
+copy .env.example .env
 ```
 
-## Run tests
+Update `.env`, then prepare the database:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx prisma generate
+npm run migrate:deploy
+npx prisma db seed
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Start the API in watch mode:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The service listens on `http://localhost:3000` by default.
 
-## Resources
+## Scripts
 
-Check out a few resources that may come in handy when working with NestJS:
+- `npm run start` - start the API
+- `npm run start:dev` - start in watch mode
+- `npm run start:debug` - start with the Nest debugger
+- `npm run start:prod` - run the compiled app from `dist/`
+- `npm run build` - compile the project
+- `npm run test` - run unit tests
+- `npm run test:watch` - run unit tests in watch mode
+- `npm run test:cov` - generate coverage
+- `npm run test:e2e` - run end-to-end tests
+- `npm run lint` - run ESLint with `--fix`
+- `npm run format` - run Prettier on source and test files
+- `npm run migrate:create` - create a Prisma migration
+- `npm run migrate:deploy` - apply committed Prisma migrations
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Auth and API Behavior
 
-## Support
+- Most endpoints require a Supabase Bearer token.
+- Public routes include `GET /api/health`, `POST /api/user/preferences/unsubscribe`, and the internal-secret-gated `POST /api/scheduled-transactions/process-due`.
+- `POST /api/auth/onboard` initializes starter data for a newly authenticated user.
+- Unverified users are rejected with `401` and code `EMAIL_NOT_VERIFIED`.
+- Validation uses Nest `ValidationPipe` with `whitelist`, `forbidNonWhitelisted`, and `transform`.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Core Endpoints
 
-## Stay in touch
+- Auth: `POST /api/auth/onboard`
+- Accounts: `GET/POST/PATCH/DELETE /api/accounts`, `POST /api/accounts/:id/adjust-balance`
+- Categories: `GET/POST/PATCH/DELETE /api/categories`
+- Transactions: `GET/POST/PATCH/DELETE /api/transactions`
+- Scheduled transactions: `GET/POST/PATCH/DELETE /api/scheduled-transactions`, `POST /api/scheduled-transactions/:id/generate`
+- Budgets: `GET/POST/PATCH/DELETE /api/budgets`, `POST /api/budgets/copy`
+- Reports: `GET /api/reports/summary`, `spending-by-category`, `budget-status`, `monthly-trend`
+- Goals: `GET/POST/PATCH/DELETE /api/goals`, `POST /api/goals/:id/contribute`
+- Chat: `POST /api/chat`, history/session management under `/api/chat/*`
+- User: `/api/user/preferences`, `/api/user/usage`, `/api/user/export`, `DELETE /api/user`
+- Notifications: `/api/notifications*`
+- Health: `GET /api/health`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Verification Notes
 
-## License
+- `npm run build` should pass for normal backend changes.
+- `npm run lint` currently has known pre-existing repo-wide ESLint debt tracked in `PROJECT-STATUS.md`.
+- Backend service test coverage was added in Ticket 54, and `npm run test` remains the main regression check.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Related Project Docs
+
+- Project state: `../PROJECT-STATUS.md`
+- Wiki index: `../wiki/index.md`
+- Prisma schema: `./prisma/schema.prisma`
