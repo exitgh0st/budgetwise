@@ -17,7 +17,7 @@ type SupabaseJwtPayload = {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(config: ConfigService) {
-    const supabaseUrl = config.get<string>('SUPABASE_URL') as string;
+    const supabaseUrl = config.getOrThrow<string>('SUPABASE_URL');
     const jwksUri = `${supabaseUrl}/auth/v1/.well-known/jwks.json`;
 
     super({

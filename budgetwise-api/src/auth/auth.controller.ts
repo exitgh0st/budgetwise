@@ -8,41 +8,43 @@ import { AccountType } from '@prisma/client';
 export class AuthController {
   constructor(private prisma: PrismaService) {}
 
-  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('onboard')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async onboard(@CurrentUser() user: { userId: string }) {
     const existingAccounts = await this.prisma.account.count({
       where: { userId: user.userId },
     });
+
     if (existingAccounts > 0) {
       return { status: 'already_onboarded' };
     }
 
-    // Clone template categories (userId=null, non-system) for this user
     const templateCategories = await this.prisma.category.findMany({
       where: { userId: null, isSystem: false },
     });
-    for (const cat of templateCategories) {
-      await this.prisma.category.create({
-        data: {
-          name: cat.name,
-          icon: cat.icon,
-          userId: user.userId,
-        },
-      });
-    }
 
-    // Create starter accounts
     const starterAccounts = [
       { name: 'Cash', type: AccountType.CASH },
       { name: 'Bank Account', type: AccountType.BANK },
       { name: 'E-Wallet', type: AccountType.EWALLET },
     ];
-    for (const acc of starterAccounts) {
-      await this.prisma.account.create({
-        data: { ...acc, userId: user.userId },
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.category.createMany({
+        data: templateCategories.map((cat) => ({
+          name: cat.name,
+          icon: cat.icon,
+          userId: user.userId,
+        })),
       });
-    }
+
+      await tx.account.createMany({
+        data: starterAccounts.map((acc) => ({
+          ...acc,
+          userId: user.userId,
+        })),
+      });
+    });
 
     return { status: 'onboarded' };
   }
