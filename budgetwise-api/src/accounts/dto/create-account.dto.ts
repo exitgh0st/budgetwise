@@ -5,11 +5,11 @@ import { AccountType } from '@prisma/client';
 export class CreateAccountDto {
   @ApiProperty({ example: 'BDO Savings' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ enum: AccountType, example: AccountType.BANK })
   @IsEnum(AccountType)
-  type: AccountType;
+  type!: AccountType;
 
   @ApiPropertyOptional({
     example: 0,
