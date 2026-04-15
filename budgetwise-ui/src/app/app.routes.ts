@@ -10,7 +10,9 @@ export const routes: Routes = [
     title: 'Login | BudgetWise',
     canActivate: [guestGuard],
     loadComponent: () =>
-      import('./pages/auth/login/login.component').then((m) => m.LoginComponent),
+      import('./pages/auth/login/login.component').then(
+        (m) => m.LoginComponent,
+      ),
   },
   {
     path: 'register',
@@ -77,6 +79,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/help/help.component').then((m) => m.HelpComponent),
   },
+  {
+    path: 'email-preferences/unsubscribe',
+    title: 'Email Preferences | BudgetWise',
+    loadComponent: () =>
+      import('./pages/email-preferences/email-unsubscribe.component').then(
+        (m) => m.EmailUnsubscribeComponent,
+      ),
+  },
 
   {
     path: '',
@@ -102,7 +112,9 @@ export const routes: Routes = [
     title: 'Accounts | BudgetWise',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/accounts/accounts.component').then((m) => m.AccountsComponent),
+      import('./pages/accounts/accounts.component').then(
+        (m) => m.AccountsComponent,
+      ),
   },
   {
     path: 'scheduled-transactions',
@@ -135,14 +147,18 @@ export const routes: Routes = [
     title: 'Budgets | BudgetWise',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/budgets/budgets.component').then((m) => m.BudgetsComponent),
+      import('./pages/budgets/budgets.component').then(
+        (m) => m.BudgetsComponent,
+      ),
   },
   {
     path: 'reports',
     title: 'Reports | BudgetWise',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
+      import('./pages/reports/reports.component').then(
+        (m) => m.ReportsComponent,
+      ),
   },
   {
     path: 'categories',

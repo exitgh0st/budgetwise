@@ -114,12 +114,12 @@ export class NotificationsService {
       | 'type'
       | 'notifyDaysBefore'
     >,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (
       !scheduledTransaction.userId ||
       scheduledTransaction.notifyDaysBefore === null
     ) {
-      return;
+      return false;
     }
 
     const startOfToday = startOfLocalDay(new Date());
@@ -134,7 +134,7 @@ export class NotificationsService {
     });
 
     if (existing) {
-      return;
+      return false;
     }
 
     const daysUntilDue = Math.max(
@@ -161,5 +161,7 @@ export class NotificationsService {
         body: `Due in ${daysUntilDue} day(s) - ${formatCurrencyAmount(Number(scheduledTransaction.amount), currencyCode)}`,
       },
     });
+
+    return true;
   }
 }

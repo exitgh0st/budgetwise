@@ -23,13 +23,13 @@
 
 .section-card {
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--mat-sys-surface-container-low) 78%, transparent),
-      var(--mat-sys-surface)
-    );
+  border: 1px solid
+    color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mat-sys-surface-container-low) 78%, transparent),
+    var(--mat-sys-surface)
+  );
 }
 
 .section-avatar {
@@ -71,6 +71,20 @@
   margin-bottom: 12px;
 }
 
+.preferences-divider {
+  height: 1px;
+  margin: 20px 0;
+  background: color-mix(
+    in srgb,
+    var(--mat-sys-outline-variant) 72%,
+    transparent
+  );
+}
+
+.notification-toggle {
+  margin-bottom: 12px;
+}
+
 .section-actions {
   display: flex;
   justify-content: flex-end;
@@ -79,12 +93,11 @@
 
 .danger-card {
   border-color: color-mix(in srgb, #f44336 28%, var(--mat-sys-outline-variant));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #f44336 10%, var(--mat-sys-surface-container-low)),
-      var(--mat-sys-surface)
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f44336 10%, var(--mat-sys-surface-container-low)),
+    var(--mat-sys-surface)
+  );
 }
 
 .danger-avatar {
@@ -99,7 +112,8 @@
   padding: 48px 24px;
   text-align: center;
   border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
   background: var(--mat-sys-surface-container-low);
 }
 

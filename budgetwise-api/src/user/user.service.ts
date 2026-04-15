@@ -6,14 +6,31 @@ import {
   DEFAULT_CURRENCY_CODE,
   normalizeCurrencyCode,
 } from './currency.constants';
-import { UpdateUserPreferencesDto } from './dto/update-user-preferences.dto';
+import {
+  EmailNotificationMode,
+  UpdateUserPreferencesDto,
+} from './dto/update-user-preferences.dto';
+
+const DEFAULT_EMAIL_NOTIFICATIONS_ENABLED = true;
+const DEFAULT_EMAIL_NOTIFICATION_MODE: EmailNotificationMode = 'instant';
+const DEFAULT_EMAIL_DIGEST_HOUR = 8;
+
+type UserPreferencesResponse = {
+  currency: ReturnType<typeof normalizeCurrencyCode>;
+  emailNotifications: boolean;
+  emailNotificationMode: EmailNotificationMode;
+  emailDigestHour: number;
+};
+
+type EmailNotificationContext = UserPreferencesResponse & {
+  email: string | null;
+  emailDigestLastSentOn: string | null;
+};
 
 type ExportDataResponse = {
   exportedAt: string;
   userId: string;
-  preferences: {
-    currency: string;
-  };
+  preferences: UserPreferencesResponse;
   accounts: unknown[];
   categories: unknown[];
   transactions: unknown[];
@@ -36,15 +53,12 @@ export class UserService {
   async getPreferences(
     userId: string,
     fallbackCurrency: string = DEFAULT_CURRENCY_CODE,
-  ): Promise<{ currency: string }> {
+  ): Promise<UserPreferencesResponse> {
     const authUser = await this.fetchSupabaseAuthUser(userId);
-
-    return {
-      currency: normalizeCurrencyCode(
-        authUser.user_metadata?.currency,
-        normalizeCurrencyCode(fallbackCurrency),
-      ),
-    };
+    return this.buildPreferencesResponse(
+      authUser.user_metadata,
+      fallbackCurrency,
+    );
   }
 
   async getCurrencyCode(
@@ -58,17 +72,80 @@ export class UserService {
   async updatePreferences(
     userId: string,
     dto: UpdateUserPreferencesDto,
-  ): Promise<{ currency: string }> {
+  ): Promise<UserPreferencesResponse> {
+    const authUser = await this.fetchSupabaseAuthUser(userId);
+    const currentPreferences = this.buildPreferencesResponse(
+      authUser.user_metadata,
+      DEFAULT_CURRENCY_CODE,
+    );
+    const nextPreferences: UserPreferencesResponse = {
+      currency: normalizeCurrencyCode(
+        dto.currency,
+        currentPreferences.currency,
+      ),
+      emailNotifications:
+        dto.emailNotifications ?? currentPreferences.emailNotifications,
+      emailNotificationMode:
+        dto.emailNotificationMode ?? currentPreferences.emailNotificationMode,
+      emailDigestHour:
+        dto.emailDigestHour ?? currentPreferences.emailDigestHour,
+    };
+
+    await this.updateSupabaseAuthUser(userId, {
+      ...(authUser.user_metadata ?? {}),
+      currency: nextPreferences.currency,
+      emailNotifications: nextPreferences.emailNotifications,
+      emailNotificationMode: nextPreferences.emailNotificationMode,
+      emailDigestHour: nextPreferences.emailDigestHour,
+    });
+
+    return nextPreferences;
+  }
+
+  async getEmailNotificationContext(
+    userId: string,
+    fallbackCurrency: string = DEFAULT_CURRENCY_CODE,
+  ): Promise<EmailNotificationContext> {
+    const authUser = await this.fetchSupabaseAuthUser(userId);
+    const preferences = this.buildPreferencesResponse(
+      authUser.user_metadata,
+      fallbackCurrency,
+    );
+
+    return {
+      ...preferences,
+      email: this.normalizeEmailAddress(authUser.email),
+      emailDigestLastSentOn: this.normalizeDigestDate(
+        authUser.user_metadata?.emailDigestLastSentOn,
+      ),
+    };
+  }
+
+  async markDailyDigestSent(userId: string, date: string): Promise<void> {
     const authUser = await this.fetchSupabaseAuthUser(userId);
 
     await this.updateSupabaseAuthUser(userId, {
       ...(authUser.user_metadata ?? {}),
-      currency: normalizeCurrencyCode(dto.currency),
+      emailDigestLastSentOn: date,
+    });
+  }
+
+  async disableEmailNotifications(
+    userId: string,
+  ): Promise<UserPreferencesResponse> {
+    const authUser = await this.fetchSupabaseAuthUser(userId);
+    const nextPreferences = this.buildPreferencesResponse(
+      authUser.user_metadata,
+      DEFAULT_CURRENCY_CODE,
+    );
+    nextPreferences.emailNotifications = false;
+
+    await this.updateSupabaseAuthUser(userId, {
+      ...(authUser.user_metadata ?? {}),
+      emailNotifications: false,
     });
 
-    return {
-      currency: normalizeCurrencyCode(dto.currency),
-    };
+    return nextPreferences;
   }
 
   async exportData(
@@ -238,6 +315,7 @@ export class UserService {
   }
 
   private async fetchSupabaseAuthUser(userId: string): Promise<{
+    email?: string;
     user_metadata?: Record<string, unknown>;
   }> {
     const { supabaseUrl, serviceRoleKey } = this.getSupabaseAdminConfig();
@@ -261,10 +339,66 @@ export class UserService {
     }
 
     const payload = (await response.json()) as {
-      user?: { user_metadata?: Record<string, unknown> };
+      user?: {
+        email?: string;
+        user_metadata?: Record<string, unknown>;
+      };
     };
 
     return payload.user ?? {};
+  }
+
+  private buildPreferencesResponse(
+    userMetadata: Record<string, unknown> | undefined,
+    fallbackCurrency: string,
+  ): UserPreferencesResponse {
+    return {
+      currency: normalizeCurrencyCode(
+        userMetadata?.currency,
+        normalizeCurrencyCode(fallbackCurrency),
+      ),
+      emailNotifications: this.normalizeBoolean(
+        userMetadata?.emailNotifications,
+        DEFAULT_EMAIL_NOTIFICATIONS_ENABLED,
+      ),
+      emailNotificationMode: this.normalizeNotificationMode(
+        userMetadata?.emailNotificationMode,
+      ),
+      emailDigestHour: this.normalizeDigestHour(userMetadata?.emailDigestHour),
+    };
+  }
+
+  private normalizeBoolean(value: unknown, fallback: boolean): boolean {
+    return typeof value === 'boolean' ? value : fallback;
+  }
+
+  private normalizeNotificationMode(value: unknown): EmailNotificationMode {
+    return value === 'daily_digest'
+      ? 'daily_digest'
+      : DEFAULT_EMAIL_NOTIFICATION_MODE;
+  }
+
+  private normalizeDigestHour(value: unknown): number {
+    if (
+      typeof value === 'number' &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value <= 23
+    ) {
+      return value;
+    }
+
+    return DEFAULT_EMAIL_DIGEST_HOUR;
+  }
+
+  private normalizeDigestDate(value: unknown): string | null {
+    return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? value
+      : null;
+  }
+
+  private normalizeEmailAddress(value: unknown): string | null {
+    return typeof value === 'string' && value.trim().length > 0 ? value : null;
   }
 
   private async updateSupabaseAuthUser(

@@ -13,8 +13,22 @@ export class UserService {
     return this.http.get<UserPreferences>(`${this.url}/preferences`);
   }
 
-  updatePreferences(preferences: UserPreferences): Observable<UserPreferences> {
-    return this.http.patch<UserPreferences>(`${this.url}/preferences`, preferences);
+  updatePreferences(
+    preferences: Partial<UserPreferences>,
+  ): Observable<UserPreferences> {
+    return this.http.patch<UserPreferences>(
+      `${this.url}/preferences`,
+      preferences,
+    );
+  }
+
+  unsubscribeEmail(token: string): Observable<UserPreferences> {
+    return this.http.post<UserPreferences>(
+      `${this.url}/preferences/unsubscribe`,
+      {
+        token,
+      },
+    );
   }
 
   exportData(): Observable<HttpResponse<Blob>> {

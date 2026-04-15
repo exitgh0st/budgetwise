@@ -64,6 +64,7 @@
 | 58 — Onboarding Tutorial & Help Page | Added a first-run dashboard onboarding overlay with guided shell highlights plus a public `/help` FAQ page linked from the authenticated sidenav. |
 | 59 — Global Transaction Search | Added debounced description search to `GET /api/transactions` plus transactions-page search and CSV export support for matching results. |
 | 60 — Multi-Currency Support | Added persisted user currency preferences via Supabase metadata, dynamic money formatting across frontend pages/forms/charts/CSV, and currency-aware chat + notification context without exchange-rate conversion. |
+| 61 — Email Notifications | Added Resend-backed scheduled-transaction reminder emails, Supabase metadata preferences for instant vs daily-digest delivery, and signed unsubscribe handling with a public frontend unsubscribe route. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 
 ---
@@ -110,11 +111,12 @@ Manual changes outside the numbered ticket flow:
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **User data portability:** `GET /api/user/export` assembles a JSON attachment with owned records across accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat history, normalizing Decimal fields to numbers
 - **User preferences:** `GET/PATCH /api/user/preferences` persists the preferred currency in Supabase `user_metadata`, defaults new users to `PHP`, and includes the preference in export payloads
+- **Email reminders:** Hourly scheduled-transaction reminders can send Resend emails in instant or daily-digest mode, log delivery failures without breaking cron, and honor signed unsubscribe links
 - **Account deletion:** `DELETE /api/user` is throttled, deletes owned data in Prisma transaction order, then removes the Supabase auth user with the server-side service role key
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
 - **Transactions:** Support income, expense, and transfer flows with atomic balance sync, date-range filters, and case-insensitive description search
 - **Scheduled transactions:** Full CRUD with owned account/category validation + atomic `POST :id/generate` + atomic hourly cron generation + `/process-due` manual trigger
-- **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss
+- **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss, plus optional email delivery for scheduled-transaction reminders
 - **Reports:** Exclude system categories and transfers; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
 - **Chat:** DeepSeek V3 via OpenAI SDK, 40 tools total, guardrails, destructive confirmation, history pagination, goal management, read-only notifications, and user-currency-aware response formatting
 - **Seed/onboarding:** Template categories cloned per user; starter accounts created by `POST /api/auth/onboard`
@@ -131,7 +133,8 @@ Manual changes outside the numbered ticket flow:
 - **Observability:** Optional `@sentry/angular` bootstrap + `ErrorHandler` integration, tracked safe development env template, and hidden production source maps with conditional `sentry-cli` upload support
 - **Transactions page:** Filtered list, debounced description search, searchable filters/dialog selects, transfer-aware dialog, and client-side CSV export that respects active search/filter state and includes the selected currency code in the amount header / filename
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow
-- **Settings page:** Responsive profile/security/data/danger-zone sections with currency selection, Supabase email/password dialogs, export download flow, and typed-confirmation account deletion
+- **Settings page:** Responsive profile/security/data/danger-zone sections with currency selection, email reminder toggles and digest timing, Supabase email/password dialogs, export download flow, and typed-confirmation account deletion
+- **Public unsubscribe flow:** `/email-preferences/unsubscribe` disables reminder emails from signed email links without requiring login
 - **Notifications UI:** Toolbar bell with unread polling, recent menu, mark-read/mark-all-read, deep-link to `/scheduled-transactions`
 - **Budgets UX:** Spillover toggle in dialog, spillover chip, base/carry/effective breakdowns, and copy-from-last-month actions with preview/selective-copy flow
 - **Goals UX:** Searchable account/category selects in goal and contribution dialogs, date-only target-date handling
@@ -150,8 +153,8 @@ Manual changes outside the numbered ticket flow:
 
 ## Upcoming Tickets
 
-No active numbered tickets are currently queued in `PROJECT-STATUS.md`.
-Upcoming or planned transactions are handled through scheduled transactions and upcoming views, not through a settlement flag on regular transactions.
+- `62-performance-optimization.md`
+- Upcoming or planned transactions are handled through scheduled transactions and upcoming views, not through a settlement flag on regular transactions.
 
 ---
 

@@ -10,6 +10,11 @@ export type SupportedCurrencyCode =
   | 'CAD'
   | 'INR';
 
+export type EmailNotificationMode = 'instant' | 'daily_digest';
+
 export interface UserPreferences {
   currency: SupportedCurrencyCode;
+  emailNotifications: boolean;
+  emailNotificationMode: EmailNotificationMode;
+  emailDigestHour: number;
 }

@@ -1,0 +1,23 @@
+<section class="unsubscribe-page">
+  <mat-card class="unsubscribe-card">
+    @if (status() === "loading") {
+      <mat-spinner diameter="40"></mat-spinner>
+      <h1>Updating your email preferences</h1>
+      <p>{{ message() }}</p>
+    } @else {
+      <mat-icon [class.is-success]="status() === 'success'">
+        {{ status() === "success" ? "mark_email_read" : "error" }}
+      </mat-icon>
+      <h1>
+        {{
+          status() === "success" ? "You are unsubscribed" : "We hit a problem"
+        }}
+      </h1>
+      <p>{{ message() }}</p>
+      <div class="actions">
+        <a mat-flat-button color="primary" routerLink="/"> Open BudgetWise </a>
+        <a mat-stroked-button routerLink="/login"> Sign In </a>
+      </div>
+    }
+  </mat-card>
+</section>

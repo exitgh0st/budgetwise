@@ -17,6 +17,7 @@ import { BudgetsModule } from './budgets/budgets.module';
 import { ReportsModule } from './reports/reports.module';
 import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { EmailModule } from './email/email.module';
 import { ScheduledTransactionsModule } from './scheduled-transactions/scheduled-transactions.module';
 import { GoalsModule } from './goals/goals.module';
 import { UserModule } from './user/user.module';
@@ -73,6 +74,7 @@ const defaultLogLevel = isProduction ? 'info' : 'debug';
     ReportsModule,
     ChatModule,
     NotificationsModule,
+    EmailModule,
     ScheduledTransactionsModule,
     GoalsModule,
     UserModule,

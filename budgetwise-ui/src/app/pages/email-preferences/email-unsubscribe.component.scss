@@ -1,0 +1,52 @@
+.unsubscribe-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(
+      circle at top,
+      color-mix(in srgb, var(--mat-sys-primary) 10%, transparent),
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      var(--mat-sys-surface-container-low),
+      var(--mat-sys-surface)
+    );
+}
+
+.unsubscribe-card {
+  width: min(100%, 520px);
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  border-radius: 28px;
+  border: 1px solid
+    color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+}
+
+.unsubscribe-card h1,
+.unsubscribe-card p {
+  margin: 0;
+}
+
+.unsubscribe-card mat-icon {
+  width: 48px;
+  height: 48px;
+  font-size: 48px;
+  color: #f44336;
+}
+
+.unsubscribe-card mat-icon.is-success {
+  color: #4caf50;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}

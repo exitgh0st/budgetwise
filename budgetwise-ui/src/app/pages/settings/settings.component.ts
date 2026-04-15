@@ -1,5 +1,10 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,16 +13,35 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import {
+  MatSlideToggleChange,
+  MatSlideToggleModule,
+} from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { SupportedCurrencyCode } from '../../core/models/user-preferences.model';
+import {
+  EmailNotificationMode,
+  SupportedCurrencyCode,
+  UserPreferences,
+} from '../../core/models/user-preferences.model';
 import { AuthService } from '../../core/services/auth.service';
 import { CurrencyService } from '../../core/services/currency.service';
 import { UserService } from '../../core/services/user.service';
 import { ChangeEmailDialogComponent } from './change-email-dialog.component';
 import { ChangePasswordDialogComponent } from './change-password-dialog.component';
 import { DeleteAccountDialogComponent } from './delete-account-dialog.component';
+
+const DIGEST_HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => ({
+  value: hour,
+  label: formatDigestHour(hour),
+}));
+
+function formatDigestHour(hour: number): string {
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const normalizedHour = hour % 12 || 12;
+  return `${normalizedHour}:00 ${suffix}`;
+}
 
 @Component({
   selector: 'app-settings',
@@ -30,6 +54,7 @@ import { DeleteAccountDialogComponent } from './delete-account-dialog.component'
     MatIconModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -49,13 +74,23 @@ export class SettingsComponent {
   readonly updatingEmail = signal(false);
   readonly updatingPassword = signal(false);
   readonly updatingCurrency = signal(false);
+  readonly loadingPreferences = signal(false);
+  readonly updatingNotifications = signal(false);
   readonly exporting = signal(false);
   readonly deleting = signal(false);
+  readonly emailNotifications = signal(true);
+  readonly emailNotificationMode = signal<EmailNotificationMode>('instant');
+  readonly emailDigestHour = signal(8);
+  readonly digestHourOptions = DIGEST_HOUR_OPTIONS;
 
   constructor() {
-    this.breakpointObserver.observe([Breakpoints.TabletPortrait]).subscribe((result) => {
-      this.isCompact.set(result.matches);
-    });
+    this.breakpointObserver
+      .observe([Breakpoints.TabletPortrait])
+      .subscribe((result) => {
+        this.isCompact.set(result.matches);
+      });
+
+    void this.loadPreferences();
   }
 
   openChangeEmailDialog(): void {
@@ -81,15 +116,15 @@ export class SettingsComponent {
       autoFocus: 'dialog',
     });
 
-    dialogRef.afterClosed().subscribe(
-      (result: { newPassword: string } | undefined) => {
+    dialogRef
+      .afterClosed()
+      .subscribe((result: { newPassword: string } | undefined) => {
         if (!result) {
           return;
         }
 
         void this.changePassword(result.newPassword);
-      },
-    );
+      });
   }
 
   openDeleteAccountDialog(): void {
@@ -150,6 +185,7 @@ export class SettingsComponent {
         }),
       );
 
+      this.applyPreferences(preferences);
       this.currencyService.setCurrency(preferences.currency);
       await this.auth.refreshSession();
       this.snackBar.open('Currency preference updated.', 'Dismiss', {
@@ -157,13 +193,42 @@ export class SettingsComponent {
       });
     } catch (error: any) {
       this.snackBar.open(
-        error?.error?.message || error?.message || 'Failed to update your currency',
+        error?.error?.message ||
+          error?.message ||
+          'Failed to update your currency',
         'Dismiss',
         { duration: 4000 },
       );
     } finally {
       this.updatingCurrency.set(false);
     }
+  }
+
+  async toggleEmailNotifications(event: MatSlideToggleChange): Promise<void> {
+    await this.updateNotificationPreferences(
+      { emailNotifications: event.checked },
+      event.checked
+        ? 'Email reminders turned on.'
+        : 'Email reminders turned off.',
+    );
+  }
+
+  async updateEmailNotificationMode(
+    mode: EmailNotificationMode,
+  ): Promise<void> {
+    await this.updateNotificationPreferences(
+      { emailNotificationMode: mode },
+      mode === 'daily_digest'
+        ? 'Daily email digest enabled.'
+        : 'Instant reminder emails enabled.',
+    );
+  }
+
+  async updateEmailDigestHour(hour: number): Promise<void> {
+    await this.updateNotificationPreferences(
+      { emailDigestHour: hour },
+      'Daily digest time updated.',
+    );
   }
 
   private async changeEmail(email: string): Promise<void> {
@@ -225,7 +290,9 @@ export class SettingsComponent {
       );
     } catch (error: any) {
       this.snackBar.open(
-        error?.error?.message || error?.message || 'Failed to delete your account',
+        error?.error?.message ||
+          error?.message ||
+          'Failed to delete your account',
         'Dismiss',
         { duration: 5000 },
       );
@@ -251,5 +318,60 @@ export class SettingsComponent {
     link.download = filename;
     link.click();
     URL.revokeObjectURL(objectUrl);
+  }
+
+  private async loadPreferences(): Promise<void> {
+    this.loadingPreferences.set(true);
+
+    try {
+      const preferences = await firstValueFrom(
+        this.userService.getPreferences(),
+      );
+      this.applyPreferences(preferences);
+    } catch (error: any) {
+      this.snackBar.open(
+        error?.error?.message ||
+          error?.message ||
+          'Failed to load your preferences',
+        'Dismiss',
+        { duration: 4000 },
+      );
+    } finally {
+      this.loadingPreferences.set(false);
+    }
+  }
+
+  private applyPreferences(preferences: UserPreferences): void {
+    this.emailNotifications.set(preferences.emailNotifications);
+    this.emailNotificationMode.set(preferences.emailNotificationMode);
+    this.emailDigestHour.set(preferences.emailDigestHour);
+  }
+
+  private async updateNotificationPreferences(
+    patch: Partial<UserPreferences>,
+    successMessage: string,
+  ): Promise<void> {
+    this.updatingNotifications.set(true);
+
+    try {
+      const preferences = await firstValueFrom(
+        this.userService.updatePreferences(patch),
+      );
+      this.applyPreferences(preferences);
+      this.snackBar.open(successMessage, 'Dismiss', {
+        duration: 3000,
+      });
+    } catch (error: any) {
+      this.snackBar.open(
+        error?.error?.message ||
+          error?.message ||
+          'Failed to update your email preferences',
+        'Dismiss',
+        { duration: 4000 },
+      );
+      void this.loadPreferences();
+    } finally {
+      this.updatingNotifications.set(false);
+    }
   }
 }

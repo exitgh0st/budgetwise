@@ -5,9 +5,15 @@ import {
   differenceInLocalCalendarDays,
   startOfLocalDay,
 } from '../common/date.util';
+import { EmailService } from '../email/email.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserService } from '../user/user.service';
 import { ScheduledTransactionsService } from './scheduled-transactions.service';
+
+type EmailNotificationContext = Awaited<
+  ReturnType<UserService['getEmailNotificationContext']>
+>;
 
 @Injectable()
 export class ScheduledTransactionsCronService {
@@ -17,6 +23,8 @@ export class ScheduledTransactionsCronService {
     private readonly scheduledTransactionsService: ScheduledTransactionsService,
     private readonly notificationsService: NotificationsService,
     private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+    private readonly emailService: EmailService,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -78,6 +86,18 @@ export class ScheduledTransactionsCronService {
   private async enqueueUpcomingNotifications(): Promise<void> {
     const now = new Date();
     const startOfToday = startOfLocalDay(now);
+    const emailContextCache = new Map<
+      string,
+      Promise<EmailNotificationContext>
+    >();
+    const digestBuckets = new Map<
+      string,
+      Array<{
+        transactionName: string;
+        amount: number;
+        dueDate: string;
+      }>
+    >();
     const records = await this.prisma.scheduledTransaction.findMany({
       where: {
         status: 'ACTIVE',
@@ -97,7 +117,7 @@ export class ScheduledTransactionsCronService {
         record.nextDueDate,
       );
       if (daysUntilDue <= record.notifyDaysBefore) {
-        await this.notificationsService.createForScheduledTx(
+        const created = await this.notificationsService.createForScheduledTx(
           record as Pick<
             ScheduledTransaction,
             | 'id'
@@ -109,7 +129,155 @@ export class ScheduledTransactionsCronService {
             | 'notifyDaysBefore'
           >,
         );
+
+        const emailContext = await this.getEmailContext(
+          record.userId!,
+          emailContextCache,
+        );
+        this.addDigestReminder(digestBuckets, record, emailContext);
+
+        if (created) {
+          await this.sendImmediateReminderEmail(record, emailContext);
+        }
       }
     }
+
+    await this.sendDailyDigestEmails(now, digestBuckets, emailContextCache);
+  }
+
+  private async getEmailContext(
+    userId: string,
+    cache: Map<string, Promise<EmailNotificationContext>>,
+  ): Promise<EmailNotificationContext> {
+    if (!cache.has(userId)) {
+      cache.set(userId, this.userService.getEmailNotificationContext(userId));
+    }
+
+    return cache.get(userId)!;
+  }
+
+  private async sendImmediateReminderEmail(
+    record: Pick<
+      ScheduledTransaction,
+      'id' | 'userId' | 'description' | 'amount' | 'nextDueDate'
+    >,
+    emailContext: EmailNotificationContext,
+  ): Promise<void> {
+    if (
+      !emailContext.email ||
+      !emailContext.emailNotifications ||
+      emailContext.emailNotificationMode !== 'instant'
+    ) {
+      return;
+    }
+
+    try {
+      await this.emailService.sendScheduledTransactionReminder({
+        to: emailContext.email,
+        transactionName: record.description ?? '(no description)',
+        amount: Number(record.amount),
+        dueDate: this.formatIsoDate(record.nextDueDate),
+        currency: emailContext.currency,
+        unsubscribeToken: this.emailService.createUnsubscribeToken(
+          record.userId!,
+        ),
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to send reminder email for scheduled transaction ID=${record.id} userId=${record.userId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private addDigestReminder(
+    buckets: Map<
+      string,
+      Array<{
+        transactionName: string;
+        amount: number;
+        dueDate: string;
+      }>
+    >,
+    record: Pick<
+      ScheduledTransaction,
+      'userId' | 'description' | 'amount' | 'nextDueDate'
+    >,
+    emailContext: EmailNotificationContext,
+  ): void {
+    if (
+      !record.userId ||
+      !emailContext.email ||
+      !emailContext.emailNotifications ||
+      emailContext.emailNotificationMode !== 'daily_digest'
+    ) {
+      return;
+    }
+
+    const reminders = buckets.get(record.userId) ?? [];
+    reminders.push({
+      transactionName: record.description ?? '(no description)',
+      amount: Number(record.amount),
+      dueDate: this.formatIsoDate(record.nextDueDate),
+    });
+    buckets.set(record.userId, reminders);
+  }
+
+  private async sendDailyDigestEmails(
+    now: Date,
+    buckets: Map<
+      string,
+      Array<{
+        transactionName: string;
+        amount: number;
+        dueDate: string;
+      }>
+    >,
+    cache: Map<string, Promise<EmailNotificationContext>>,
+  ): Promise<void> {
+    const today = this.formatLocalDate(now);
+    const currentHour = now.getHours();
+
+    for (const [userId, reminders] of buckets.entries()) {
+      if (reminders.length === 0) {
+        continue;
+      }
+
+      const emailContext = await this.getEmailContext(userId, cache);
+      if (
+        !emailContext.email ||
+        !emailContext.emailNotifications ||
+        emailContext.emailNotificationMode !== 'daily_digest' ||
+        emailContext.emailDigestHour !== currentHour ||
+        emailContext.emailDigestLastSentOn === today
+      ) {
+        continue;
+      }
+
+      try {
+        await this.emailService.sendDailyDigest({
+          to: emailContext.email,
+          digestDate: today,
+          currency: emailContext.currency,
+          items: reminders,
+          unsubscribeToken: this.emailService.createUnsubscribeToken(userId),
+        });
+        await this.userService.markDailyDigestSent(userId, today);
+      } catch (error) {
+        this.logger.error(
+          `Failed to send daily digest email for userId=${userId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  }
+
+  private formatIsoDate(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  private formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }

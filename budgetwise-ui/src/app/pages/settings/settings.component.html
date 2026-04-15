@@ -1,11 +1,11 @@
-<section
-  class="settings-page"
-  [class.settings-page-compact]="isCompact()"
->
+<section class="settings-page" [class.settings-page-compact]="isCompact()">
   <div class="page-header">
     <div>
       <h1>Settings</h1>
-      <p>Manage your profile, account security, data export, and permanent account deletion.</p>
+      <p>
+        Manage your profile, account security, data export, and permanent
+        account deletion.
+      </p>
     </div>
   </div>
 
@@ -29,13 +29,18 @@
           </div>
           <div>
             <mat-card-title>Profile</mat-card-title>
-            <mat-card-subtitle>Review the email tied to your BudgetWise account.</mat-card-subtitle>
+            <mat-card-subtitle
+              >Review the email tied to your BudgetWise
+              account.</mat-card-subtitle
+            >
           </div>
         </mat-card-header>
         <mat-card-content>
           <div class="detail-row">
             <span class="detail-label">Email address</span>
-            <span class="detail-value">{{ auth.currentUser()?.email || 'No email on file' }}</span>
+            <span class="detail-value">{{
+              auth.currentUser()?.email || "No email on file"
+            }}</span>
           </div>
         </mat-card-content>
         <mat-divider></mat-divider>
@@ -46,7 +51,7 @@
             (click)="openChangeEmailDialog()"
             [disabled]="updatingEmail()"
           >
-            {{ updatingEmail() ? 'Updating...' : 'Change Email' }}
+            {{ updatingEmail() ? "Updating..." : "Change Email" }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -58,12 +63,16 @@
           </div>
           <div>
             <mat-card-title>Security</mat-card-title>
-            <mat-card-subtitle>Keep your account protected with a fresh password.</mat-card-subtitle>
+            <mat-card-subtitle
+              >Keep your account protected with a fresh
+              password.</mat-card-subtitle
+            >
           </div>
         </mat-card-header>
         <mat-card-content>
           <p class="section-copy">
-            Password updates are handled through your Supabase account and apply to future sign-ins right away.
+            Password updates are handled through your Supabase account and apply
+            to future sign-ins right away.
           </p>
         </mat-card-content>
         <mat-divider></mat-divider>
@@ -74,7 +83,7 @@
             (click)="openChangePasswordDialog()"
             [disabled]="updatingPassword()"
           >
-            {{ updatingPassword() ? 'Updating...' : 'Change Password' }}
+            {{ updatingPassword() ? "Updating..." : "Change Password" }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -86,7 +95,10 @@
           </div>
           <div>
             <mat-card-title>Preferences</mat-card-title>
-            <mat-card-subtitle>Choose how BudgetWise formats every amount across the app.</mat-card-subtitle>
+            <mat-card-subtitle
+              >Choose how BudgetWise formats every amount across the
+              app.</mat-card-subtitle
+            >
           </div>
         </mat-card-header>
         <mat-card-content>
@@ -94,19 +106,75 @@
             <mat-label>Currency</mat-label>
             <mat-select
               [value]="currencyService.code()"
-              [disabled]="updatingCurrency()"
+              [disabled]="updatingCurrency() || loadingPreferences()"
               (selectionChange)="updateCurrency($event.value)"
             >
-              @for (currency of currencyService.supportedCurrencies; track currency.code) {
+              @for (
+                currency of currencyService.supportedCurrencies;
+                track currency.code
+              ) {
                 <mat-option [value]="currency.code">
-                  {{ currency.symbol }} {{ currency.name }} ({{ currency.code }})
+                  {{ currency.symbol }} {{ currency.name }} ({{
+                    currency.code
+                  }})
                 </mat-option>
               }
             </mat-select>
           </mat-form-field>
           <p class="section-copy">
-            This is display-only. BudgetWise does not convert your existing amounts.
+            This is display-only. BudgetWise does not convert your existing
+            amounts.
           </p>
+
+          <div class="preferences-divider"></div>
+
+          <mat-slide-toggle
+            class="notification-toggle"
+            [checked]="emailNotifications()"
+            [disabled]="loadingPreferences() || updatingNotifications()"
+            (change)="toggleEmailNotifications($event)"
+          >
+            Email reminders for upcoming scheduled transactions
+          </mat-slide-toggle>
+          <p class="section-copy">
+            Turn this off to keep reminders in-app only, or switch to a
+            once-daily digest.
+          </p>
+
+          <mat-form-field appearance="outline" class="settings-field">
+            <mat-label>Email delivery</mat-label>
+            <mat-select
+              [value]="emailNotificationMode()"
+              [disabled]="
+                !emailNotifications() ||
+                loadingPreferences() ||
+                updatingNotifications()
+              "
+              (selectionChange)="updateEmailNotificationMode($event.value)"
+            >
+              <mat-option value="instant">Instant reminders</mat-option>
+              <mat-option value="daily_digest">Daily digest</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          @if (
+            emailNotifications() && emailNotificationMode() === "daily_digest"
+          ) {
+            <mat-form-field appearance="outline" class="settings-field">
+              <mat-label>Digest send time</mat-label>
+              <mat-select
+                [value]="emailDigestHour()"
+                [disabled]="loadingPreferences() || updatingNotifications()"
+                (selectionChange)="updateEmailDigestHour($event.value)"
+              >
+                @for (option of digestHourOptions; track option.value) {
+                  <mat-option [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          }
         </mat-card-content>
       </mat-card>
 
@@ -117,12 +185,16 @@
           </div>
           <div>
             <mat-card-title>Data</mat-card-title>
-            <mat-card-subtitle>Download a full JSON export of your BudgetWise records.</mat-card-subtitle>
+            <mat-card-subtitle
+              >Download a full JSON export of your BudgetWise
+              records.</mat-card-subtitle
+            >
           </div>
         </mat-card-header>
         <mat-card-content>
           <p class="section-copy">
-            Your export includes accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat history.
+            Your export includes accounts, categories, transactions, scheduled
+            transactions, budgets, goals, notifications, and chat history.
           </p>
         </mat-card-content>
         <mat-divider></mat-divider>
@@ -134,7 +206,7 @@
             (click)="exportAllData()"
             [disabled]="exporting()"
           >
-            {{ exporting() ? 'Exporting...' : 'Export All Data' }}
+            {{ exporting() ? "Exporting..." : "Export All Data" }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -146,12 +218,17 @@
           </div>
           <div>
             <mat-card-title>Danger Zone</mat-card-title>
-            <mat-card-subtitle>Delete your account and remove all stored data permanently.</mat-card-subtitle>
+            <mat-card-subtitle
+              >Delete your account and remove all stored data
+              permanently.</mat-card-subtitle
+            >
           </div>
         </mat-card-header>
         <mat-card-content>
           <p class="section-copy">
-            This action is irreversible. It removes your accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat sessions.
+            This action is irreversible. It removes your accounts, categories,
+            transactions, scheduled transactions, budgets, goals, notifications,
+            and chat sessions.
           </p>
         </mat-card-content>
         <mat-divider></mat-divider>
@@ -163,7 +240,7 @@
             (click)="openDeleteAccountDialog()"
             [disabled]="deleting()"
           >
-            {{ deleting() ? 'Deleting...' : 'Delete Account' }}
+            {{ deleting() ? "Deleting..." : "Delete Account" }}
           </button>
         </mat-card-actions>
       </mat-card>
