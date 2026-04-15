@@ -7,6 +7,8 @@ import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import compression from 'compression';
+import express from 'express';
 
 async function bootstrap() {
   if (process.env.SENTRY_DSN) {
@@ -19,17 +21,24 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
+
+  app.enableShutdownHooks();
+
   const helmetFactory = helmet;
 
   app.useLogger(app.get(Logger));
 
-  app.set('trust proxy', 1);
+  app.set('trust proxy', true);
 
   app.use(
     helmetFactory({
       contentSecurityPolicy: false,
     }),
   );
+
+  app.use(compression());
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
   app.enableCors({
     origin: process.env.ORIGIN ?? 'http://localhost:4200',
@@ -39,7 +48,14 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
 
@@ -50,7 +66,10 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+
+  if (process.env.NODE_ENV !== 'production') {
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   await app.listen(process.env.PORT ?? 3000);
 }

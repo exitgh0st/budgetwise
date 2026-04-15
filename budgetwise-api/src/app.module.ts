@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { IncomingMessage, ServerResponse } from 'node:http';
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -7,7 +8,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { LoggerModule } from 'nestjs-pino';
-import type { Request, Response } from 'express';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -47,7 +47,7 @@ const defaultLogLevel = isProduction ? 'info' : 'debug';
                 ignore: 'pid,hostname',
               },
             },
-        genReqId: (request: Request, response: Response) => {
+        genReqId: (request: IncomingMessage, response: ServerResponse) => {
           const headerValue = request.headers['x-request-id'];
           const requestId = Array.isArray(headerValue)
             ? headerValue[0]
