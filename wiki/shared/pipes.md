@@ -1,12 +1,13 @@
 ---
 type: shared
-source_files: [budgetwise-ui/src/app/shared/pipes/markdown.pipe.ts]
-last_ingested: 2026-04-07
+source_files: [budgetwise-ui/src/app/shared/pipes]
+last_ingested: 2026-04-15
 tags: [frontend, pipes]
 ---
 
 # Pipes
 
-| Pipe | File | Purpose |
-|------|------|---------|
-| `MarkdownPipe` | `shared/pipes/markdown.pipe.ts` | Lightweight custom markdown → HTML for chat assistant replies. Used by [[chat-panel]]. Chosen over `ngx-markdown` to keep the bundle small — see [[decisions]]. |
+| Pipe | Purpose |
+|------|---------|
+| `AppCurrencyPipe` | Formats amounts using the selected currency from `CurrencyService` |
+| `MarkdownPipe` | Lightweight markdown -> HTML for chat replies, sanitized before binding |

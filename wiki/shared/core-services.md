@@ -1,32 +1,37 @@
 ---
 type: shared
 source_files: [budgetwise-ui/src/app/core/services]
-last_ingested: 2026-04-11
+last_ingested: 2026-04-15
 tags: [frontend, services]
 ---
 
 # Core Services
 
-All under `budgetwise-ui/src/app/core/services/`. Every HTTP service is `@Injectable({ providedIn: 'root' })`, uses `inject(HttpClient)`, and reads its base URL from `environment.apiUrl`.
+All services live under `budgetwise-ui/src/app/core/services/`.
 
-| Service | File | Wraps |
-|---------|------|-------|
-| `AccountsService` | `accounts.service.ts` | `/api/accounts/*` (incl. `:id/adjust-balance`) - see [[accounts]] |
-| `ScheduledTransactionsService` | `scheduled-transactions.service.ts` | `/api/scheduled-transactions/*` - see [[scheduled-transactions]] |
-| `NotificationsService` | `notifications.service.ts` | `/api/notifications/*` + unread-count polling signal - see [[notifications]] |
-| `BudgetsService` | `budgets.service.ts` | `/api/budgets/*` including `copyFromMonth()` -> `POST /api/budgets/copy` - see [[budgets]] |
-| `CategoriesService` | `categories.service.ts` | `/api/categories/*` - see [[categories]] |
-| `ChatService` | `chat.service.ts` | `/api/chat/*` - see [[chat]] / [[chat-panel]] |
-| `GoalsService` | `goals.service.ts` | `/api/goals/*` - see [[goals]] |
-| `ReportsService` | `reports.service.ts` | `/api/reports/*` - see [[reports]] |
-| `TransactionsService` | `transactions.service.ts` | `/api/transactions/*` - see [[transactions]]. Exposes `TransactionFilters` + `exportAll()` for CSV export |
-| `AuthService` | `auth.service.ts` | Wraps `SupabaseService.client.auth.*` + posts to `/api/auth/onboard`. Exposes signal-based `currentUser`, computed `isAuthenticated`, `isLoading`. |
-| `SupabaseService` | `supabase.service.ts` | Holds the singleton Supabase client (env-configured) |
-| `ThemeService` | `theme.service.ts` | Persists light/dark preference in `localStorage`, defaults to OS preference, toggles `html.dark-theme` |
+| Service | Wraps / Responsibility |
+|---------|-------------------------|
+| `AccountsService` | `/api/accounts/*` |
+| `AuthService` | Supabase auth flows plus `/api/auth/onboard` |
+| `BudgetsService` | `/api/budgets/*` including `copyFromMonth()` |
+| `CategoriesService` | `/api/categories/*` |
+| `ChatService` | `/api/chat/*` |
+| `CurrencyService` | Hydrates currency preference and formats money app-wide |
+| `GoalsService` | `/api/goals/*` |
+| `NetworkStatusService` | Tracks online/offline state for the global banner |
+| `NotificationsService` | `/api/notifications/*` and unread-count polling |
+| `OnboardingUiService` | Controls active tutorial highlight targets for the onboarding overlay |
+| `ReportsService` | `/api/reports/*` |
+| `ScheduledTransactionsService` | `/api/scheduled-transactions/*` |
+| `SupabaseService` | Singleton Supabase client |
+| `ThemeService` | Light/dark preference in `localStorage` |
+| `TransactionsService` | `/api/transactions/*` plus CSV export helper |
+| `UserService` | `/api/user/*` for preferences, usage, export, unsubscribe, and deletion |
 
 ## Conventions
-- Services return `Observable<T>` from RxJS (no signals on the HTTP boundary).
-- Models live next to services in `core/models/` - see [[core-models]].
-- Shared date-only helpers live in `core/utils/date.util.ts` and are used by transaction, scheduled-transaction, and goal form flows.
-- The Bearer token is added by [[interceptors]], not by individual services.
-- Production base URL: `https://budgetwise-api-k9z9.onrender.com/api` via `environment.prod.ts`.
+
+- HTTP services return `Observable<T>`.
+- Models live in `core/models/` - see [[core-models]].
+- Shared date-only helpers live in `core/utils/date.util.ts`.
+- Bearer tokens are added by [[interceptors]], not by individual services.
+- `CurrencyService` is the source of truth for frontend money formatting and powers `AppCurrencyPipe`.

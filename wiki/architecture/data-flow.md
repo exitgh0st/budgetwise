@@ -1,33 +1,47 @@
 ---
 type: architecture
-source_files: [budgetwise-api/src/main.ts, budgetwise-ui/src/app/core/interceptors/auth.interceptor.ts, budgetwise-api/src/auth/jwt.strategy.ts]
-last_ingested: 2026-04-11
+source_files: [budgetwise-api/src/main.ts, budgetwise-api/src/auth/jwt.strategy.ts, budgetwise-api/src/reports/report-cache.service.ts, budgetwise-ui/src/app/core/interceptors/auth.interceptor.ts]
+last_ingested: 2026-04-15
 tags: [architecture, data-flow]
 ---
 
 # Data Flow
 
-## REST request lifecycle (typical CRUD call)
+## REST request lifecycle
 
-1. **Component** (e.g. `transactions.component.ts`) calls a method on a [[core-services|core service]] (`TransactionsService.create(...)`).
-2. Service issues `HttpClient.post('${environment.apiUrl}/transactions', body)`.
-3. `authInterceptor` ([[interceptors]]) calls `supabase.client.auth.getSession()`, attaches `Authorization: Bearer <access_token>`. On 401 it triggers `signOut()`.
-4. Request hits NestJS `main.ts` - global `ValidationPipe { whitelist:true, transform:true }` strips unknown fields and coerces types based on the DTO.
-5. Global `JwtAuthGuard` ([[auth]]) validates the JWT against Supabase JWKS using ES256. Sets `req.user = { userId, email }`. Routes decorated `@Public()` skip JWT auth, though a route can still layer a separate guard such as `InternalAdminGuard`.
-6. Controller (e.g. `transactions.controller.ts`) extracts `userId` via `@CurrentUser()` and forwards to the service.
-7. Service runs Prisma queries (`this.prisma.$transaction(...)` for multi-step writes), parses date-only request fields via shared helpers, and converts Prisma `Decimal` to `Number()` before returning.
-8. Response flows back to the component, which updates local signals/state.
+1. A page component calls a [[core-services|core service]] method, for example `TransactionsService.create(...)`.
+2. The service issues an `HttpClient` request to `${environment.apiUrl}/...`.
+3. [[interceptors|authInterceptor]] reads the Supabase session and attaches `Authorization: Bearer <access_token>`.
+4. NestJS `main.ts` runs the global `ValidationPipe` and other cross-cutting middleware.
+5. Global `JwtAuthGuard` validates the JWT against Supabase JWKS and exposes `req.user = { userId, email, currency }`.
+6. Controllers pull `userId` via `@CurrentUser()` and forward to services.
+7. Services run Prisma queries, parse date-only fields through shared helpers, normalize `Decimal` values to `number`, and invalidate report cache when accounts, budgets, or transactions mutate.
+8. Responses flow back to the page, which updates local state, signals, or RxJS subscriptions.
 
-## Auth bootstrap (frontend)
+## Auth bootstrap
 
-1. App boots -> `AuthService` constructor calls `supabase.client.auth.getSession()` and sets `currentUser` signal.
-2. `app.ts` shows the protected shell only when `auth.isAuthenticated()` is true.
-3. On `signInWithEmail` success, `AuthService.onboard()` POSTs `/api/auth/onboard` which clones template categories and creates 3 starter accounts (no-op if already onboarded). See [[auth]].
+1. App boot creates `AuthService`, which loads the current Supabase session.
+2. Protected shell UI renders only when `auth.isAuthenticated()` is true.
+3. `CurrencyService` hydrates the user's preferred currency from `GET /api/user/preferences` once auth settles.
+4. After sign-in, `AuthService.onboard()` posts `/api/auth/onboard` to clone template categories and create starter accounts on first run.
+5. If the backend returns `401` with `EMAIL_NOT_VERIFIED`, the interceptor retries once with `refreshSession()` and then routes to `/verify-email`.
+
+## Reports cache flow
+
+1. Dashboard and reports page call `ReportsService` endpoints.
+2. Backend `ReportsService` delegates cache reads and writes to `ReportCacheService`.
+3. Cache keys are user-scoped and parameter-scoped.
+4. Accounts, budgets, and transactions writes call `reportCache.invalidateUser(userId)` so later reads recompute.
 
 ## Chat agent flow
 
-See [[chat-agent-flow]] - the chat panel calls `POST /api/chat`, which invokes `ChatService.chat()` and runs a tool-call loop that re-uses every backend service via `ToolExecutor`.
+See [[chat-agent-flow]]. `POST /api/chat` enters `ChatService.chat()`, which applies guardrails, builds a system prompt using the user's preferred currency, executes tool calls, and writes chat history.
 
-## Cron flow ([[scheduled-transactions]])
+## Scheduled-transaction cron flow
 
-`ScheduledTransactionsCronService` runs `@Cron(EVERY_HOUR)` -> `processDueTransactions()` loops `findAllDue()` (status=ACTIVE, nextDueDate <= end of the current local day, userId not null) -> for each record calls `generateFromRecord`, which re-reads the schedule inside one Prisma transaction, creates a transaction, links it via `scheduledTransactionId`, and advances `nextDueDate` or marks it COMPLETED. After successful generation it auto-marks matching reminder notifications as read, then `enqueueUpcomingNotifications()` creates at most one unread reminder per scheduled transaction per day using local-calendar-day math. Manual trigger: `POST /api/scheduled-transactions/process-due` (`@Public()` + `InternalAdminGuard`).
+`ScheduledTransactionsCronService` runs every hour:
+
+1. `processDueTransactions()` loops active due templates and atomically generates real transactions.
+2. Successful generations auto-mark matching reminder notifications as read.
+3. `enqueueUpcomingNotifications()` creates at most one unread reminder notification per scheduled transaction per day.
+4. For users with email reminders enabled, the cron sends either instant reminder emails or daily digests through [[email]] based on saved user preferences.

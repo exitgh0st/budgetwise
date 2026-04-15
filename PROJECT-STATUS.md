@@ -2,7 +2,7 @@
 
 > Read this file FIRST at the start of every session. Use `/resume` to do this automatically.
 
-**Last updated at commit:** `bb0e8db` — source baseline for wiki ingest a90d08a..546bcd4 (2026-04-11)
+**Last updated at commit:** `299cb60` - source baseline for wiki ingest 546bcd4..299cb60 (2026-04-15)
 
 ## Completed Tickets (summary)
 
@@ -65,6 +65,7 @@
 | 59 — Global Transaction Search | Added debounced description search to `GET /api/transactions` plus transactions-page search and CSV export support for matching results. |
 | 60 — Multi-Currency Support | Added persisted user currency preferences via Supabase metadata, dynamic money formatting across frontend pages/forms/charts/CSV, and currency-aware chat + notification context without exchange-rate conversion. |
 | 61 — Email Notifications | Added Resend-backed scheduled-transaction reminder emails, Supabase metadata preferences for instant vs daily-digest delivery, and signed unsubscribe handling with a public frontend unsubscribe route. |
+| 62 — Performance Optimization | Added a user-scoped in-memory reports cache with invalidation on account/budget/transaction writes, tightened heavy Prisma reads with `select`/`take`, and reduced frontend eager work with async animations, event coalescing, idle-deferred shell widgets, and bundle-analysis tooling. |
 | Goals feature (shipped) | Typed savings/debt-payoff goals, linked contributions, `/api/goals` CRUD/contribute, `/goals` page. |
 | 63 — Data Limits & Usage Enforcement | Per-user record limits enforced at create time across all 7 resource types; `GET /api/user/usage` endpoint; usage card in Settings; add-button disabling + near-limit warning chips on accounts, categories, goals, and scheduled-transactions pages. |
 
@@ -76,7 +77,6 @@ Manual changes outside the numbered ticket flow:
 
 | Change | Files modified |
 |--------|---------------|
-| **Dashboard recent/upcoming split** — surfaces current activity alongside upcoming planned transactions | `dashboard.component.ts/html` |
 | **Accounts page polish** — total balance summary moved above the card grid | `accounts.component.html/scss` |
 | **App-wide UI layout** — sidenav width 240px; removed max-width from main content | `app.scss` |
 | **Datepicker provider fix** — native date adapter configured globally | `app.config.ts` |
@@ -105,27 +105,28 @@ Manual changes outside the numbered ticket flow:
 ## What Exists
 
 ### Backend (`budgetwise-api/`)
-- **Modules:** Auth, Prisma, Accounts, Categories, Transactions, ScheduledTransactions, Notifications, Budgets, Reports, Chat, Goals, User
+- **Modules:** Auth, Prisma, Accounts, Categories, Transactions, ScheduledTransactions, Notifications, Budgets, Reports, Chat, Goals, User, Email, Health
 - **Auth:** Global `JwtAuthGuard` (ES256), Supabase JWT via JWKS, verified-email enforcement via `EMAIL_NOT_VERIFIED`, `@Public()` + `@CurrentUser()`, plus `InternalAdminGuard` for manual ops hooks
 - **API hardening:** Helmet security headers, trusted-proxy-aware IP throttling (`100/min` global, tighter onboard/chat caps), and a global exception filter that sanitizes unhandled production `500`s
 - **Observability:** Public `GET /api/health` database probe, `nestjs-pino` structured request/response logging with `x-request-id` correlation IDs, and optional Sentry error capture when `SENTRY_DSN` is set
 - **Multi-tenancy:** Every owned query scoped to `userId`; ownership violations return 404
 - **User data portability:** `GET /api/user/export` assembles a JSON attachment with owned records across accounts, categories, transactions, scheduled transactions, budgets, goals, notifications, and chat history, normalizing Decimal fields to numbers
-- **User preferences:** `GET/PATCH /api/user/preferences` persists the preferred currency in Supabase `user_metadata`, defaults new users to `PHP`, and includes the preference in export payloads
+- **User preferences:** `GET/PATCH /api/user/preferences` persists the preferred currency plus email-reminder settings in Supabase `user_metadata`, defaults new users to `PHP`, and includes preferences in export payloads
 - **Usage limits:** `GET /api/user/usage` returns current counts vs limits for all 7 resource types; limits centralized in `src/common/constants/limits.ts`; enforced via pre-create count checks in all service `create()` methods
 - **Email reminders:** Hourly scheduled-transaction reminders can send Resend emails in instant or daily-digest mode, log delivery failures without breaking cron, and honor signed unsubscribe links
+- **Report caching:** `ReportCacheService` keeps user-scoped report responses in memory for 5 minutes and is invalidated when accounts, budgets, or transactions change
 - **Account deletion:** `DELETE /api/user` is throttled, deletes owned data in Prisma transaction order, then removes the Supabase auth user with the server-side service role key
 - **Database models:** `Account`, `Category`, `Transaction`, `ScheduledTransaction`, `Notification`, `Budget`, `Goal`, `GoalContribution`, `ChatSession`, `ChatMessage`
-- **Transactions:** Support income, expense, and transfer flows with atomic balance sync, date-range filters, and case-insensitive description search
+- **Transactions:** Support income, expense, and transfer flows with atomic balance sync, date-range filters, case-insensitive description search, and bounded pagination defaults
 - **Scheduled transactions:** Full CRUD with owned account/category validation + atomic `POST :id/generate` + atomic hourly cron generation + `/process-due` manual trigger
 - **Notifications:** `/api/notifications` list / unread-count / mark-read / mark-all-read / dismiss, plus optional email delivery for scheduled-transaction reminders
-- **Reports:** Exclude system categories and transfers; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
+- **Reports:** Exclude system categories and transfers; all four report endpoints are cached per user; budget status returns `budgetAmount`, `baseBudget`, `carriedAmount`, `effectiveBudget`, `spillover`
 - **Chat:** DeepSeek V3 via OpenAI SDK, 40 tools total, guardrails, destructive confirmation, history pagination, goal management, read-only notifications, and user-currency-aware response formatting
 - **Seed/onboarding:** Template categories cloned per user; starter accounts created by `POST /api/auth/onboard`
 
 ### Frontend (`budgetwise-ui/`)
 - **Auth shell:** Login/register/forgot/reset/callback/verify-email pages, JWT interceptor, auth/guest guards, and signed-in unverified-user redirects
-- **Pages:** Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings, Help, Privacy Policy, Terms of Service, Not Found
+- **Pages:** Landing, Dashboard, Accounts, Transactions, Scheduled Transactions, Budgets, Reports, Categories, Goals, Settings, Help, Privacy Policy, Terms of Service, Email Unsubscribe, Not Found
 - **Onboarding:** First-run dashboard tutorial overlay with five guided steps, `localStorage` completion state, and highlight cues for Dashboard, Accounts, Transactions, Budgets, and the AI chat entry point
 - **Legal UX:** Public `/privacy` and `/terms` routes, auth-page legal footer links, required registration consent checkbox, and authenticated sidenav footer links
 - **Help page:** Public `/help` FAQ route with expandable sections for getting started, accounts, transactions, budgets, scheduled transactions, and AI chat, plus a support email CTA
@@ -133,6 +134,7 @@ Manual changes outside the numbered ticket flow:
 - **PWA support:** Angular service worker now ships in production builds with an installable manifest, branded icon set, shell-only asset caching, and a global offline banner for repeat visits
 - **Landing page:** Public `/` route now introduces BudgetWise with a hero, feature highlights, AI advisor callout, dashboard mockup preview, and conversion links into `/register`
 - **Observability:** Optional `@sentry/angular` bootstrap + `ErrorHandler` integration, tracked safe development env template, and hidden production source maps with conditional `sentry-cli` upload support
+- **Performance work:** `provideAnimationsAsync`, zone event coalescing, idle-deferred notification/chat mounts, route-local chart loading, and bundle-analysis tooling reduce frontend eager work, though the Angular initial bundle warning still remains
 - **Transactions page:** Filtered list, debounced description search, searchable filters/dialog selects, transfer-aware dialog, and client-side CSV export that respects active search/filter state and includes the selected currency code in the amount header / filename
 - **Scheduled transactions page:** Expense tab, income tab, calendar tab, searchable filters, create/edit/delete/pay/receive flow
 - **Settings page:** Responsive profile/security/data/danger-zone sections with currency selection, email reminder toggles and digest timing, Supabase email/password dialogs, export download flow, typed-confirmation account deletion, and a usage card showing per-resource progress bars
@@ -156,7 +158,8 @@ Manual changes outside the numbered ticket flow:
 
 ## Upcoming Tickets
 
-- `62-performance-optimization.md` (skipped/out of order — 63 completed)
+- No active implementation ticket is recorded in `PROJECT-STATUS.md` right now.
+- Open ticket files that are still not reflected as shipped here: `50-containerization.md`, `51-ci-cd-pipeline.md`, `53-database-backup-strategy.md`.
 - Upcoming or planned transactions are handled through scheduled transactions and upcoming views, not through a settlement flag on regular transactions.
 
 ---
@@ -174,6 +177,8 @@ Manual changes outside the numbered ticket flow:
 - Scheduled transactions are the canonical replacement for the earlier bill/recurring naming
 - Upcoming or planned transactions are handled through scheduled transactions and upcoming views, not through a settlement flag on regular transactions
 - Reminder notifications dedupe to one unread row per scheduled transaction per day
+- Report responses are cached in-memory per user for 5 minutes and invalidated on account, budget, and transaction writes
+- Preferred currency is a formatting preference only; no exchange-rate conversion is performed anywhere in the app
 - Budget spillover only chains across consecutive prior months that also have explicit `spillover=true` budget rows
 - `scheduledTransactionId` on `Transaction` links cron/manual-generated rows back to their source template
 
@@ -181,7 +186,7 @@ Manual changes outside the numbered ticket flow:
 
 ## Known Issues
 
-- **Bundle size:** the Angular initial bundle is still above the default 500KB warning budget. Not blocking.
+- **Bundle size:** the Angular initial bundle still exceeds the default 500KB warning budget in production builds.
 - **Backend lint debt:** `budgetwise-api` still fails `npm run lint` due pre-existing repo-wide `@typescript-eslint` issues outside Ticket 36 scope.
 - **Chat cursor:** `oldestMessageId` only tracks initial-load messages; live-session messages still use `id=''` on the frontend cursor path.
 - **`ChatService.testConnection()`** remains in the service for debugging and is not exposed by any controller.

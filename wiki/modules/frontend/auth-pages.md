@@ -1,31 +1,30 @@
 ---
 type: module-frontend
-source_files: [budgetwise-ui/src/app/pages/auth/login/login.component.ts, budgetwise-ui/src/app/pages/auth/register/register.component.ts, budgetwise-ui/src/app/pages/auth/forgot-password/forgot-password.component.ts, budgetwise-ui/src/app/pages/auth/reset-password/reset-password.component.ts, budgetwise-ui/src/app/pages/auth/callback/callback.component.ts]
-last_ingested: 2026-04-07
+source_files: [budgetwise-ui/src/app/pages/auth]
+last_ingested: 2026-04-15
 tags: [frontend, auth]
 ---
 
 # Auth Pages
 
 ## Purpose
-Supabase-backed sign-in/up/reset flow. All `guestGuard`-protected (except `/auth/callback` and `/auth/reset-password` which are open to receive Supabase redirects).
 
-## Files
-| Route | File |
-|-------|------|
-| `/login` | `pages/auth/login/login.component.ts` (+ `.html`) |
-| `/register` | `pages/auth/register/register.component.ts` (+ `.html`) |
-| `/forgot-password` | `pages/auth/forgot-password/forgot-password.component.ts` (+ `.html`) |
-| `/auth/reset-password` | `pages/auth/reset-password/reset-password.component.ts` (+ `.html`) |
-| `/auth/callback` | `pages/auth/callback/callback.component.ts` |
+Supabase-backed sign-in, registration, verification, and recovery flows.
 
-## Behavior
-- All flows go through [[core-services]] `AuthService` → `SupabaseService.client.auth.*`.
-- `signInWithEmail` triggers `AuthService.onboard()` afterwards, which POSTs `/api/auth/onboard` (idempotent — see [[auth]]).
-- `signInWithGoogle` redirects to `/auth/callback` after the OAuth round-trip; the callback completes the session and routes to `/dashboard`.
-- `app.ts` hides the protected shell while `auth.isLoading()` is true.
+## Routes
 
-## Guards
-- `/login`, `/register`, `/forgot-password` use `guestGuard` (redirect signed-in users away)
-- `/auth/callback` and `/auth/reset-password` are open
-- All other routes use `authGuard` — see [[guards]]
+- `/login`
+- `/register`
+- `/forgot-password`
+- `/auth/callback`
+- `/auth/reset-password`
+- `/verify-email`
+
+## Key Behavior
+
+- Login and register are guest-only routes.
+- Registration includes required Terms and Privacy consent.
+- Successful sign-in triggers backend onboarding.
+- `/verify-email` handles unverified-but-signed-in sessions and supports resend flows.
+- Callback and reset-password routes stay public so Supabase can complete session setup.
+- Auth pages link to the public legal pages.

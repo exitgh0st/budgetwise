@@ -1,31 +1,26 @@
 ---
 type: module-frontend
-source_files: [budgetwise-ui/src/app/pages/dashboard/dashboard.component.ts, budgetwise-ui/src/app/pages/dashboard/dashboard.component.html]
-last_ingested: 2026-04-07
+source_files: [budgetwise-ui/src/app/pages/dashboard/dashboard.component.ts, budgetwise-ui/src/app/pages/dashboard/dashboard.component.html, budgetwise-ui/src/app/shared/components/onboarding/onboarding.component.ts]
+last_ingested: 2026-04-15
 tags: [frontend, dashboard]
 ---
 
 # Dashboard Page
 
 ## Purpose
-Landing page after login. Snapshot of finances: summary cards, budget bars, recent + upcoming transactions.
 
-## Files
-| File | Role |
-|------|------|
-| `pages/dashboard/dashboard.component.ts` | Component logic, fetches summary + budget-status + transactions on init |
-| `pages/dashboard/dashboard.component.html` | Template |
-
-## UI Elements
-- Summary cards: total income, total expenses, net balance (this month)
-- Budget status bars per category (green / amber / red)
-- "Recent" + "Upcoming" transaction sections for current activity and planned items
+Landing page after login with summary cards, budget progress, recent transactions, and the first-run onboarding overlay.
 
 ## Data Sources
-- [[core-services]] `ReportsService.getSummary` → `/api/reports/summary`
-- `ReportsService.getBudgetStatus` → `/api/reports/budget-status`
-- `TransactionsService.getAll` → `/api/transactions`
 
-## Responsive Behavior
-- Desktop: multi-column card grid
-- Mobile: single column stack
+- `AccountsService.getAll()`
+- `ReportsService.getSummary()`
+- `ReportsService.getBudgetStatus()`
+- `TransactionsService.getAll({ limit: 10 })`
+
+## Key Behavior
+
+- Shows remaining balance, monthly expenses, and monthly income.
+- Displays budget progress bars for the current month.
+- Lists recent transactions with relative date labels.
+- Shows an onboarding stepper on first visit and highlights shell navigation targets through `OnboardingUiService`.

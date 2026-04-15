@@ -1,31 +1,24 @@
 ---
 type: module-frontend
-source_files: [budgetwise-ui/src/app/shared/components/chat-panel/chat-panel.component.ts, budgetwise-ui/src/app/shared/components/chat-panel/chat-panel.component.html, budgetwise-ui/src/app/shared/pipes/markdown.pipe.ts]
-last_ingested: 2026-04-07
+source_files: [budgetwise-ui/src/app/shared/components/chat-panel/chat-panel.component.ts, budgetwise-ui/src/app/shared/pipes/markdown.pipe.ts, budgetwise-ui/src/app/app.html]
+last_ingested: 2026-04-15
 tags: [frontend, chat, ai]
 ---
 
 # Chat Panel
 
 ## Purpose
-Slide-in AI advisor panel. Mounted globally from `app.ts`. Toggled by a FAB.
 
-## Files
-| File | Role |
-|------|------|
-| `shared/components/chat-panel/chat-panel.component.ts` | Component logic — sessions, send, scroll-to-load older messages |
-| `shared/components/chat-panel/chat-panel.component.html` | Template |
-| `shared/pipes/markdown.pipe.ts` | Lightweight markdown renderer for assistant replies (no `ngx-markdown` — see [[decisions]]) |
+Global slide-in AI advisor panel mounted from the app shell.
 
-## UI / behavior
-- Slide-in sidebar — 400px on desktop, fullscreen on mobile
-- Session list, rename, delete, new session
-- Cursor-based pagination — scroll-to-top loads older messages via `?before=<id>`
+## Key Behavior
+
+- Deferred until idle in `app.html` to reduce initial shell work
+- Session list, rename, delete, and new-session flows
+- Cursor-based history pagination
 - Typing indicator while waiting for `POST /api/chat`
-
-## Data sources
-- [[core-services]] `ChatService` → all `/api/chat/*` endpoints
-- Backed by [[chat]] / [[chat-agent-flow]]
+- Assistant replies rendered through the sanitized `MarkdownPipe`
 
 ## Notes
-- The current-session cursor uses `id=''` for messages from the live turn (not loaded via the history endpoint). Not a bug — the cursor only matters for loading older pages. See [[known-issues]].
+
+- The current-session cursor still uses `id=''` for live-turn messages. See [[known-issues]].

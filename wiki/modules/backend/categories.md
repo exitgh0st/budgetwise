@@ -1,33 +1,24 @@
 ---
 type: module-backend
-source_files: [budgetwise-api/src/categories/categories.module.ts, budgetwise-api/src/categories/categories.controller.ts, budgetwise-api/src/categories/categories.service.ts, budgetwise-api/src/categories/dto/create-category.dto.ts, budgetwise-api/src/categories/dto/update-category.dto.ts]
-last_ingested: 2026-04-09
+source_files: [budgetwise-api/src/categories/categories.service.ts]
+last_ingested: 2026-04-15
 tags: [backend, categories]
 ---
 
 # Categories Module
 
 ## Purpose
-Spending/income categories with user, system, and template variants.
 
-## Files
-| File | Role |
-|------|------|
-| `categories.module.ts` | Module |
-| `categories.controller.ts` | REST endpoints |
-| `categories.service.ts` | CRUD + system protection + FK protection |
-| `dto/create-category.dto.ts` / `update-category.dto.ts` | Validation |
-
-## Endpoints
-See [[api-routes]] section Categories.
+Manage user categories while exposing template and system categories for shared budgeting flows.
 
 ## Key Logic
-- `findAll(userId)` returns user-owned plus system categories.
-- System categories cannot be edited or deleted.
-- `create` maps Prisma `P2002` to a duplicate-name conflict.
-- `remove` maps Prisma `P2003` to a friendly FK-protection error.
+
+- `findAll` returns owned categories plus template and system categories.
+- System categories are read-only from the normal category CRUD surface.
+- Create enforces the configured per-user usage limit.
+- Delete remains FK-protected so referenced categories cannot be removed silently.
 
 ## Relations
+
 - Owns [[category]]
-- Referenced by [[transaction]], [[scheduled-transaction]], and [[budget]]
-- Exposes 5 chat tools; `delete_category` is destructive
+- Referenced by [[transactions]], [[budgets]], [[goals]], and [[scheduled-transactions]]

@@ -1,20 +1,23 @@
 ---
 type: shared
-source_files: [budgetwise-ui/src/app/core/guards/auth.guard.ts, budgetwise-ui/src/app/core/guards/guest.guard.ts]
-last_ingested: 2026-04-09
+source_files: [budgetwise-ui/src/app/core/guards/auth.guard.ts, budgetwise-ui/src/app/core/guards/guest.guard.ts, budgetwise-ui/src/app/core/guards/verify-email.guard.ts]
+last_ingested: 2026-04-15
 tags: [frontend, guards, auth]
 ---
 
 # Frontend Guards
 
-Functional `CanActivateFn` guards. Both wait for [[core-services]] `AuthService.isLoading()` to settle before deciding.
+Functional `CanActivateFn` guards that wait for auth loading to settle before deciding.
 
-| Guard | File | Behavior |
-|-------|------|----------|
-| `authGuard` | `core/guards/auth.guard.ts` | Allows if `auth.isAuthenticated()`, otherwise navigates to `/login` |
-| `guestGuard` | `core/guards/guest.guard.ts` | Allows only signed-out users, otherwise redirects away from auth pages |
+| Guard | Behavior |
+|-------|----------|
+| `authGuard` | Allows protected pages only for fully authenticated users |
+| `guestGuard` | Allows guest-only auth pages and redirects signed-in users away |
+| `verifyEmailGuard` | Keeps `/verify-email` reachable only for users with a session who still need verification |
 
-Wired in `app.routes.ts`:
-- `authGuard` protects `/dashboard`, `/accounts`, `/transactions`, `/scheduled-transactions`, `/budgets`, `/reports`, `/categories`, `/goals`
-- `guestGuard` protects `/login`, `/register`, `/forgot-password`
-- `/auth/callback` and `/auth/reset-password` are intentionally unguarded so Supabase can land a session first
+## Route usage
+
+- `authGuard` protects `/dashboard`, `/accounts`, `/transactions`, `/scheduled-transactions`, `/budgets`, `/reports`, `/categories`, `/goals`, and `/settings`
+- `guestGuard` protects `/login`, `/register`, and `/forgot-password`
+- `verifyEmailGuard` protects `/verify-email`
+- Public routes like `/`, `/help`, `/privacy`, `/terms`, and `/email-preferences/unsubscribe` stay unguarded

@@ -1,5 +1,10 @@
 # Wiki Log
 
+## [2026-04-15] ingest | Delta 546bcd4..299cb60 - tickets 44-63, including ticket 62 performance optimization
+- Created pages: [[email]], [[health]], [[user]], [[landing-page]], [[settings-page]], [[help-page]], [[legal-pages]], [[email-preferences-page]], [[not-found-page]]
+- Updated pages: [[index]], [[overview]], [[project-structure]], [[api-routes]], [[data-flow]], [[chat-agent-flow]], [[accounts]], [[auth]], [[budgets]], [[chat]], [[goals]], [[notifications]], [[reports]], [[scheduled-transactions]], [[transactions]], [[auth-pages]], [[dashboard]], [[accounts-page]], [[categories-page]], [[transactions-page]], [[scheduled-transactions-page]], [[budgets-page]], [[goals-page]], [[reports-page]], [[chat-panel]], [[core-services]], [[core-models]], [[guards]], [[interceptors]], [[pipes]], [[tickets-overview]], [[decisions]], [[known-issues]]
+- Marker bumped from `546bcd4` to `299cb60`
+
 ## [2026-04-15] ticket | #63 completed — wiki ingest pending
 
 ## [2026-04-11] ingest | Delta b6a5861..546bcd4 - tickets 36-43, guarded process-due, date-only normalization, decimal response normalization, budget copy preview, opening-balance transactions
