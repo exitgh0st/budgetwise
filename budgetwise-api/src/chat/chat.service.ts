@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import OpenAI from 'openai';
+import { USER_LIMITS } from '../common/constants/limits';
 import { PrismaService } from '../prisma/prisma.service';
 import { ToolExecutor } from './tools/tool-executor';
 import { toolDefinitions } from './tools/tool-definitions';
@@ -96,6 +97,15 @@ export class ChatService {
   // ============================================
 
   async createSession(title?: string, userId?: string) {
+    if (userId) {
+      const count = await this.prisma.chatSession.count({ where: { userId } });
+      if (count >= USER_LIMITS.chatSessions) {
+        throw new BadRequestException(
+          `Chat session limit reached (${count}/${USER_LIMITS.chatSessions}). Delete old chat sessions to start new ones.`,
+        );
+      }
+    }
+
     return this.prisma.chatSession.create({
       data: { title, userId },
     });

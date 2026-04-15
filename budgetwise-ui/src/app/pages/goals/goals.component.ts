@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { forkJoin } from 'rxjs';
 import { Account } from '../../core/models/account.model';
 import { Category } from '../../core/models/category.model';
@@ -16,6 +17,7 @@ import { Transaction } from '../../core/models/transaction.model';
 import { AccountsService } from '../../core/services/accounts.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { GoalsService } from '../../core/services/goals.service';
+import { UserService } from '../../core/services/user.service';
 import { TransactionsService } from '../../core/services/transactions.service';
 import {
   ConfirmDialogComponent,
@@ -34,6 +36,7 @@ import {
   TransactionDialogComponent,
   TransactionDialogData,
 } from '../transactions/transaction-dialog/transaction-dialog.component';
+import { isAtLimit, isNearLimit, UsageLimits } from '../../core/models/usage-limits.model';
 import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 @Component({
@@ -46,6 +49,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
     MatIconModule,
     MatProgressBarModule,
     MatTableModule,
+    MatTooltipModule,
     AppCurrencyPipe,
     DatePipe,
   ],
@@ -57,6 +61,7 @@ export class GoalsComponent implements OnInit {
   private accountsService = inject(AccountsService);
   private categoriesService = inject(CategoriesService);
   private transactionsService = inject(TransactionsService);
+  private userService = inject(UserService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
@@ -67,7 +72,28 @@ export class GoalsComponent implements OnInit {
   expandedGoalIds = new Set<string>();
   loading = false;
   isMobile = false;
+  usage: UsageLimits | null = null;
   readonly transactionColumns = ['date', 'type', 'details', 'amount', 'actions'];
+
+  get goalsAtLimit(): boolean {
+    return this.usage ? isAtLimit(this.usage.goals) : false;
+  }
+
+  get goalsNearLimit(): boolean {
+    return this.usage ? isNearLimit(this.usage.goals) : false;
+  }
+
+  get addGoalTooltip(): string {
+    if (!this.usage) return '';
+    const { used, limit } = this.usage.goals;
+    if (isAtLimit(this.usage.goals)) {
+      return `Goal limit reached (${used}/${limit}). Delete completed goals to create new ones.`;
+    }
+    if (isNearLimit(this.usage.goals)) {
+      return `${used}/${limit} goals used`;
+    }
+    return '';
+  }
 
   ngOnInit(): void {
     this.breakpointObserver.observe([Breakpoints.Handset]).subscribe((result) => {
@@ -75,6 +101,14 @@ export class GoalsComponent implements OnInit {
     });
 
     this.loadPage();
+    this.loadUsage();
+  }
+
+  loadUsage(): void {
+    this.userService.getUsage().subscribe({
+      next: (data) => { this.usage = data; },
+      error: () => {},
+    });
   }
 
   loadPage(): void {

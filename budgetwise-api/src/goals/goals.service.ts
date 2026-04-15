@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { GoalType, Prisma, TransactionType } from '@prisma/client';
+import { USER_LIMITS } from '../common/constants/limits';
 import { parseDateOnly } from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -147,6 +148,13 @@ export class GoalsService {
   ) {}
 
   async create(dto: CreateGoalDto, userId: string): Promise<GoalResponse> {
+    const count = await this.prisma.goal.count({ where: { userId } });
+    if (count >= USER_LIMITS.goals) {
+      throw new BadRequestException(
+        `Goal limit reached (${count}/${USER_LIMITS.goals}). Delete completed goals to create new ones.`,
+      );
+    }
+
     await this.validateGoalFields(dto.type, dto.accountId ?? null, userId);
 
     const goal = await this.prisma.goal.create({

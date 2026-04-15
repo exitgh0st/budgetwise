@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Category } from '@prisma/client';
+import { USER_LIMITS } from '../common/constants/limits';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -14,6 +15,13 @@ export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateCategoryDto, userId: string): Promise<Category> {
+    const count = await this.prisma.category.count({ where: { userId } });
+    if (count >= USER_LIMITS.categories) {
+      throw new BadRequestException(
+        `Category limit reached (${count}/${USER_LIMITS.categories}). Delete unused categories to create new ones.`,
+      );
+    }
+
     try {
       return await this.prisma.category.create({ data: { ...dto, userId } });
     } catch (error: any) {

@@ -27,6 +27,12 @@ export class UserController {
     private readonly emailService: EmailService,
   ) {}
 
+  @Get('usage')
+  @ApiOperation({ summary: 'Get current usage counts and limits' })
+  getUsage(@CurrentUser() user: { userId: string }) {
+    return this.userService.getUsage(user.userId);
+  }
+
   @Get('preferences')
   @ApiOperation({ summary: 'Get the current user preferences' })
   getPreferences(@CurrentUser() user: { userId: string; currency?: string }) {

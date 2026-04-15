@@ -15,6 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -30,6 +31,7 @@ import { AccountsService } from '../../core/services/accounts.service';
 import { CategoriesService } from '../../core/services/categories.service';
 import { CurrencyService } from '../../core/services/currency.service';
 import { ScheduledTransactionsService } from '../../core/services/scheduled-transactions.service';
+import { UserService } from '../../core/services/user.service';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -39,6 +41,7 @@ import {
   ScheduledTransactionDialogData,
 } from './scheduled-transaction-dialog/scheduled-transaction-dialog.component';
 import { ScheduledTransactionsCalendarComponent } from './scheduled-transactions-calendar/scheduled-transactions-calendar.component';
+import { isAtLimit, isNearLimit, UsageLimits } from '../../core/models/usage-limits.model';
 import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 @Component({
@@ -65,6 +68,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
     ScheduledTransactionsCalendarComponent,
     ReactiveFormsModule,
     NgxMatSelectSearchModule,
+    MatTooltipModule,
   ],
   templateUrl: './scheduled-transactions.component.html',
   styleUrl: './scheduled-transactions.component.scss',
@@ -73,6 +77,7 @@ export class ScheduledTransactionsComponent implements OnInit {
   private scheduledTransactionsService = inject(ScheduledTransactionsService);
   private accountsService = inject(AccountsService);
   private categoriesService = inject(CategoriesService);
+  private userService = inject(UserService);
   private currencyService = inject(CurrencyService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -90,6 +95,27 @@ export class ScheduledTransactionsComponent implements OnInit {
   isMobile = false;
   processingIds = new Set<string>();
   activeTabIndex = 0;
+  usage: UsageLimits | null = null;
+
+  get scheduledAtLimit(): boolean {
+    return this.usage ? isAtLimit(this.usage.scheduledTransactions) : false;
+  }
+
+  get scheduledNearLimit(): boolean {
+    return this.usage ? isNearLimit(this.usage.scheduledTransactions) : false;
+  }
+
+  get addScheduledTooltip(): string {
+    if (!this.usage) return '';
+    const { used, limit } = this.usage.scheduledTransactions;
+    if (isAtLimit(this.usage.scheduledTransactions)) {
+      return `Scheduled transaction limit reached (${used}/${limit}). Delete unused scheduled transactions to create new ones.`;
+    }
+    if (isNearLimit(this.usage.scheduledTransactions)) {
+      return `${used}/${limit} scheduled transactions used`;
+    }
+    return '';
+  }
   expenseFilters = this.createDefaultFilters();
   incomeFilters = this.createDefaultFilters();
 
@@ -139,6 +165,14 @@ export class ScheduledTransactionsComponent implements OnInit {
     });
     this.loadScheduledTransactions();
     this.loadDropdowns();
+    this.loadUsage();
+  }
+
+  loadUsage(): void {
+    this.userService.getUsage().subscribe({
+      next: (data) => { this.usage = data; },
+      error: () => {},
+    });
   }
 
   get totalIncome(): number {

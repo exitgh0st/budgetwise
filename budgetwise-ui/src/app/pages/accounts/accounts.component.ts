@@ -7,8 +7,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AccountsService } from '../../core/services/accounts.service';
+import { UserService } from '../../core/services/user.service';
 import { Account, AccountType } from '../../core/models/account.model';
+import { isAtLimit, isNearLimit, UsageLimits } from '../../core/models/usage-limits.model';
 import {
   AccountProvider,
   getProviderById,
@@ -38,6 +41,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
+    MatTooltipModule,
     FormsModule,
   ],
   templateUrl: './accounts.component.html',
@@ -45,6 +49,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 })
 export class AccountsComponent implements OnInit {
   private accountsService = inject(AccountsService);
+  private userService = inject(UserService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
@@ -53,6 +58,27 @@ export class AccountsComponent implements OnInit {
   filteredAccounts: Account[] = [];
   loading = true;
   isMobile = false;
+  usage: UsageLimits | null = null;
+
+  get accountsAtLimit(): boolean {
+    return this.usage ? isAtLimit(this.usage.accounts) : false;
+  }
+
+  get accountsNearLimit(): boolean {
+    return this.usage ? isNearLimit(this.usage.accounts) : false;
+  }
+
+  get addAccountTooltip(): string {
+    if (!this.usage) return '';
+    const { used, limit } = this.usage.accounts;
+    if (isAtLimit(this.usage.accounts)) {
+      return `Account limit reached (${used}/${limit}). Delete unused accounts to create new ones.`;
+    }
+    if (isNearLimit(this.usage.accounts)) {
+      return `${used}/${limit} accounts used`;
+    }
+    return '';
+  }
 
   // Filter state
   filterSearch = '';
@@ -101,6 +127,7 @@ export class AccountsComponent implements OnInit {
         this.isMobile = result.matches;
       });
     this.loadAccounts();
+    this.loadUsage();
   }
 
   loadAccounts() {
@@ -116,6 +143,17 @@ export class AccountsComponent implements OnInit {
           duration: 3000,
         });
         this.loading = false;
+      },
+    });
+  }
+
+  loadUsage() {
+    this.userService.getUsage().subscribe({
+      next: (data) => {
+        this.usage = data;
+      },
+      error: () => {
+        // Non-critical
       },
     });
   }

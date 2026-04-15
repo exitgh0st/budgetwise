@@ -181,6 +181,62 @@
       <mat-card class="section-card">
         <mat-card-header>
           <div mat-card-avatar class="section-avatar">
+            <mat-icon>data_usage</mat-icon>
+          </div>
+          <div>
+            <mat-card-title>Usage</mat-card-title>
+            <mat-card-subtitle
+              >Your current record counts against plan limits.</mat-card-subtitle
+            >
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          @if (loadingUsage()) {
+            <div class="usage-loading">
+              <mat-spinner diameter="24"></mat-spinner>
+            </div>
+          } @else if (usage()) {
+            <div class="usage-list">
+              @for (
+                row of [
+                  { key: 'Accounts', entry: usage()!.accounts },
+                  { key: 'Transactions', entry: usage()!.transactions },
+                  { key: 'Categories', entry: usage()!.categories },
+                  { key: 'Budgets', entry: usage()!.budgets },
+                  { key: 'Goals', entry: usage()!.goals },
+                  { key: 'Scheduled Transactions', entry: usage()!.scheduledTransactions },
+                  { key: 'Chat Sessions', entry: usage()!.chatSessions }
+                ];
+                track row.key
+              ) {
+                <div class="usage-row">
+                  <div class="usage-row-header">
+                    <span class="usage-label">{{ row.key }}</span>
+                    <span
+                      class="usage-count"
+                      [class.usage-count-warning]="isNearLimit(row.entry)"
+                      [class.usage-count-limit]="isAtLimit(row.entry)"
+                    >
+                      {{ row.entry.used | number }}/{{ row.entry.limit | number }}
+                    </span>
+                  </div>
+                  <mat-progress-bar
+                    mode="determinate"
+                    [value]="usagePercent(row.entry)"
+                    [color]="isAtLimit(row.entry) ? 'warn' : 'primary'"
+                    class="usage-bar"
+                    [class.usage-bar-warning]="isNearLimit(row.entry)"
+                  ></mat-progress-bar>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="section-card">
+        <mat-card-header>
+          <div mat-card-avatar class="section-avatar">
             <mat-icon>download</mat-icon>
           </div>
           <div>

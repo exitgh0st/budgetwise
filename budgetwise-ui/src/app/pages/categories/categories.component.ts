@@ -7,8 +7,11 @@ import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CategoriesService } from '../../core/services/categories.service';
+import { UserService } from '../../core/services/user.service';
 import { Category } from '../../core/models/category.model';
+import { isAtLimit, isNearLimit, UsageLimits } from '../../core/models/usage-limits.model';
 import { CategoryDialogComponent, CategoryDialogData } from './category-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -21,12 +24,14 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '../../shared/componen
     MatButtonModule,
     MatIconModule,
     MatProgressBarModule,
+    MatTooltipModule,
   ],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss',
 })
 export class CategoriesComponent implements OnInit {
   private categoriesService = inject(CategoriesService);
+  private userService = inject(UserService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private breakpointObserver = inject(BreakpointObserver);
@@ -38,16 +43,45 @@ export class CategoriesComponent implements OnInit {
   categories: Category[] = [];
   loading = true;
   isMobile = false;
+  usage: UsageLimits | null = null;
+
+  get categoriesAtLimit(): boolean {
+    return this.usage ? isAtLimit(this.usage.categories) : false;
+  }
+
+  get categoriesNearLimit(): boolean {
+    return this.usage ? isNearLimit(this.usage.categories) : false;
+  }
+
+  get addCategoryTooltip(): string {
+    if (!this.usage) return '';
+    const { used, limit } = this.usage.categories;
+    if (isAtLimit(this.usage.categories)) {
+      return `Category limit reached (${used}/${limit}). Delete unused categories to create new ones.`;
+    }
+    if (isNearLimit(this.usage.categories)) {
+      return `${used}/${limit} categories used`;
+    }
+    return '';
+  }
 
   ngOnInit() {
     this.breakpointObserver.observe(['(max-width: 599px)']).subscribe(result => {
       this.isMobile = result.matches;
     });
     this.loadCategories();
+    this.loadUsage();
   }
 
   ngAfterViewInit() {
     this.dataSource.sort = this.sort;
+  }
+
+  loadUsage() {
+    this.userService.getUsage().subscribe({
+      next: (data) => { this.usage = data; },
+      error: () => {},
+    });
   }
 
   loadCategories() {

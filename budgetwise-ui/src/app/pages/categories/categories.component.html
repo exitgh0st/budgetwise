@@ -1,9 +1,22 @@
 <div class="page-header">
   <h1>Categories</h1>
   @if (!isMobile) {
-    <button mat-flat-button color="primary" (click)="openAddDialog()">
-      <mat-icon>add</mat-icon> Add Category
-    </button>
+    <div class="add-btn-wrap">
+      @if (categoriesNearLimit || categoriesAtLimit) {
+        <span class="limit-chip" [class.limit-chip-danger]="categoriesAtLimit">
+          {{ usage!.categories.used }}/{{ usage!.categories.limit }} used
+        </span>
+      }
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="openAddDialog()"
+        [disabled]="categoriesAtLimit"
+        [matTooltip]="addCategoryTooltip"
+      >
+        <mat-icon>add</mat-icon> Add Category
+      </button>
+    </div>
   }
 </div>
 
@@ -16,7 +29,13 @@
     <mat-icon class="empty-icon">category</mat-icon>
     <h2>No categories yet</h2>
     <p>Create your first category to organize your transactions.</p>
-    <button mat-flat-button color="primary" (click)="openAddDialog()">
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="openAddDialog()"
+      [disabled]="categoriesAtLimit"
+      [matTooltip]="addCategoryTooltip"
+    >
       <mat-icon>add</mat-icon> Add Category
     </button>
   </div>
@@ -85,7 +104,15 @@
 }
 
 @if (isMobile && !loading) {
-  <button mat-fab class="fab-add" color="primary" (click)="openAddDialog()" aria-label="Add category">
+  <button
+    mat-fab
+    class="fab-add"
+    color="primary"
+    (click)="openAddDialog()"
+    aria-label="Add category"
+    [disabled]="categoriesAtLimit"
+    [matTooltip]="addCategoryTooltip"
+  >
     <mat-icon>add</mat-icon>
   </button>
 }

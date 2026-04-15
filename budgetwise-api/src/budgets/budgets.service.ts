@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { USER_LIMITS } from '../common/constants/limits';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportCacheService } from '../reports/report-cache.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
@@ -26,6 +27,13 @@ export class BudgetsService {
   ) {}
 
   async create(dto: CreateBudgetDto, userId: string): Promise<BudgetResponse> {
+    const count = await this.prisma.budget.count({ where: { userId } });
+    if (count >= USER_LIMITS.budgets) {
+      throw new BadRequestException(
+        `Budget limit reached (${count}/${USER_LIMITS.budgets}). Delete old budgets to create new ones.`,
+      );
+    }
+
     const category = await this.prisma.category.findFirst({
       where: { id: dto.categoryId, OR: [{ userId }, { isSystem: true }] },
     });

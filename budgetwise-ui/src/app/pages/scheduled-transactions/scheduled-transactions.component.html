@@ -18,10 +18,23 @@
             }
           </mat-form-field>
 
-          <button mat-flat-button color="primary" (click)="openAddDialog('EXPENSE')">
-            <mat-icon>add</mat-icon>
-            Add Scheduled Expense
-          </button>
+          <div class="add-btn-wrap">
+            @if (scheduledNearLimit || scheduledAtLimit) {
+              <span class="limit-chip" [class.limit-chip-danger]="scheduledAtLimit">
+                {{ usage!.scheduledTransactions.used }}/{{ usage!.scheduledTransactions.limit }} used
+              </span>
+            }
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="openAddDialog('EXPENSE')"
+              [disabled]="scheduledAtLimit"
+              [matTooltip]="addScheduledTooltip"
+            >
+              <mat-icon>add</mat-icon>
+              Add Scheduled Expense
+            </button>
+          </div>
         </div>
       } @else {
         <mat-form-field appearance="outline" class="search-bar">
@@ -196,7 +209,14 @@
             <button mat-flat-button color="primary" type="button" (click)="clearFilters('EXPENSE')">Clear Filters</button>
           } @else {
             <p>Add your first scheduled transaction to start tracking upcoming expenses.</p>
-            <button mat-flat-button color="primary" type="button" (click)="openAddDialog('EXPENSE')">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="openAddDialog('EXPENSE')"
+              [disabled]="scheduledAtLimit"
+              [matTooltip]="addScheduledTooltip"
+            >
               <mat-icon>add</mat-icon>
               Add Scheduled Expense
             </button>
@@ -358,7 +378,16 @@
       }
 
       @if (isMobile) {
-        <button mat-fab class="fab-add" color="primary" type="button" aria-label="Add scheduled transaction" (click)="openAddDialog('EXPENSE')">
+        <button
+          mat-fab
+          class="fab-add"
+          color="primary"
+          type="button"
+          aria-label="Add scheduled transaction"
+          (click)="openAddDialog('EXPENSE')"
+          [disabled]="scheduledAtLimit"
+          [matTooltip]="addScheduledTooltip"
+        >
           <mat-icon>add</mat-icon>
         </button>
       }
@@ -380,10 +409,23 @@
             }
           </mat-form-field>
 
-          <button mat-flat-button color="primary" (click)="openAddDialog('INCOME')">
-            <mat-icon>add</mat-icon>
-            Add Scheduled Income
-          </button>
+          <div class="add-btn-wrap">
+            @if (scheduledNearLimit || scheduledAtLimit) {
+              <span class="limit-chip" [class.limit-chip-danger]="scheduledAtLimit">
+                {{ usage!.scheduledTransactions.used }}/{{ usage!.scheduledTransactions.limit }} used
+              </span>
+            }
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="openAddDialog('INCOME')"
+              [disabled]="scheduledAtLimit"
+              [matTooltip]="addScheduledTooltip"
+            >
+              <mat-icon>add</mat-icon>
+              Add Scheduled Income
+            </button>
+          </div>
         </div>
       } @else {
         <mat-form-field appearance="outline" class="search-bar">
@@ -558,7 +600,14 @@
             <button mat-flat-button color="primary" type="button" (click)="clearFilters('INCOME')">Clear Filters</button>
           } @else {
             <p>Add your first recurring income item to start tracking scheduled income.</p>
-            <button mat-flat-button color="primary" type="button" (click)="openAddDialog('INCOME')">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="openAddDialog('INCOME')"
+              [disabled]="scheduledAtLimit"
+              [matTooltip]="addScheduledTooltip"
+            >
               <mat-icon>add</mat-icon>
               Add Income
             </button>
@@ -720,7 +769,16 @@
       }
 
       @if (isMobile) {
-        <button mat-fab class="fab-add" color="primary" type="button" aria-label="Add income" (click)="openAddDialog('INCOME')">
+        <button
+          mat-fab
+          class="fab-add"
+          color="primary"
+          type="button"
+          aria-label="Add income"
+          (click)="openAddDialog('INCOME')"
+          [disabled]="scheduledAtLimit"
+          [matTooltip]="addScheduledTooltip"
+        >
           <mat-icon>add</mat-icon>
         </button>
       }

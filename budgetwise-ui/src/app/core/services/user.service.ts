@@ -2,12 +2,17 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { UsageLimits } from '../models/usage-limits.model';
 import { UserPreferences } from '../models/user-preferences.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/user`;
+
+  getUsage(): Observable<UsageLimits> {
+    return this.http.get<UsageLimits>(`${this.url}/usage`);
+  }
 
   getPreferences(): Observable<UserPreferences> {
     return this.http.get<UserPreferences>(`${this.url}/preferences`);

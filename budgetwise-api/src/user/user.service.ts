@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { USER_LIMITS } from '../common/constants/limits';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   DEFAULT_CURRENCY_CODE,
@@ -67,6 +68,39 @@ export class UserService {
   ): Promise<string> {
     const preferences = await this.getPreferences(userId, fallbackCurrency);
     return preferences.currency;
+  }
+
+  async getUsage(userId: string) {
+    const [
+      accounts,
+      transactions,
+      categories,
+      budgets,
+      goals,
+      scheduledTransactions,
+      chatSessions,
+    ] = await Promise.all([
+      this.prisma.account.count({ where: { userId } }),
+      this.prisma.transaction.count({ where: { userId } }),
+      this.prisma.category.count({ where: { userId } }),
+      this.prisma.budget.count({ where: { userId } }),
+      this.prisma.goal.count({ where: { userId } }),
+      this.prisma.scheduledTransaction.count({ where: { userId } }),
+      this.prisma.chatSession.count({ where: { userId } }),
+    ]);
+
+    return {
+      accounts: { used: accounts, limit: USER_LIMITS.accounts },
+      transactions: { used: transactions, limit: USER_LIMITS.transactions },
+      categories: { used: categories, limit: USER_LIMITS.categories },
+      budgets: { used: budgets, limit: USER_LIMITS.budgets },
+      goals: { used: goals, limit: USER_LIMITS.goals },
+      scheduledTransactions: {
+        used: scheduledTransactions,
+        limit: USER_LIMITS.scheduledTransactions,
+      },
+      chatSessions: { used: chatSessions, limit: USER_LIMITS.chatSessions },
+    };
   }
 
   async updatePreferences(

@@ -11,7 +11,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import { DecimalPipe } from '@angular/common';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import {
   MatSlideToggleChange,
@@ -20,6 +23,11 @@ import {
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import {
+  UsageLimits,
+  isAtLimit,
+  isNearLimit,
+} from '../../core/models/usage-limits.model';
 import {
   EmailNotificationMode,
   SupportedCurrencyCode,
@@ -47,14 +55,17 @@ function formatDigestHour(hour: number): string {
   selector: 'app-settings',
   standalone: true,
   imports: [
+    DecimalPipe,
     MatButtonModule,
     MatCardModule,
     MatDividerModule,
     MatFormFieldModule,
     MatIconModule,
+    MatProgressBarModule,
     MatProgressSpinnerModule,
     MatSelectModule,
     MatSlideToggleModule,
+    MatTooltipModule,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -82,6 +93,10 @@ export class SettingsComponent {
   readonly emailNotificationMode = signal<EmailNotificationMode>('instant');
   readonly emailDigestHour = signal(8);
   readonly digestHourOptions = DIGEST_HOUR_OPTIONS;
+  readonly usage = signal<UsageLimits | null>(null);
+  readonly loadingUsage = signal(false);
+  readonly isAtLimit = isAtLimit;
+  readonly isNearLimit = isNearLimit;
 
   constructor() {
     this.breakpointObserver
@@ -91,6 +106,7 @@ export class SettingsComponent {
       });
 
     void this.loadPreferences();
+    void this.loadUsage();
   }
 
   openChangeEmailDialog(): void {
@@ -318,6 +334,23 @@ export class SettingsComponent {
     link.download = filename;
     link.click();
     URL.revokeObjectURL(objectUrl);
+  }
+
+  usagePercent(entry: { used: number; limit: number }): number {
+    return Math.min(100, Math.round((entry.used / entry.limit) * 100));
+  }
+
+  private async loadUsage(): Promise<void> {
+    this.loadingUsage.set(true);
+
+    try {
+      const data = await firstValueFrom(this.userService.getUsage());
+      this.usage.set(data);
+    } catch {
+      // Usage is non-critical; fail silently
+    } finally {
+      this.loadingUsage.set(false);
+    }
   }
 
   private async loadPreferences(): Promise<void> {

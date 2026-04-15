@@ -105,6 +105,57 @@
   color: #f44336;
 }
 
+.usage-loading {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.usage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.usage-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.usage-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.usage-label {
+  font-size: 0.875rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.usage-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.usage-count-warning {
+  color: #FF9800;
+}
+
+.usage-count-limit {
+  color: #F44336;
+}
+
+.usage-bar {
+  border-radius: 4px;
+}
+
+.usage-bar-warning ::ng-deep .mdc-linear-progress__bar-inner {
+  border-color: #FF9800;
+}
+
 .state-card {
   display: grid;
   justify-items: center;

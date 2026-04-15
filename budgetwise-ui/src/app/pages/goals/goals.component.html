@@ -6,10 +6,24 @@
     </div>
 
     @if (!isMobile) {
-      <button mat-flat-button color="primary" type="button" (click)="openAddDialog()">
-        <mat-icon>add</mat-icon>
-        Add Financial Goal
-      </button>
+      <div class="add-btn-wrap">
+        @if (goalsNearLimit || goalsAtLimit) {
+          <span class="limit-chip" [class.limit-chip-danger]="goalsAtLimit">
+            {{ usage!.goals.used }}/{{ usage!.goals.limit }} used
+          </span>
+        }
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="openAddDialog()"
+          [disabled]="goalsAtLimit"
+          [matTooltip]="addGoalTooltip"
+        >
+          <mat-icon>add</mat-icon>
+          Add Financial Goal
+        </button>
+      </div>
     }
   </div>
 
@@ -222,7 +236,15 @@
   }
 
   @if (isMobile) {
-    <button class="fab-add" mat-fab color="primary" type="button" (click)="openAddDialog()">
+    <button
+      class="fab-add"
+      mat-fab
+      color="primary"
+      type="button"
+      (click)="openAddDialog()"
+      [disabled]="goalsAtLimit"
+      [matTooltip]="addGoalTooltip"
+    >
       <mat-icon>add</mat-icon>
     </button>
   }

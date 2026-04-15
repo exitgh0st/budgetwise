@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Account, TransactionType } from '@prisma/client';
+import { USER_LIMITS } from '../common/constants/limits';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportCacheService } from '../reports/report-cache.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -30,6 +31,13 @@ export class AccountsService {
     dto: CreateAccountDto,
     userId: string,
   ): Promise<AccountResponse> {
+    const count = await this.prisma.account.count({ where: { userId } });
+    if (count >= USER_LIMITS.accounts) {
+      throw new BadRequestException(
+        `Account limit reached (${count}/${USER_LIMITS.accounts}). Delete unused accounts to create new ones.`,
+      );
+    }
+
     const openingBalance = dto.balance ?? 0;
     const account = await this.prisma.$transaction(async (tx) => {
       const createdAccount = await tx.account.create({

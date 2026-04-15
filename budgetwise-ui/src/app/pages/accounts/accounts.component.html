@@ -1,9 +1,22 @@
 <div class="page-header">
   <h1>Accounts</h1>
   @if (!isMobile) {
-    <button mat-flat-button color="primary" (click)="openAddDialog()">
-      <mat-icon>add</mat-icon> Add Account
-    </button>
+    <div class="add-btn-wrap">
+      @if (accountsNearLimit || accountsAtLimit) {
+        <span class="limit-chip" [class.limit-chip-danger]="accountsAtLimit">
+          {{ usage!.accounts.used }}/{{ usage!.accounts.limit }} used
+        </span>
+      }
+      <button
+        mat-flat-button
+        color="primary"
+        (click)="openAddDialog()"
+        [disabled]="accountsAtLimit"
+        [matTooltip]="addAccountTooltip"
+      >
+        <mat-icon>add</mat-icon> Add Account
+      </button>
+    </div>
   }
 </div>
 
@@ -16,7 +29,13 @@
     <mat-icon class="empty-icon">account_balance_wallet</mat-icon>
     <h2>No accounts yet</h2>
     <p>Create your first account to start tracking your finances.</p>
-    <button mat-flat-button color="primary" (click)="openAddDialog()">
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="openAddDialog()"
+      [disabled]="accountsAtLimit"
+      [matTooltip]="addAccountTooltip"
+    >
       <mat-icon>add</mat-icon> Add Account
     </button>
   </div>
@@ -139,6 +158,8 @@
     color="primary"
     (click)="openAddDialog()"
     aria-label="Add account"
+    [disabled]="accountsAtLimit"
+    [matTooltip]="addAccountTooltip"
   >
     <mat-icon>add</mat-icon>
   </button>

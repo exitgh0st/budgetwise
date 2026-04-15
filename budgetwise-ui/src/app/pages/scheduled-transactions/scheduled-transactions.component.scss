@@ -16,6 +16,26 @@
   padding-top: 16px;
 }
 
+.add-btn-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.limit-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, #FF9800 18%, transparent);
+  color: #FF9800;
+}
+
+.limit-chip-danger {
+  background: color-mix(in srgb, #F44336 18%, transparent);
+  color: #F44336;
+}
+
 .tab-actions-bar {
   display: flex;
   align-items: center;

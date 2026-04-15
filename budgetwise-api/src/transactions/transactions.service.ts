@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, TransactionType } from '@prisma/client';
+import { USER_LIMITS } from '../common/constants/limits';
 import { parseDateBoundary, parseDateOnly } from '../common/date.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportCacheService } from '../reports/report-cache.service';
@@ -65,6 +66,13 @@ export class TransactionsService {
     dto: CreateTransactionDto,
     userId: string,
   ): Promise<TransactionResponse> {
+    const count = await this.prisma.transaction.count({ where: { userId } });
+    if (count >= USER_LIMITS.transactions) {
+      throw new BadRequestException(
+        `Transaction limit reached (${count}/${USER_LIMITS.transactions}). Export and delete old transactions to continue.`,
+      );
+    }
+
     const transaction = await this.prisma.$transaction((tx) =>
       this.createRawInTransaction(tx, dto, userId),
     );

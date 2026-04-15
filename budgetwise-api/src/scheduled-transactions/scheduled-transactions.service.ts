@@ -8,6 +8,7 @@ import {
   RecurringFrequency,
   ScheduledTransaction,
 } from '@prisma/client';
+import { USER_LIMITS } from '../common/constants/limits';
 import {
   createDateOnlyUtc,
   endOfLocalDay,
@@ -66,6 +67,15 @@ export class ScheduledTransactionsService {
     dto: CreateScheduledTransactionDto,
     userId: string,
   ): Promise<ScheduledTransactionResponse> {
+    const count = await this.prisma.scheduledTransaction.count({
+      where: { userId },
+    });
+    if (count >= USER_LIMITS.scheduledTransactions) {
+      throw new BadRequestException(
+        `Scheduled transaction limit reached (${count}/${USER_LIMITS.scheduledTransactions}). Delete unused scheduled transactions to create new ones.`,
+      );
+    }
+
     const totalInstallments =
       dto.frequency === 'ONCE' ? 1 : (dto.totalInstallments ?? null);
     const completedInstallments = dto.completedInstallments ?? 0;
