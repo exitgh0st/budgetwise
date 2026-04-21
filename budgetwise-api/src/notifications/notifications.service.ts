@@ -20,6 +20,7 @@ export class NotificationsService {
     private readonly userService: UserService,
   ) {}
 
+  /** Returns a paginated list of notifications for the user, newest first. */
   async listForUser(
     userId: string,
     skip = 0,
@@ -39,6 +40,7 @@ export class NotificationsService {
     });
   }
 
+  /** Marks a single notification as read. Returns the existing record unchanged if already read. */
   async markRead(userId: string, id: string): Promise<Notification> {
     const notification = await this.prisma.notification.findFirst({
       where: { id, userId },
@@ -85,6 +87,11 @@ export class NotificationsService {
     await this.prisma.notification.delete({ where: { id } });
   }
 
+  /**
+   * Marks all unread SCHEDULED_TX_DUE notifications for a scheduled transaction as read.
+   * Called by the cron job after a due transaction is successfully generated so the
+   * in-app reminder is automatically dismissed.
+   */
   async markReadByScheduledTx(
     scheduledTransactionId: string,
   ): Promise<{ updated: number }> {
@@ -103,6 +110,14 @@ export class NotificationsService {
     return { updated: result.count };
   }
 
+  /**
+   * Creates a SCHEDULED_TX_DUE in-app notification for an upcoming scheduled transaction.
+   * Idempotent: skips creation if an unread notification for the same record already
+   * exists today (checked via `createdAt >= startOfToday`), so the hourly cron job
+   * does not produce duplicate reminders.
+   *
+   * @returns true when a new notification was created, false when skipped
+   */
   async createForScheduledTx(
     scheduledTransaction: Pick<
       ScheduledTransaction,
@@ -124,6 +139,7 @@ export class NotificationsService {
 
     const startOfToday = startOfLocalDay(new Date());
 
+    // Idempotency guard: do not create a second notification if one was already sent today.
     const existing = await this.prisma.notification.findFirst({
       where: {
         scheduledTransactionId: scheduledTransaction.id,
