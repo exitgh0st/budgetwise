@@ -17,24 +17,24 @@ export class CopyBudgetsDto {
   @IsNumber()
   @Min(1)
   @Max(12)
-  sourceMonth: number;
+  sourceMonth!: number;
 
   @ApiProperty({ example: 2026 })
   @Type(() => Number)
   @IsNumber()
-  sourceYear: number;
+  sourceYear!: number;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 12 })
   @Type(() => Number)
   @IsNumber()
   @Min(1)
   @Max(12)
-  targetMonth: number;
+  targetMonth!: number;
 
   @ApiProperty({ example: 2026 })
   @Type(() => Number)
   @IsNumber()
-  targetYear: number;
+  targetYear!: number;
 
   @ApiPropertyOptional({
     example: ['uuid-of-category-1', 'uuid-of-category-2'],

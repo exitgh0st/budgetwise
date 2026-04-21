@@ -2,8 +2,8 @@ import { IsString } from 'class-validator';
 
 export class SendMessageDto {
   @IsString()
-  message: string;
+  message!: string;
 
   @IsString()
-  sessionId: string;
+  sessionId!: string;
 }

@@ -4,7 +4,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CreateCategoryDto {
   @ApiProperty({ example: 'Food & Dining' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional({ example: '🍔' })
   @IsOptional()
