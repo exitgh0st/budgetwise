@@ -2,12 +2,24 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Cache } from 'cache-manager';
 
+/**
+ * Thin wrapper around NestJS CacheManager that tracks which cache keys belong to
+ * each user so `invalidateUser` can bust only that user's entries without
+ * scanning the entire cache store.
+ */
 @Injectable()
 export class ReportCacheService {
+  // In-memory index: userId → Set of cache keys. Cleared on invalidation.
   private readonly userKeys = new Map<string, Set<string>>();
 
   constructor(@Inject(CACHE_MANAGER) private readonly cache: Cache) {}
 
+  /**
+   * Cache-aside read: returns the cached value if present, otherwise calls
+   * `loader`, stores the result, and returns it.
+   *
+   * @param ttl Cache TTL in milliseconds (default: 5 minutes)
+   */
   async remember<T>(
     userId: string,
     scope: string,
@@ -29,6 +41,7 @@ export class ReportCacheService {
     return result;
   }
 
+  /** Deletes all cached report entries for a user. Called after any write that changes their report data. */
   async invalidateUser(userId: string): Promise<void> {
     const keys = this.userKeys.get(userId);
 

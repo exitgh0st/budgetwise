@@ -15,6 +15,11 @@ export interface CategoryBreakdown {
   transactionCount: number;
 }
 
+/**
+ * Budget vs. actual spending for one category in a given period.
+ * `effectiveBudget = baseBudget + carriedAmount` when spillover is enabled;
+ * otherwise `carriedAmount` is 0 and `effectiveBudget` equals `baseBudget`.
+ */
 export interface BudgetStatus {
   budgetId: string;
   categoryId: string;
@@ -22,7 +27,9 @@ export interface BudgetStatus {
   categoryIcon: string | null;
   budgetAmount: number;
   baseBudget: number;
+  /** Unspent budget rolled over from prior months (0 when spillover is disabled). */
   carriedAmount: number;
+  /** baseBudget + carriedAmount — the total available budget for this period. */
   effectiveBudget: number;
   spent: number;
   remaining: number;

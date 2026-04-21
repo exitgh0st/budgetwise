@@ -10,6 +10,11 @@ import {
   MonthlyTrend,
 } from './types/report.types';
 
+/**
+ * Computes aggregated financial reports (summary, spending breakdown, budget status, monthly trend).
+ * All public methods are cache-aware: results are stored via `ReportCacheService` and
+ * invalidated whenever a user's transactions or budgets change.
+ */
 @Injectable()
 export class ReportsService {
   constructor(
@@ -44,6 +49,7 @@ export class ReportsService {
     return `${categoryId}:${year}-${month}`;
   }
 
+  /** Returns IDs of system categories so they can be excluded from user-facing reports. */
   private async getSystemCategoryIds(): Promise<string[]> {
     const cats = await this.prisma.category.findMany({
       where: { isSystem: true },
@@ -53,6 +59,7 @@ export class ReportsService {
     return cats.map((c) => c.id);
   }
 
+  /** Returns total income, total expenses, and net balance for the given month/year. */
   async getSummary(
     month?: number,
     year?: number,
@@ -110,6 +117,7 @@ export class ReportsService {
     };
   }
 
+  /** Returns expense totals grouped by category, sorted descending by amount spent. */
   async getSpendingByCategory(
     month?: number,
     year?: number,
@@ -194,6 +202,11 @@ export class ReportsService {
       .sort((a, b) => b.totalSpent - a.totalSpent);
   }
 
+  /**
+   * Returns each budget for the period along with how much was spent and how much is remaining.
+   * Accounts for spillover: unspent budget from prior months is carried forward and added to
+   * the current period's effective budget.
+   */
   async getBudgetStatus(
     month?: number,
     year?: number,
@@ -281,8 +294,10 @@ export class ReportsService {
         spendingMap.get(budget.categoryId) ?? 0,
       ]),
     );
+    // carryCache stores Promises so concurrent calls for the same key coalesce onto one DB read.
     const carryCache = new Map<string, Promise<number>>();
 
+    // Lazily fetches actual spending for a given category/month, caching results in spentCache.
     const getSpentFor = async (
       categoryId: string,
       targetMonth: number,
@@ -322,6 +337,7 @@ export class ReportsService {
       return spentAmount;
     };
 
+    // Lazily fetches a budget record for a given category/month, caching results in budgetCache.
     const findBudgetFor = async (
       categoryId: string,
       targetMonth: number,
@@ -355,6 +371,15 @@ export class ReportsService {
       return normalizedBudget;
     };
 
+    /**
+     * Recursively computes the budget carry-forward for a category into `targetMonth`.
+     * Formula: carry = priorBudget + priorCarry - priorSpent
+     * Base cases: no prior budget record, or spillover=false → carry is 0.
+     *
+     * The Promise is stored in `carryCache` before awaiting so re-entrant calls for
+     * the same key (possible when processing multiple budgets concurrently) share the
+     * single in-flight DB round-trip rather than issuing duplicates.
+     */
     const computeCarry = async (
       categoryId: string,
       targetMonth: number,
@@ -431,6 +456,7 @@ export class ReportsService {
     );
   }
 
+  /** Returns income and expense totals for the last `months` calendar months (default: 6), oldest first. */
   async getMonthlyTrend(
     months?: number,
     userId?: string,
