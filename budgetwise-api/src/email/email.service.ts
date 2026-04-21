@@ -25,6 +25,14 @@ type DigestEmailParams = {
   unsubscribeToken: string;
 };
 
+/**
+ * Sends transactional reminder emails via Resend.
+ * When `RESEND_API_KEY` is not configured the service silently no-ops so the
+ * rest of the application continues to work without email functionality.
+ *
+ * Unsubscribe tokens use a `base64url(JSON).HMAC-SHA256` format signed with
+ * `EMAIL_UNSUBSCRIBE_SECRET` so they are tamper-proof and carry a 30-day expiry.
+ */
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
@@ -35,6 +43,7 @@ export class EmailService {
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    // null client means email is disabled — all send methods become no-ops.
     this.client = apiKey ? new Resend(apiKey) : null;
     this.fromAddress =
       this.configService.get<string>('EMAIL_FROM') ??
@@ -42,6 +51,7 @@ export class EmailService {
     this.appUrl = this.normalizeAppUrl(
       this.configService.get<string>('ORIGIN') ?? 'http://localhost:4200',
     );
+    // Fallback chain: dedicated secret → Supabase service key → static dev default.
     this.unsubscribeSecret =
       this.configService.get<string>('EMAIL_UNSUBSCRIBE_SECRET') ??
       this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') ??
@@ -54,6 +64,11 @@ export class EmailService {
     }
   }
 
+  /**
+   * Creates a signed, expiring token for one-click email unsubscribe links.
+   * Format: `base64url({"userId","exp"}).HMAC-SHA256(base64url-payload)`
+   * Tokens are valid for 30 days.
+   */
   createUnsubscribeToken(userId: string): string {
     const payload = JSON.stringify({
       userId,
@@ -65,6 +80,13 @@ export class EmailService {
     return `${encodedPayload}.${signature}`;
   }
 
+  /**
+   * Verifies a token produced by `createUnsubscribeToken` and returns the `userId`.
+   * Uses `timingSafeEqual` to prevent timing-based signature forgery; buffers must
+   * be the same length before the comparison (a mismatch throws).
+   *
+   * @throws BadRequestException when the token is malformed, tampered with, or expired
+   */
   verifyUnsubscribeToken(token: string): string {
     const [encodedPayload, signature] = token.split('.');
 
@@ -76,6 +98,7 @@ export class EmailService {
     const providedBuffer = Buffer.from(signature);
     const expectedBuffer = Buffer.from(expectedSignature);
 
+    // Length must match before calling timingSafeEqual (it throws on buffer length mismatch).
     if (
       providedBuffer.length !== expectedBuffer.length ||
       !timingSafeEqual(providedBuffer, expectedBuffer)
@@ -100,6 +123,7 @@ export class EmailService {
     return payload.userId;
   }
 
+  /** Sends an immediate reminder email for a single upcoming scheduled transaction. No-ops when email is not configured. */
   async sendScheduledTransactionReminder(
     params: ReminderEmailParams,
   ): Promise<void> {
@@ -140,6 +164,7 @@ export class EmailService {
     });
   }
 
+  /** Sends a daily digest email listing all upcoming scheduled transactions for the day. No-ops when email is not configured or item list is empty. */
   async sendDailyDigest(params: DigestEmailParams): Promise<void> {
     if (!this.client || params.items.length === 0) {
       return;
@@ -186,12 +211,20 @@ export class EmailService {
     return new URL(path, `${this.appUrl}/`).toString();
   }
 
+  /** Returns an HMAC-SHA256 signature of `encodedPayload` using the configured unsubscribe secret. */
   private sign(encodedPayload: string): string {
     return createHmac('sha256', this.unsubscribeSecret)
       .update(encodedPayload)
       .digest('base64url');
   }
 
+  /**
+   * Generates the HTML body for all outbound emails using a shared layout.
+   * All user-supplied strings are run through `escapeHtml` to prevent HTML injection.
+   * CTA href and unsubscribe link are NOT escaped here because they are rendered
+   * as attribute values in trusted templates — callers are responsible for encoding
+   * any user-provided query params before passing them in.
+   */
   private wrapEmailHtml(params: {
     eyebrow: string;
     title: string;
@@ -255,6 +288,7 @@ export class EmailService {
     `;
   }
 
+  /** Escapes special HTML characters to prevent injection when embedding user-supplied strings in email templates. */
   private escapeHtml(value: string): string {
     return value
       .replaceAll('&', '&amp;')
