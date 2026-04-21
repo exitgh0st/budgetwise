@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { IncomingMessage, ServerResponse } from 'node:http';
+import { createRequire } from 'node:module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -26,6 +27,30 @@ import { HealthModule } from './health/health.module';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const defaultLogLevel = isProduction ? 'info' : 'debug';
+const runtimeRequire = createRequire(__filename);
+
+function resolveDevTransport() {
+  if (isProduction) {
+    return undefined;
+  }
+
+  try {
+    return {
+      target: runtimeRequire.resolve('pino-pretty'),
+      options: {
+        singleLine: true,
+        translateTime: 'SYS:standard',
+        ignore: 'pid,hostname',
+      },
+    };
+  } catch {
+    // Keep local boot resilient when the optional pretty-printer package is not installed.
+    console.warn(
+      '[Logger] pino-pretty is not installed; falling back to standard pino logs. Install it with "npm i -D pino-pretty" if you want formatted dev output.',
+    );
+    return undefined;
+  }
+}
 
 @Module({
   imports: [
@@ -37,16 +62,7 @@ const defaultLogLevel = isProduction ? 'info' : 'debug';
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env.LOG_LEVEL ?? defaultLogLevel,
-        transport: isProduction
-          ? undefined
-          : {
-              target: 'pino-pretty',
-              options: {
-                singleLine: true,
-                translateTime: 'SYS:standard',
-                ignore: 'pid,hostname',
-              },
-            },
+        transport: resolveDevTransport(),
         genReqId: (request: IncomingMessage, response: ServerResponse) => {
           const headerValue = request.headers['x-request-id'];
           const requestId = Array.isArray(headerValue)
