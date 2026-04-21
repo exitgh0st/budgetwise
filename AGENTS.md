@@ -195,13 +195,52 @@ Use PHP:
 
 * Descriptive names only
 * One component/service per file
-* Comment only non-obvious logic
+* **Code-review-quality comments on every code change.** Treat each diff as something a real developer will review. Add comments wherever they make review easier — not excessive, deliberate.
+
+### Required Comments
+
+* JSDoc/TSDoc on every new or modified:
+
+  * NestJS service method
+  * NestJS controller handler
+  * DTO class
+  * guard / pipe / interceptor / filter
+  * Angular component class
+  * exported utility / helper / pipe
+* One-line intent comment above non-trivial logic:
+
+  * business rule branches
+  * guardrail / validation branches
+  * currency or Prisma Decimal conversions
+  * async flows and RxJS pipelines
+  * complex selectors / computed signals
+* Rationale comment (`// Reason:` or `// Why:`) anywhere the code:
+
+  * looks surprising
+  * defends against a specific edge case
+  * encodes a deliberate trade-off
+* Reference ticket ID (e.g. `// Ticket #27`) only when behavior is non-obvious without it.
+
+### Do Not Comment
+
+* Self-evident code
+* Obvious getters / setters
+* Restatements of the identifier name
+* Multi-paragraph docstrings — one short line is almost always enough
+
+### Applies To
+
+* TypeScript (NestJS + Angular)
+* Prisma schema
+* HTML templates (use `<!-- -->` for non-obvious structure)
+* SCSS (for non-obvious layout hacks)
 
 ### Never
 
 * Rename schema fields without asking
 * Change API contracts silently
 * Add migrations unless requested
+* Ship code changes without the comments above
 
 ---
 

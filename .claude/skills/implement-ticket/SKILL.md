@@ -27,12 +27,18 @@ You are implementing a ticket for the BudgetWise project. Follow these steps str
 ## Step 4: Implement
 - Follow the ticket's tasks step by step
 - Follow all rules in CLAUDE.md
+- **Write code-review-quality comments as you go** (see CLAUDE.md → Code Quality). A real developer will review every diff from this ticket, so every non-trivial addition needs:
+  - JSDoc/TSDoc on new/modified public service methods, controller handlers, DTOs, guards, pipes, interceptors, Angular component classes, and exported utilities.
+  - A one-line intent comment above non-trivial logic blocks (business rules, guardrails, Decimal conversions, async flows, RxJS pipelines).
+  - A `// Reason:` or `// Why:` comment wherever the code looks surprising or encodes a deliberate trade-off.
+  - Keep it terse. No essays, no restating the identifier name, no comments on self-evident code.
 - **Do NOT modify anything under `wiki/`** during implementation. Wiki updates happen only during explicit ingest operations. If you notice the wiki is stale while working, surface it to the user — do not silently fix it.
 
 ## Step 5: Verify
 - Check each acceptance criterion in the ticket
 - Fix any that are not met
 - Run the dev server to confirm no errors
+- **Review your own diff for comment coverage.** Before moving on, scan every changed file and confirm the CLAUDE.md comment rules are met. Add missing JSDoc / intent / rationale comments now — not later.
 - If verification reveals that the wiki references a file/endpoint/symbol that no longer exists, flag it to the user instead of editing wiki pages.
 
 ## Step 6: Update PROJECT-STATUS.md and log the ticket

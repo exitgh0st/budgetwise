@@ -124,4 +124,11 @@ Fix issues before committing.
 ### Code Quality
 - Descriptive names for variables, methods, and files
 - One component/service per file
-- Comments only where logic is non-obvious
+- **Code-review-quality comments on all changes.** Write code as if a real developer will review every diff. Add comments wherever they make review easier — not excessive, but deliberate. This rule applies to every code change, every ticket, every refactor.
+  - **Required comments:**
+    - JSDoc/TSDoc on every new/modified public service method, controller handler, DTO class, guard, pipe, interceptor, Angular component class, and exported utility — state purpose, params, return, and thrown exceptions.
+    - A one-line intent comment above non-trivial logic blocks (business rules, guardrails, validation branches, currency/decimal conversions, async flows, RxJS pipelines, complex selectors).
+    - A rationale comment (`// Reason: ...` or `// Why: ...`) anywhere the code looks surprising, defends against a specific edge case, or encodes a deliberate trade-off.
+    - Reference the ticket ID (e.g. `// Ticket #27`) in comments only when the behavior is non-obvious without that context.
+  - **Do not comment:** self-evident code, obvious getters/setters, or restatements of the identifier name. One short line is almost always enough — never multi-paragraph docstrings.
+  - **Applies to all languages in this repo:** TypeScript (NestJS + Angular), Prisma schema, HTML templates (use `<!-- -->` for non-obvious structural choices), SCSS (for non-obvious layout hacks).
