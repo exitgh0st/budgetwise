@@ -11,6 +11,11 @@ import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { TransactionsService } from '../transactions/transactions.service';
 
+/**
+ * API response shape for an account.
+ * Prisma stores `balance` and `maintainingBalance` as `Decimal`; they are
+ * converted to `number` before leaving the service layer.
+ */
 export type AccountResponse = Omit<
   Account,
   'balance' | 'maintainingBalance'
@@ -27,6 +32,14 @@ export class AccountsService {
     private reportCache: ReportCacheService,
   ) {}
 
+  /**
+   * Creates a new account. If an opening balance is provided, an adjustment
+   * transaction is created in the same DB transaction to record the initial
+   * balance as INCOME (positive) or EXPENSE (negative), keeping ledger integrity.
+   *
+   * @throws BadRequestException when the user hits the account limit or the
+   *   seed Adjustment category is missing
+   */
   async create(
     dto: CreateAccountDto,
     userId: string,
@@ -40,6 +53,8 @@ export class AccountsService {
 
     const openingBalance = dto.balance ?? 0;
     const account = await this.prisma.$transaction(async (tx) => {
+      // Always create the account with balance 0; the opening balance is
+      // applied via a transaction so the audit trail is preserved.
       const createdAccount = await tx.account.create({
         data: {
           name: dto.name,
@@ -81,6 +96,7 @@ export class AccountsService {
         userId,
       );
 
+      // Re-fetch because createWithTx updated the balance via an increment
       const updatedAccount = await tx.account.findUnique({
         where: { id: createdAccount.id },
       });
@@ -96,6 +112,7 @@ export class AccountsService {
     return this.toResponse(account);
   }
 
+  /** Returns all accounts for a user, ordered by creation date (oldest first). */
   async findAll(userId: string): Promise<AccountResponse[]> {
     const accounts = await this.prisma.account.findMany({
       where: { userId },
@@ -106,6 +123,10 @@ export class AccountsService {
     return accounts.map((account) => this.toResponse(account));
   }
 
+  /**
+   * Returns a single account by ID, scoped to the requesting user.
+   * @throws NotFoundException when the account does not exist or belongs to another user
+   */
   async findOne(id: string, userId: string): Promise<AccountResponse> {
     const account = await this.prisma.account.findFirst({
       where: { id, userId },
@@ -143,6 +164,14 @@ export class AccountsService {
     return this.toResponse(account);
   }
 
+  /**
+   * Sets an account balance to an exact value by recording an adjustment transaction
+   * for the difference. The transaction type is INCOME when the balance increases
+   * and EXPENSE when it decreases, preserving a correct audit trail.
+   *
+   * @throws NotFoundException when the account is not found
+   * @throws BadRequestException when the Adjustment system category is missing
+   */
   async adjustBalance(
     id: string,
     newBalance: number,
@@ -195,6 +224,7 @@ export class AccountsService {
     return this.toResponse(account);
   }
 
+  /** Converts Prisma Decimal fields to plain numbers for JSON serialization. */
   private toResponse(account: Account): AccountResponse {
     return {
       ...account,

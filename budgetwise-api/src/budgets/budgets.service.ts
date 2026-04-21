@@ -19,6 +19,10 @@ type BudgetWithCategory = Prisma.BudgetGetPayload<{
   include: typeof budgetInclude;
 }>;
 
+/**
+ * API response shape for a budget.
+ * Converts Prisma `Decimal` amount to a plain `number`.
+ */
 export type BudgetResponse = Omit<BudgetWithCategory, 'amount'> & {
   amount: number;
 };
@@ -30,6 +34,14 @@ export class BudgetsService {
     private reportCache: ReportCacheService,
   ) {}
 
+  /**
+   * Creates or updates a budget for the given category/month/year combination.
+   * Uses upsert because the unique constraint (categoryId + month + year + userId)
+   * means setting a budget for an existing period should update, not duplicate.
+   *
+   * @throws BadRequestException when the user hits the budget limit
+   * @throws NotFoundException when the category is not accessible to the user
+   */
   async create(dto: CreateBudgetDto, userId: string): Promise<BudgetResponse> {
     const count = await this.prisma.budget.count({ where: { userId } });
     if (count >= USER_LIMITS.budgets) {
@@ -142,6 +154,14 @@ export class BudgetsService {
     return this.toResponse(budget);
   }
 
+  /**
+   * Copies budgets from a source month to a target month.
+   * `skipDuplicates: true` means budgets that already exist in the target period
+   * are silently skipped rather than causing an error; `skipped` in the response
+   * reflects how many were omitted.
+   *
+   * @returns Counts of copied, skipped, and total source budgets
+   */
   async copyFromMonth(
     dto: CopyBudgetsDto,
     userId: string,

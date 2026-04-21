@@ -12,6 +12,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { FilterTransactionsDto } from './dto/filter-transactions.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 
+/** Shared include for all transaction queries so response shape is consistent. */
 const transactionInclude = {
   account: true,
   fromAccount: true,
@@ -48,6 +49,7 @@ export type TransactionResponse = Omit<
   toAccount: NormalizedAccount<TransactionAccount> | null;
 };
 
+/** Paginated list response returned by `findAll`. */
 export interface PaginatedTransactionsResponse {
   data: TransactionResponse[];
   total: number;
@@ -62,6 +64,12 @@ export class TransactionsService {
     private reportCache: ReportCacheService,
   ) {}
 
+  /**
+   * Creates a transaction and updates account balances atomically.
+   * Enforces the per-user transaction limit before writing.
+   *
+   * @throws BadRequestException when the transaction limit is reached or validation fails
+   */
   async create(
     dto: CreateTransactionDto,
     userId: string,
@@ -81,6 +89,11 @@ export class TransactionsService {
     return this.toResponse(transaction);
   }
 
+  /**
+   * Creates a transaction within an existing Prisma transaction.
+   * Use this when the caller already owns a DB transaction context (e.g. account creation).
+   * Also invalidates the report cache after the write.
+   */
   async createWithTx(
     tx: Prisma.TransactionClient,
     dto: CreateTransactionDto,
@@ -92,6 +105,10 @@ export class TransactionsService {
     return this.toResponse(transaction);
   }
 
+  /**
+   * Alias of `createWithTx` used by goal contributions to keep call sites readable.
+   * Both variants delegate to `createRawInTransaction`.
+   */
   async createInTransaction(
     tx: Prisma.TransactionClient,
     dto: CreateTransactionDto,
@@ -103,6 +120,11 @@ export class TransactionsService {
     return this.toResponse(transaction);
   }
 
+  /**
+   * Returns a paginated, filtered list of transactions for the user.
+   * Account filter matches any of the three account columns (account, fromAccount, toAccount)
+   * to correctly include transfer transactions in per-account views.
+   */
   async findAll(
     filters: FilterTransactionsDto,
     userId: string,
@@ -113,6 +135,8 @@ export class TransactionsService {
     const offset = filters.offset ?? 0;
 
     if (filters.accountId) {
+      // Transfers use fromAccountId/toAccountId instead of accountId, so we
+      // must check all three columns when filtering by account.
       where.OR = [
         { accountId: filters.accountId },
         { fromAccountId: filters.accountId },
@@ -171,6 +195,17 @@ export class TransactionsService {
     return this.toResponse(transaction);
   }
 
+  /**
+   * Updates a transaction's fields and re-applies balance effects atomically:
+   * 1. Reverses the original balance impact
+   * 2. Applies the new balance impact
+   *
+   * Goal-linked contribution transactions are restricted from changing their
+   * transaction type because the goal type determines the required type.
+   *
+   * @throws NotFoundException when the transaction does not exist for the user
+   * @throws BadRequestException when a goal-linked transaction tries to change type
+   */
   async update(
     id: string,
     dto: UpdateTransactionDto,
@@ -184,6 +219,8 @@ export class TransactionsService {
         throw new NotFoundException(`Transaction ${id} not found`);
       }
 
+      // Goal contributions are tied to a specific transaction type (TRANSFER for SAVINGS,
+      // EXPENSE for DEBT_PAYOFF). Reject type changes that would break that invariant.
       const linkedContribution = await tx.goalContribution.findUnique({
         where: { transactionId: id },
         include: { goal: true },
@@ -250,6 +287,10 @@ export class TransactionsService {
     return this.toResponse(transaction);
   }
 
+  /**
+   * Deletes a transaction and reverses its balance effect on the affected account(s).
+   * @throws NotFoundException when the transaction does not exist for the user
+   */
   async remove(id: string, userId: string): Promise<TransactionResponse> {
     const transaction = await this.prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.findFirst({
@@ -271,6 +312,10 @@ export class TransactionsService {
     return this.toResponse(transaction);
   }
 
+  /**
+   * Core write path: validates shape, persists the record, and applies balance effects.
+   * All public create variants delegate here so the logic lives in one place.
+   */
   private async createRawInTransaction(
     tx: Prisma.TransactionClient,
     dto: CreateTransactionDto,
@@ -305,6 +350,14 @@ export class TransactionsService {
     return transaction;
   }
 
+  /**
+   * Validates account/category ownership and normalises the transaction shape.
+   * TRANSFER → uses fromAccountId + toAccountId, nulls accountId.
+   * INCOME/EXPENSE → uses accountId + categoryId, nulls transfer fields.
+   *
+   * @throws BadRequestException for missing required fields or same-account transfers
+   * @throws NotFoundException for accounts/categories not accessible to the user
+   */
   private async resolveTransactionShape(
     tx: Prisma.TransactionClient,
     dto: Pick<
@@ -389,6 +442,10 @@ export class TransactionsService {
     }
   }
 
+  /**
+   * Undoes a transaction's balance effect by negating the amount.
+   * Used before updating or deleting a transaction so the old impact is first removed.
+   */
   private async reverseBalanceEffect(
     tx: Prisma.TransactionClient,
     transaction: {
@@ -408,6 +465,12 @@ export class TransactionsService {
     });
   }
 
+  /**
+   * Applies a transaction's balance effect to the relevant account(s) using atomic increments.
+   * TRANSFER: debits fromAccount, credits toAccount.
+   * INCOME: credits accountId; EXPENSE: debits accountId.
+   * Negative `amount` (used by `reverseBalanceEffect`) inverts the direction.
+   */
   private async applyBalanceEffect(
     tx: Prisma.TransactionClient,
     transaction: {
@@ -472,6 +535,7 @@ export class TransactionsService {
     };
   }
 
+  /** Converts Prisma Decimal fields to plain numbers for JSON serialization. */
   private toResponse(
     transaction: TransactionWithRelations,
   ): TransactionResponse {
