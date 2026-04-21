@@ -140,6 +140,11 @@ type GoalResponse = Omit<
     | null;
 };
 
+/**
+ * Manages financial goals (SAVINGS and DEBT_PAYOFF) and their linked contribution transactions.
+ * Contributions are always real transactions: TRANSFER for SAVINGS (money moves to the
+ * goal account) and EXPENSE for DEBT_PAYOFF (money leaves an account).
+ */
 @Injectable()
 export class GoalsService {
   constructor(
@@ -147,6 +152,13 @@ export class GoalsService {
     private transactionsService: TransactionsService,
   ) {}
 
+  /**
+   * Creates a new financial goal.
+   * SAVINGS goals require a linked account upfront; DEBT_PAYOFF goals do not use an account.
+   *
+   * @throws BadRequestException when the user hits the goal limit or required fields are missing
+   * @throws NotFoundException when the linked account is not owned by the user
+   */
   async create(dto: CreateGoalDto, userId: string): Promise<GoalResponse> {
     const count = await this.prisma.goal.count({ where: { userId } });
     if (count >= USER_LIMITS.goals) {
@@ -189,6 +201,14 @@ export class GoalsService {
     return this.toResponse(goal);
   }
 
+  /**
+   * Updates a goal's mutable fields.
+   * Goal type is immutable after creation because the contribution transaction
+   * type is derived from it.
+   *
+   * @throws BadRequestException when attempting to change the goal type
+   * @throws NotFoundException when the goal does not exist or belongs to another user
+   */
   async update(
     id: string,
     dto: UpdateGoalDto,
@@ -237,6 +257,16 @@ export class GoalsService {
     await this.prisma.goal.delete({ where: { id } });
   }
 
+  /**
+   * Records a contribution toward a goal by creating a linked transaction.
+   * SAVINGS → TRANSFER from `fromAccountId` to the goal account.
+   * DEBT_PAYOFF → EXPENSE from `fromAccountId`.
+   *
+   * The contribution is linked via a `GoalContribution` record so it is
+   * tracked separately from regular transactions.
+   *
+   * @throws NotFoundException when the goal is not found
+   */
   async contribute(
     id: string,
     dto: ContributeGoalDto,
@@ -402,6 +432,15 @@ export class GoalsService {
     }
   }
 
+  /**
+   * Resolves the category to use for a contribution transaction.
+   * If the caller provides a categoryId it is validated and returned.
+   * Otherwise, auto-selects or creates the default "Savings" / "Debt" category.
+   *
+   * The try/catch on P2002 handles a race condition: two simultaneous contributions
+   * may both find no existing category and attempt to create it — the loser catches
+   * the unique-constraint error and re-fetches the winner's record.
+   */
   private async resolveContributionCategory(
     tx: Prisma.TransactionClient,
     type: GoalType,
@@ -420,6 +459,7 @@ export class GoalsService {
         name,
         OR: [{ userId }, { isSystem: true }, { userId: null }],
       },
+      // Prefer user-owned over system so personal renames are respected
       orderBy: [{ isSystem: 'desc' }, { userId: 'desc' }],
       select: { id: true },
     });
@@ -442,6 +482,8 @@ export class GoalsService {
 
       return created.id;
     } catch (error) {
+      // P2002: race condition — another request created the same category first.
+      // Re-fetch rather than failing.
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
@@ -458,6 +500,11 @@ export class GoalsService {
     }
   }
 
+  /**
+   * Converts the raw DB payload into the API response shape.
+   * Computes `currentAmount` by summing contribution transaction amounts,
+   * and converts all Prisma Decimal fields to plain numbers.
+   */
   private toResponse(goal: GoalWithRelations): GoalResponse {
     const currentAmount = goal.contributions.reduce(
       (sum, contribution) => sum + Number(contribution.transaction.amount),
