@@ -18,6 +18,7 @@ import { SendMessageDto } from './dto/send-message.dto';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { CHAT_LIMITS } from '../common/constants/limits';
 
 @ApiTags('Chat')
 @ApiBearerAuth()
@@ -86,9 +87,11 @@ export class ChatController {
     @Query('limit') limit?: string,
     @Query('before') before?: string,
   ) {
+    const parsedLimit = limit ? Number(limit) : undefined;
+
     return this.chatService.getHistory(
       sessionId,
-      limit ? Number(limit) : 50,
+      Number.isNaN(parsedLimit) ? undefined : parsedLimit,
       before,
       user.userId,
     );
@@ -108,7 +111,7 @@ export class ChatController {
     );
     const { messages, hasMore } = await this.chatService.getHistory(
       sessionId,
-      50,
+      CHAT_LIMITS.defaultHistoryPageSize,
       undefined,
       user.userId,
     );

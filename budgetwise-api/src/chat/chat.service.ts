@@ -1,6 +1,11 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import OpenAI from 'openai';
-import { USER_LIMITS } from '../common/constants/limits';
+import { CHAT_LIMITS, USER_LIMITS } from '../common/constants/limits';
 import { PrismaService } from '../prisma/prisma.service';
 import { ToolExecutor } from './tools/tool-executor';
 import { toolDefinitions } from './tools/tool-definitions';
@@ -174,41 +179,115 @@ export class ChatService {
   // MESSAGE HISTORY
   // ============================================
 
+  /**
+   * Fetch paginated chat history for a session.
+   *
+   * Features:
+   * - Cursor-based pagination using `before` (message ID)
+   * - Stable ordering (createdAt + id) to prevent duplicates/skips
+   * - Filters out tool/internal messages
+   * - Returns messages in chronological order (oldest → newest)
+   */
   async getHistory(
     sessionId: string,
-    limit = 50,
+    limit: number = CHAT_LIMITS.defaultHistoryPageSize,
     before?: string,
     userId?: string,
   ): Promise<{ messages: any[]; hasMore: boolean }> {
+    /**
+     * Optional authorization check:
+     * Ensure the session belongs to the requesting user.
+     */
     if (userId) {
       const session = await this.prisma.chatSession.findFirst({
         where: { id: sessionId, userId },
       });
-      if (!session)
+
+      if (!session) {
         throw new NotFoundException(`Session ${sessionId} not found`);
+      }
     }
 
+    /**
+     * Enforce safe pagination limits:
+     * - minimum: 1
+     * - maximum: maxHistoryPageSize
+     */
+    const safeLimit = Math.min(
+      Math.max(1, limit),
+      CHAT_LIMITS.maxHistoryPageSize,
+    );
+
+    /**
+     * Base query:
+     * - Only messages for this session
+     * - Exclude internal/tool-related messages
+     */
     const where: any = {
       sessionId,
       role: { not: 'tool' },
       toolCalls: null,
     };
 
+    /**
+     * Cursor pagination logic:
+     *
+     * We fetch messages BEFORE the "before" message.
+     *
+     * IMPORTANT FIX:
+     * We use a composite condition:
+     * - createdAt < cursor.createdAt
+     * - OR same createdAt but id < cursor.id
+     *
+     * This prevents:
+     * - duplicate messages
+     * - skipped messages when timestamps collide
+     */
     if (before) {
       const cursor = await this.prisma.chatMessage.findUnique({
         where: { id: before },
       });
-      if (cursor) where.createdAt = { lt: cursor.createdAt };
+
+      if (cursor) {
+        where.OR = [
+          {
+            createdAt: { lt: cursor.createdAt },
+          },
+          {
+            createdAt: cursor.createdAt,
+            id: { lt: cursor.id },
+          },
+        ];
+      }
+      // If cursor not found → pagination is ignored safely
     }
 
+    /**
+     * Fetch messages:
+     * - Order must be deterministic (createdAt + id)
+     * - DESC for pagination efficiency
+     * - Fetch one extra to detect "hasMore"
+     */
     const raw = await this.prisma.chatMessage.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
-      take: limit + 1,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: safeLimit + 1,
     });
 
-    const hasMore = raw.length > limit;
-    return { messages: raw.slice(0, limit).reverse(), hasMore };
+    /**
+     * Determine if more pages exist
+     */
+    const hasMore = raw.length > safeLimit;
+
+    /**
+     * Return:
+     * - Only requested page size
+     * - Reverse to chronological order (oldest → newest)
+     */
+    return {
+      messages: raw.slice(0, safeLimit).reverse(),
+      hasMore,
+    };
   }
 
   private async buildMessageArray(
@@ -224,63 +303,104 @@ export class ChatService {
       { role: 'system', content: systemPrompt },
     ];
 
-    // Track tool_call_ids we expect to see tool responses for
-    let pendingToolCallIds: string[] = [];
+    // Use Set to prevent duplicate tracking + make removal O(1)
+    const pendingToolCallIds = new Set<string>();
 
     for (const msg of history) {
-      // Before adding any non-tool message, flush any orphaned tool_call_ids
-      // by inserting synthetic tool responses. This handles corrupted history
-      // where an assistant tool_calls message has no following tool messages.
-      if (msg.role !== 'tool' && pendingToolCallIds.length > 0) {
-        for (const callId of pendingToolCallIds) {
-          messages.push({
-            role: 'tool',
-            tool_call_id: callId,
-            content: JSON.stringify({ status: 'pending_confirmation' }),
-          } as any);
-        }
-        pendingToolCallIds = [];
+      /**
+       * If we encounter a non-tool message but still have pending tool calls,
+       * it means the history is incomplete or corrupted.
+       * We safely patch it with synthetic tool responses.
+       */
+      if (msg.role !== 'tool') {
+        this.flushPendingToolCalls(messages, pendingToolCallIds);
+        pendingToolCallIds.clear();
       }
 
-      if (msg.role === 'user') {
-        messages.push({ role: 'user', content: msg.content });
-      } else if (msg.role === 'assistant') {
-        const assistantMsg: any = {
-          role: 'assistant',
-          content: msg.content || null,
-        };
-        if (msg.toolCalls) {
-          const toolCalls = JSON.parse(msg.toolCalls);
-          assistantMsg.tool_calls = toolCalls;
-          // Track which tool_call_ids need responses
-          pendingToolCallIds = toolCalls
-            .filter((tc: any) => tc.type === 'function')
-            .map((tc: any) => tc.id as string);
+      switch (msg.role) {
+        case 'user':
+          messages.push({
+            role: 'user',
+            content: msg.content,
+          });
+          break;
+
+        case 'assistant': {
+          const { message, toolCallIds } = this.mapAssistant(msg);
+
+          messages.push(message);
+
+          // IMPORTANT FIX: accumulate instead of overwrite
+          for (const id of toolCallIds) {
+            pendingToolCallIds.add(id);
+          }
+
+          break;
         }
-        messages.push(assistantMsg);
-      } else if (msg.role === 'tool') {
-        // Mark this tool_call_id as satisfied
-        pendingToolCallIds = pendingToolCallIds.filter(
-          (id) => id !== msg.toolCallId,
-        );
-        messages.push({
-          role: 'tool',
-          tool_call_id: msg.toolCallId || '',
-          content: msg.content,
-        } as any);
+
+        case 'tool':
+          if (msg.toolCallId) {
+            pendingToolCallIds.delete(msg.toolCallId);
+          }
+          break;
       }
     }
 
-    // Flush any remaining orphaned tool_call_ids at end of history
+    // Final safety flush for any remaining orphaned tool calls
+    this.flushPendingToolCalls(messages, pendingToolCallIds);
+
+    return messages;
+  }
+
+  /**
+   * Inject synthetic tool responses for missing tool-call results.
+   */
+  private flushPendingToolCalls(
+    messages: ChatCompletionMessageParam[],
+    pendingToolCallIds: Set<string>,
+  ) {
     for (const callId of pendingToolCallIds) {
       messages.push({
         role: 'tool',
         tool_call_id: callId,
-        content: JSON.stringify({ status: 'pending_confirmation' }),
+        content: JSON.stringify({
+          status: 'missing_tool_response',
+        }),
       } as any);
     }
+  }
 
-    return messages;
+  /**
+   * ASSISTANT mapping + tool call extraction
+   */
+  private mapAssistant(msg: any): {
+    message: ChatCompletionMessageParam;
+    toolCallIds: string[];
+  } {
+    const message: any = {
+      role: 'assistant',
+      content: msg.content ?? null,
+    };
+
+    let toolCallIds: string[] = [];
+
+    if (msg.toolCalls) {
+      try {
+        const toolCalls = JSON.parse(msg.toolCalls);
+
+        message.tool_calls = toolCalls;
+
+        toolCallIds = toolCalls
+          .filter((tc: any) => tc.type === 'function')
+          .map((tc: any) => tc.id)
+          .filter(Boolean);
+      } catch {
+        // Fail safely: ignore corrupted tool call data
+        toolCallIds = [];
+      }
+    }
+
+    return { message, toolCallIds };
   }
 
   // ============================================
@@ -452,7 +572,7 @@ export class ChatService {
     messages: ChatCompletionMessageParam[],
     sessionId: string,
     userId: string,
-    maxIterations = 50,
+    maxIterations: number = CHAT_LIMITS.toolIterations,
   ): Promise<string> {
     let iteration = 0;
 

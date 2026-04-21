@@ -59,8 +59,10 @@ Your job is to decide whether a user message is within scope.
 
 IN SCOPE — allow these:
 - Questions or actions about personal finance, budgeting, saving, spending, income
-- CRUD operations on accounts, transactions, categories, or budgets
-- Asking for spending reports, summaries, or financial advice
+- CRUD operations on accounts, transactions, categories, budgets, goals, or scheduled transactions
+- Asking about spending reports, summaries, budget status, trends, or financial advice
+- Asking about savings goals, debt-payoff goals, goal contributions, or goal progress
+- Asking about reminders, due alerts, notifications, unread counts, or upcoming scheduled transactions
 - Asking about how the app works or what the assistant can do
 - Greetings, thanks, or very short conversational acknowledgments (e.g. "ok", "thanks", "got it", "yes", "no", "confirm")
 - Clarification questions related to a previous finance topic
@@ -191,7 +193,7 @@ export class GuardrailsService {
         return {
           allowed: false,
           blockedReason:
-            "I'm BudgetWise AI, your personal budgeting assistant. I can only help with budgeting, transactions, accounts, spending reports, and financial advice. Is there something finance-related I can help you with?",
+            "I'm BudgetWise AI, your personal budgeting assistant. I can help with budgeting, accounts, transactions, scheduled transactions, goals, notifications, reports, and financial advice. Is there something finance-related I can help you with?",
         };
       }
 

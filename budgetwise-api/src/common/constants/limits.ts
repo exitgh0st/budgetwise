@@ -8,4 +8,10 @@ export const USER_LIMITS = {
   chatSessions: 100,
 } as const;
 
+export const CHAT_LIMITS = {
+  defaultHistoryPageSize: 50,
+  maxHistoryPageSize: 100,
+  toolIterations: 50,
+} as const;
+
 export type UserLimitKey = keyof typeof USER_LIMITS;
