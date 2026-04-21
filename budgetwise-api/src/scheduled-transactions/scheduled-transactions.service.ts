@@ -199,6 +199,14 @@ export class ScheduledTransactionsService {
     await this.prisma.scheduledTransaction.delete({ where: { id } });
   }
 
+  /**
+   * Manually triggers a single generation from a scheduled transaction,
+   * posting a real transaction for the current date and advancing the schedule.
+   * Only active scheduled transactions can be generated.
+   *
+   * @throws NotFoundException when the scheduled transaction is not found
+   * @throws BadRequestException when the scheduled transaction is not active
+   */
   async generate(id: string, userId: string): Promise<object> {
     return this.prisma.$transaction(async (tx) => {
       const scheduledTransaction = await tx.scheduledTransaction.findFirst({
@@ -261,6 +269,13 @@ export class ScheduledTransactionsService {
     );
   }
 
+  /**
+   * Called by the cron job to generate a transaction from a due scheduled record.
+   * Re-validates status and due date inside the DB transaction to handle the
+   * TOCTOU window between `findAllDue` and actual execution.
+   *
+   * @returns true when a transaction was created, false when the record was skipped
+   */
   async generateFromRecord(
     scheduledTransaction: Pick<ScheduledTransaction, 'id' | 'userId'>,
   ): Promise<boolean> {
@@ -272,6 +287,8 @@ export class ScheduledTransactionsService {
         where: { id: scheduledTransaction.id },
       });
 
+      // Re-check inside the transaction to avoid processing a record that was
+      // already generated or cancelled between the list query and this write.
       if (!current || current.status !== 'ACTIVE') {
         return false;
       }
@@ -307,6 +324,13 @@ export class ScheduledTransactionsService {
     });
   }
 
+  /**
+   * Advances a due date by one frequency period.
+   * MONTHLY uses `Math.min(originalDay, lastDay)` to clamp dates like
+   * Jan 31 → Feb 28 instead of rolling into March (which `Date.UTC` would do).
+   * WEEKLY adds 7 days via UTC math to avoid DST-related day drift.
+   * ONCE returns the original date unchanged; the status is set to COMPLETED elsewhere.
+   */
   private advanceDate(from: Date, frequency: RecurringFrequency): Date {
     const originalDay = from.getUTCDate();
     const month = from.getUTCMonth();
@@ -323,6 +347,7 @@ export class ScheduledTransactionsService {
         const nextMonth = month + 1;
         const nextYear = year + Math.floor(nextMonth / 12);
         const normalizedMonth = nextMonth % 12;
+        // Day 0 of the month after `normalizedMonth + 1` gives the last day of normalizedMonth
         const lastDay = new Date(
           Date.UTC(nextYear, normalizedMonth + 1, 0, 12, 0, 0, 0),
         ).getUTCDate();
@@ -335,6 +360,7 @@ export class ScheduledTransactionsService {
 
       case 'YEARLY': {
         const nextYear = year + 1;
+        // Handle Feb 29 leap-year dates by clamping to Feb 28 in non-leap years
         const lastDay = new Date(
           Date.UTC(nextYear, month + 1, 0, 12, 0, 0, 0),
         ).getUTCDate();
@@ -392,6 +418,13 @@ export class ScheduledTransactionsService {
     }
   }
 
+  /**
+   * Computes the Prisma update payload after a generation:
+   * - ONCE → mark COMPLETED immediately.
+   * - Recurring with no installment cap → advance due date only.
+   * - Recurring with installment cap → advance date and increment count;
+   *   mark COMPLETED when the cap is reached.
+   */
   private getProgressUpdate(scheduledTransaction: ScheduledTransaction) {
     const nextDueDate = this.advanceDate(
       scheduledTransaction.nextDueDate,

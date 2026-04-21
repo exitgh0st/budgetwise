@@ -15,6 +15,11 @@ type EmailNotificationContext = Awaited<
   ReturnType<UserService['getEmailNotificationContext']>
 >;
 
+/**
+ * Hourly cron service that:
+ * 1. Generates transactions for all past-due scheduled entries.
+ * 2. Enqueues in-app notifications and sends email reminders for upcoming scheduled transactions.
+ */
 @Injectable()
 export class ScheduledTransactionsCronService {
   private readonly logger = new Logger(ScheduledTransactionsCronService.name);
@@ -33,6 +38,14 @@ export class ScheduledTransactionsCronService {
     await this.enqueueUpcomingNotifications();
   }
 
+  /**
+   * Generates transactions for all currently due scheduled entries.
+   * Runs in a loop so a single cron tick can catch up on multiple overdue periods
+   * (e.g. after a server outage). The MAX_ITERATIONS cap prevents an infinite loop
+   * if something goes wrong with the due-date advancement.
+   *
+   * @returns Summary counts for observability / the manual `/process-due` endpoint
+   */
   async processDueTransactions(): Promise<{
     processed: number;
     failed: number;
@@ -83,6 +96,15 @@ export class ScheduledTransactionsCronService {
     return { processed: totalProcessed, failed: totalFailed, iterations };
   }
 
+  /**
+   * Checks upcoming scheduled transactions and sends reminder notifications.
+   *
+   * Uses two accumulation structures built during a single pass over records:
+   * - `emailContextCache`: lazy-loaded per-user email preferences (avoids N Supabase API calls)
+   * - `digestBuckets`: per-user lists of reminders collected for daily digest emails
+   *
+   * After the pass, sends one digest email per user whose digest hour matches the current hour.
+   */
   private async enqueueUpcomingNotifications(): Promise<void> {
     const now = new Date();
     const startOfToday = startOfLocalDay(now);
@@ -145,6 +167,11 @@ export class ScheduledTransactionsCronService {
     await this.sendDailyDigestEmails(now, digestBuckets, emailContextCache);
   }
 
+  /**
+   * Lazily fetches (and caches) the email notification context for a user.
+   * The cache stores the Promise so parallel lookups for the same userId
+   * coalesce onto a single Supabase API call rather than issuing duplicates.
+   */
   private async getEmailContext(
     userId: string,
     cache: Map<string, Promise<EmailNotificationContext>>,
@@ -222,6 +249,12 @@ export class ScheduledTransactionsCronService {
     buckets.set(record.userId, reminders);
   }
 
+  /**
+   * Sends a single daily digest email to each user whose:
+   * - email notifications are enabled in daily_digest mode
+   * - digest hour matches the current hour
+   * - digest has not already been sent today (idempotency via `emailDigestLastSentOn`)
+   */
   private async sendDailyDigestEmails(
     now: Date,
     buckets: Map<
