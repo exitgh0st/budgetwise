@@ -32,6 +32,11 @@ import { NotificationsService } from '../../../core/services/notifications.servi
   templateUrl: './notification-bell.component.html',
   styleUrl: './notification-bell.component.scss',
 })
+/**
+ * Notification bell icon with unread badge.
+ * Delegates polling lifecycle to `NotificationsService` — starts on init, stops on destroy.
+ * The recent notification list is loaded lazily when the menu is opened (`loadRecent`).
+ */
 export class NotificationBellComponent implements OnInit, OnDestroy {
   private readonly notificationsService = inject(NotificationsService);
   private readonly router = inject(Router);

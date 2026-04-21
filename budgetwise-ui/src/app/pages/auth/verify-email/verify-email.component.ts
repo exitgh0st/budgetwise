@@ -44,6 +44,7 @@ export class VerifyEmailComponent implements OnInit {
   cooldownSeconds = signal(0);
 
   private cooldownTimerId: number | null = null;
+  /** Guards against double navigation when the auth state change fires multiple times. */
   private redirectInProgress = false;
 
   ngOnInit() {
@@ -140,6 +141,7 @@ export class VerifyEmailComponent implements OnInit {
     await this.router.navigate(['/dashboard']);
   }
 
+  /** Starts a countdown timer to prevent spamming the resend endpoint. */
   private startCooldown(seconds: number) {
     this.cooldownSeconds.set(seconds);
 

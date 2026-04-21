@@ -90,6 +90,13 @@ type ScheduledTransactionCalendarEvent = CalendarEvent<{
   templateUrl: './scheduled-transactions-calendar.component.html',
   styleUrl: './scheduled-transactions-calendar.component.scss',
 })
+/**
+ * Calendar view for scheduled transactions.
+ * `projectMonth` forward-projects each ACTIVE record's recurrence pattern into the viewed month,
+ * generating a `CalendarEvent` per occurrence. The `events` signal is `computed` from `records`
+ * and `viewDate` so it stays in sync automatically.
+ * On mobile, day clicks open a bottom sheet instead of a sidebar panel.
+ */
 export class ScheduledTransactionsCalendarComponent {
   private readonly scheduledTransactionsService = inject(
     ScheduledTransactionsService,
@@ -409,6 +416,7 @@ export class ScheduledTransactionsCalendarComponent {
     }
   }
 
+  /** Advances by one month, clamping to the last day of the target month (e.g. Jan 31 → Feb 28/29). */
   private addMonthWithClamp(date: Date): Date {
     const nextMonth = addMonths(date, 1);
     const originalDay = date.getDate();
@@ -416,6 +424,7 @@ export class ScheduledTransactionsCalendarComponent {
     return setDate(nextMonth, Math.min(originalDay, lastDayOfMonth));
   }
 
+  /** Advances by one year, clamping to the last day of the target month (handles Feb 29 on non-leap years). */
   private addYearWithClamp(date: Date): Date {
     const nextYear = addYears(date, 1);
     const originalDay = date.getDate();

@@ -51,6 +51,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
   templateUrl: './budgets.component.html',
   styleUrl: './budgets.component.scss',
 })
+/** Budgets page — per-category budget management with carry-forward status and month navigation. */
 export class BudgetsComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private budgetsService = inject(BudgetsService);
@@ -257,6 +258,11 @@ export class BudgetsComponent implements OnInit {
       });
   }
 
+  /**
+   * Builds the preview list for the copy dialog.
+   * `willCopy` / `selected` are false for categories that already have a budget
+   * in the target month — shown as greyed-out in the dialog so the user knows they'll be skipped.
+   */
   private buildCopyPreviewItems(
     sourceBudgets: Budget[],
     targetBudgets: Budget[],

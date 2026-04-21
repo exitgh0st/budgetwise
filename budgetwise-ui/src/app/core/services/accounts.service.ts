@@ -43,6 +43,7 @@ export class AccountsService {
     return this.http.delete<Account>(`${this.url}/${id}`);
   }
 
+  /** Records a balance adjustment transaction on the server so the difference is audit-logged. */
   adjustBalance(id: string, newBalance: number): Observable<Account> {
     return this.http.post<Account>(`${this.url}/${id}/adjust-balance`, {
       newBalance,

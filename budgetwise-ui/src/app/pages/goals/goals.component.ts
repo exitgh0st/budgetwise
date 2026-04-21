@@ -56,6 +56,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
   templateUrl: './goals.component.html',
   styleUrl: './goals.component.scss',
 })
+/** Goals page — SAVINGS and DEBT_PAYOFF goals with inline linked-transaction expansion. */
 export class GoalsComponent implements OnInit {
   private goalsService = inject(GoalsService);
   private accountsService = inject(AccountsService);
@@ -154,6 +155,7 @@ export class GoalsComponent implements OnInit {
     return Math.min(this.percentComplete(goal), 100);
   }
 
+  /** Two-step creation: first pick SAVINGS or DEBT_PAYOFF, then open the goal form. */
   openAddDialog(): void {
     const typeDialogRef = this.dialog.open(GoalTypeDialogComponent, {
       width: '420px',
@@ -268,6 +270,7 @@ export class GoalsComponent implements OnInit {
     });
   }
 
+  /** SAVINGS goals require a linked account (for the transfer); DEBT_PAYOFF goals do not. */
   canContribute(goal: Goal): boolean {
     return goal.type === 'SAVINGS' ? !!goal.accountId : true;
   }
@@ -334,6 +337,7 @@ export class GoalsComponent implements OnInit {
             duration: 3000,
           });
           this.loadPage();
+          // Re-expand the goal row after reload so the user sees the updated transaction.
           this.expandedGoalIds.add(goal.id);
         },
         error: (err) => {

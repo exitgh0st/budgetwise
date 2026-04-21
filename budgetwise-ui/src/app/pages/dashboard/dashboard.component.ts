@@ -29,6 +29,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
+/** Overview page — fetches accounts, current-month summary, budget status, and 10 recent transactions in parallel. */
 export class DashboardComponent implements OnInit {
   private accountsService = inject(AccountsService);
   private transactionsService = inject(TransactionsService);
@@ -78,6 +79,7 @@ export class DashboardComponent implements OnInit {
 
   formatRelativeDate(dateStr: string): string {
     const date = new Date(dateStr);
+    // Normalize both sides to midnight so the day diff is always a whole number.
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const target = new Date(date);
@@ -95,6 +97,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private shouldShowOnboarding() {
+    // Guard against SSR environments where localStorage is not available.
     return typeof localStorage !== 'undefined'
       && !localStorage.getItem(BUDGETWISE_ONBOARDING_STORAGE_KEY);
   }

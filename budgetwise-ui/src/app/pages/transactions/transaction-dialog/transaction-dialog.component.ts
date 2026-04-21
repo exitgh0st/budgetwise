@@ -183,6 +183,15 @@ interface NonTransferSnapshot {
     }
   `,
 })
+/**
+ * Add/Edit transaction dialog.
+ * The form fields and validators change dynamically based on type:
+ *   INCOME/EXPENSE: accountId + categoryId required; from/toAccountId cleared.
+ *   TRANSFER: fromAccountId + toAccountId required; accountId/categoryId cleared.
+ *
+ * `preservedNonTransfer` saves the accountId and categoryId when the user switches
+ * to TRANSFER so they are restored when switching back to INCOME/EXPENSE.
+ */
 export class TransactionDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<TransactionDialogComponent>);
@@ -212,6 +221,8 @@ export class TransactionDialogComponent implements OnInit {
     const t = this.data.transaction;
     const initialValue = this.data.initialValue;
     const isTransfer = t?.type === 'TRANSFER';
+    // Round-trip through YYYY-MM-DD so the datepicker receives a LOCAL midnight Date,
+    // avoiding the UTC-midnight shift that would display the wrong day in negative-offset timezones.
     const transactionDate = t?.date
       ? (fromDateOnlyString(toDateOnlyString(t.date)) ?? new Date(t.date))
       : new Date();
@@ -309,6 +320,7 @@ export class TransactionDialogComponent implements OnInit {
     this.applyTypeValidators(type);
   }
 
+  /** Swaps required validators between (accountId, categoryId) and (fromAccountId, toAccountId) based on type. */
   private applyTypeValidators(type: TransactionType) {
     const accountId = this.form.get('accountId');
     const categoryId = this.form.get('categoryId');

@@ -219,6 +219,7 @@ export class AccountDialogComponent implements OnInit {
     typeControl?.valueChanges.subscribe((newType: AccountType) => {
       this.updateFilteredProviders(newType);
 
+      // Clear the selected provider if it doesn't support the new account type.
       const currentProviderId = providerIdControl?.value as string | null;
       if (currentProviderId) {
         const provider = ACCOUNT_PROVIDERS.find(
@@ -233,6 +234,7 @@ export class AccountDialogComponent implements OnInit {
         providerIdControl?.setValue(null);
       }
 
+      // Maintaining balance is a BANK-only concept; clear it for all other types.
       if (newType !== 'BANK') {
         this.form.get('maintainingBalance')?.setValue(null);
       }

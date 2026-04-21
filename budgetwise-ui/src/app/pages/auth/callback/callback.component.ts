@@ -34,6 +34,12 @@ import { AuthService } from '../../../core/services/auth.service';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+/**
+ * Handles the OAuth / magic-link callback after Supabase redirects back to the app.
+ * Polls `AuthService.isLoading()` at 100 ms intervals until the SDK resolves the
+ * session from the URL hash, then routes to /dashboard or /verify-email.
+ * A 10-second hard timeout redirects to /login if auth never resolves.
+ */
 export class CallbackComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);

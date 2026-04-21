@@ -63,6 +63,12 @@ export interface DateGroup {
   templateUrl: './transactions.component.html',
   styleUrl: './transactions.component.scss',
 })
+/**
+ * Transactions page — paginated, server-filtered list with CSV export.
+ * Account and category dropdowns have client-side search controls (`accountSearchCtrl`,
+ * `categorySearchCtrl`) whose values are used by `filteredAccounts` / `filteredCategories`
+ * getters but are NOT sent to the server — they only narrow the dropdown options.
+ */
 export class TransactionsComponent implements OnInit {
   private transactionsService = inject(TransactionsService);
   private accountsService = inject(AccountsService);
@@ -112,6 +118,7 @@ export class TransactionsComponent implements OnInit {
         this.pageSize = this.isMobile ? 10 : 20;
       });
 
+    // Debounce free-text search to avoid a server request on every keystroke.
     this.searchControl.valueChanges
       .pipe(
         map(value => value.trim()),
@@ -128,6 +135,7 @@ export class TransactionsComponent implements OnInit {
   loadDropdowns() {
     this.accountsService.getAll().subscribe(a => this.accounts = a);
     this.categoriesService.getAll().subscribe(c => {
+      // Exclude system categories except Savings and Debt, which are valid transaction targets.
       this.categories = c.filter(
         cat => !cat.isSystem || ['Savings', 'Debt'].includes(cat.name),
       );
@@ -264,9 +272,11 @@ export class TransactionsComponent implements OnInit {
     });
   }
 
+  /** Groups transactions by local calendar date (`YYYY-MM-DD`) and sorts groups descending. */
   private groupByDate(transactions: Transaction[]): DateGroup[] {
     const map = new Map<string, Transaction[]>();
     for (const t of transactions) {
+      // toDateOnlyString uses local calendar parts to avoid UTC off-by-one issues.
       const dateKey = toDateOnlyString(t.date);
       if (!dateKey) {
         continue;
@@ -351,6 +361,7 @@ export class TransactionsComponent implements OnInit {
       'Category',
       'Description',
     ];
+    // RFC 4180: wrap every cell in quotes and escape embedded quotes by doubling them.
     const rows = transactions.map(transaction => [
       this.formatDate(transaction.date),
       transaction.type,

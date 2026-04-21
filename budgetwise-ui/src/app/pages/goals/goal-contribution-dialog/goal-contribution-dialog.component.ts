@@ -140,6 +140,7 @@ export class GoalContributionDialogComponent {
   readonly currencyService = inject(CurrencyService);
   data = inject<GoalContributionDialogData>(MAT_DIALOG_DATA);
 
+  // Exclude the goal's own savings account — you can't fund a transfer from its destination.
   readonly fundingAccounts = this.data.accounts.filter(
     (account) => account.id !== this.data.goal.accountId,
   );
@@ -155,6 +156,7 @@ export class GoalContributionDialogComponent {
     const s = (this.categorySearchCtrl.value || '').toLowerCase();
     return s ? this.data.categories.filter(c => c.name.toLowerCase().includes(s)) : this.data.categories;
   }
+  // Default category matches the goal type: "Savings" for SAVINGS goals, "Debt" for DEBT_PAYOFF goals.
   readonly defaultCategoryId =
     this.data.categories.find((category) =>
       category.name === (this.data.goal.type === 'SAVINGS' ? 'Savings' : 'Debt'),

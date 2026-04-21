@@ -37,6 +37,17 @@ import { MarkdownPipe } from '../../pipes/markdown.pipe';
   templateUrl: './chat-panel.component.html',
   styleUrl: './chat-panel.component.scss',
 })
+/**
+ * Slide-in chat panel hosting the AI financial advisor conversation.
+ *
+ * Scroll strategy: `shouldScroll` is set to `true` whenever new messages arrive
+ * and consumed in `ngAfterViewChecked` so the DOM scroll happens after Angular
+ * finishes rendering the new message nodes, not mid-subscription.
+ *
+ * Pagination: `oldestMessageId` is the cursor for the "load more" direction.
+ * On each page, older messages are prepended and `previousScrollHeight` is used
+ * to restore the user's visual position after the DOM grows upward.
+ */
 export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   isPanelOpen = false;
   isMobile = false;
@@ -49,6 +60,7 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   messages: ChatMessage[] = [];
   sessions: ChatSession[] = [];
   activeSessionId = '';
+  /** Cursor for reverse-chronological pagination; the `id` of the earliest loaded message. */
   private oldestMessageId: string | null = null;
 
   editingSessionId: string | null = null;
@@ -59,6 +71,7 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   private chatService = inject(ChatService);
   readonly onboardingUi = inject(OnboardingUiService);
   private snackBar = inject(MatSnackBar);
+  /** Deferred scroll flag — consumed in ngAfterViewChecked once the DOM is stable. */
   private shouldScroll = false;
   private subscriptions = new Subscription();
 
@@ -86,6 +99,7 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
     this.chatService.getActiveSession().subscribe({
       next: ({ sessionId, messages, hasMore }) => {
         this.activeSessionId = sessionId;
+        // Filter out tool-call messages — they are internal agent steps, not displayable chat turns.
         this.messages = messages.filter(m => m.role !== 'tool');
         this.hasMoreMessages = hasMore;
         this.oldestMessageId = messages.length > 0 ? messages[0].id : null;
@@ -170,6 +184,7 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
   }
 
   onScroll(event: Event) {
+    // Trigger pagination when the user scrolls within 100px of the top.
     const el = event.target as HTMLElement;
     if (el.scrollTop < 100 && this.hasMoreMessages && !this.isLoadingMore) {
       this.loadMoreMessages();
@@ -180,6 +195,7 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
     if (!this.hasMoreMessages || this.isLoadingMore || !this.oldestMessageId) return;
     this.isLoadingMore = true;
     const el = this.messageContainer.nativeElement as HTMLElement;
+    // Snapshot height before prepending so we can restore the user's visual position afterward.
     const previousScrollHeight = el.scrollHeight;
 
     this.chatService.getHistory(this.activeSessionId, 50, this.oldestMessageId).subscribe({
@@ -189,6 +205,7 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
         this.hasMoreMessages = hasMore;
         this.oldestMessageId = filtered.length > 0 ? filtered[0].id : this.oldestMessageId;
         this.isLoadingMore = false;
+        // Defer to next tick so Angular renders the new nodes before we adjust scrollTop.
         setTimeout(() => { el.scrollTop = el.scrollHeight - previousScrollHeight; }, 0);
       },
       error: () => { this.isLoadingMore = false; }
@@ -240,6 +257,8 @@ export class ChatPanelComponent implements AfterViewChecked, OnDestroy {
     });
   }
 
+  // Runs after every change-detection cycle; scroll only when the flag is set
+  // to avoid forcing a layout recalculation on every tick.
   ngAfterViewChecked() {
     if (this.shouldScroll) {
       this.scrollToBottom();

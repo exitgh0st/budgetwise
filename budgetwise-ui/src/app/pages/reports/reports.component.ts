@@ -45,6 +45,11 @@ interface MonthOption {
   templateUrl: './reports.component.html',
   styleUrl: './reports.component.scss',
 })
+/**
+ * Reports page — monthly spending doughnut chart, budget status table, and 6-month income/expense bar chart.
+ * Chart.js theme colors are read from CSS custom properties so they respond to dark/light mode changes;
+ * an `effect()` in the constructor re-applies the theme whenever `ThemeService.isDark()` changes.
+ */
 export class ReportsComponent implements OnInit {
   @ViewChild('doughnutChart') doughnutChart?: BaseChartDirective;
 
@@ -123,6 +128,8 @@ export class ReportsComponent implements OnInit {
   };
 
   constructor() {
+    // Re-theme charts whenever the dark/light mode signal fires.
+    // queueMicrotask defers the update to after Angular's current rendering pass.
     effect(() => {
       this.themeService.isDark();
       queueMicrotask(() => this.applyChartTheme());
@@ -176,6 +183,7 @@ export class ReportsComponent implements OnInit {
     return 'carry-neutral';
   }
 
+  /** Populates the month selector with the current month plus the 11 preceding months. */
   private buildMonthOptions() {
     const now = new Date();
 
@@ -263,6 +271,7 @@ export class ReportsComponent implements OnInit {
     });
   }
 
+  /** Rebuilds chart option objects from the current CSS custom properties and triggers a Chart.js update. */
   private applyChartTheme() {
     if (typeof window === 'undefined') {
       return;

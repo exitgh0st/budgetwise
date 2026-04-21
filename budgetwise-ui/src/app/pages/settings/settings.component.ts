@@ -71,6 +71,10 @@ function formatDigestHour(hour: number): string {
   styleUrl: './settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
+/**
+ * Settings page — account, security, currency, email notifications, data export, and account deletion.
+ * Uses signal-based state for per-section loading indicators.
+ */
 export class SettingsComponent {
   readonly auth = inject(AuthService);
   readonly currencyService = inject(CurrencyService);
@@ -203,6 +207,8 @@ export class SettingsComponent {
 
       this.applyPreferences(preferences);
       this.currencyService.setCurrency(preferences.currency);
+      // Currency is stored in Supabase user_metadata and re-embedded in the JWT on each refresh.
+      // Refreshing the session ensures the new currency is reflected in the token for subsequent requests.
       await this.auth.refreshSession();
       this.snackBar.open('Currency preference updated.', 'Dismiss', {
         duration: 3000,
@@ -327,12 +333,14 @@ export class SettingsComponent {
     return `budgetwise-export-${new Date().toISOString().split('T')[0]}.json`;
   }
 
+  /** Triggers a browser file-save dialog by creating a temporary object URL and clicking a hidden anchor. */
   private downloadBlob(blob: Blob, filename: string): void {
     const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = objectUrl;
     link.download = filename;
     link.click();
+    // Revoke immediately after click; the browser has already queued the download.
     URL.revokeObjectURL(objectUrl);
   }
 
@@ -380,6 +388,11 @@ export class SettingsComponent {
     this.emailDigestHour.set(preferences.emailDigestHour);
   }
 
+  /**
+   * Shared helper for all email-notification preference changes.
+   * On error, re-fetches preferences from the server to roll back optimistic UI state
+   * (e.g. a toggle that was visually flipped but the API call failed).
+   */
   private async updateNotificationPreferences(
     patch: Partial<UserPreferences>,
     successMessage: string,
@@ -402,6 +415,7 @@ export class SettingsComponent {
         'Dismiss',
         { duration: 4000 },
       );
+      // Reload server state to undo any local signal changes made before the failure.
       void this.loadPreferences();
     } finally {
       this.updatingNotifications.set(false);

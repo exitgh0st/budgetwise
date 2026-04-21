@@ -49,6 +49,7 @@ export class LoginComponent {
         this.form.value.email!,
         this.form.value.password!,
       );
+      // Email/password sign-up requires email verification before accessing the app.
       await this.router.navigate([
         result.requiresEmailVerification ? '/verify-email' : '/dashboard',
       ]);

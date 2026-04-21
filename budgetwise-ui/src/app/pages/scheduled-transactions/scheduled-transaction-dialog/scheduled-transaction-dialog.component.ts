@@ -266,6 +266,8 @@ export class ScheduledTransactionDialogComponent implements OnInit {
 
   ngOnInit() {
     const scheduledTransaction = this.data.scheduledTransaction;
+    // Round-trip through YYYY-MM-DD to get a local midnight Date for the datepicker,
+    // avoiding the UTC offset shift that would display the wrong day in negative-offset timezones.
     const nextDueDate = scheduledTransaction?.nextDueDate
       ? (
           fromDateOnlyString(toDateOnlyString(scheduledTransaction.nextDueDate)) ??
@@ -339,6 +341,7 @@ export class ScheduledTransactionDialogComponent implements OnInit {
     value.totalInstallments = value.totalInstallments
       ? Number(value.totalInstallments)
       : null;
+    // ONCE schedules don't have installments; normalise to 1 total / 0 completed.
     if (value.frequency === 'ONCE') {
       value.completedInstallments = Math.min(value.completedInstallments, 0);
       value.totalInstallments = 1;
@@ -346,6 +349,7 @@ export class ScheduledTransactionDialogComponent implements OnInit {
     this.dialogRef.close(value);
   }
 
+  /** Disables the completed-installments field when total installments is blank or zero. */
   private syncCompletedInstallmentsControl(totalInstallments: unknown) {
     const completedInstallmentsControl = this.form.get(
       'completedInstallments',

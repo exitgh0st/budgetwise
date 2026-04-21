@@ -25,6 +25,7 @@ export class ChatService {
     return this.http.post<ChatSession>(`${this.url}/sessions/new`, { title });
   }
 
+  /** Fetches paginated history; `before` is a message ID cursor for reverse-chronological pagination. */
   getHistory(sessionId: string, limit = 50, before?: string): Observable<{ messages: ChatMessage[]; hasMore: boolean }> {
     const params = before ? `?limit=${limit}&before=${before}` : `?limit=${limit}`;
     return this.http.get<{ messages: ChatMessage[]; hasMore: boolean }>(`${this.url}/history/${sessionId}${params}`);

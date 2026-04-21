@@ -47,6 +47,7 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
   templateUrl: './accounts.component.html',
   styleUrl: './accounts.component.scss',
 })
+/** Accounts page — lists all accounts with client-side search/type filtering and balance summary cards. */
 export class AccountsComponent implements OnInit {
   private accountsService = inject(AccountsService);
   private userService = inject(UserService);
@@ -250,6 +251,9 @@ export class AccountsComponent implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (!result) return;
 
+      // Balance adjustment uses a dedicated endpoint (adjustBalance) that records the
+      // difference as a transaction, while prop updates (name, type, etc.) go through
+      // the regular update endpoint. When both change, adjustBalance runs first.
       const { balance, ...updateData } = result;
       const newBalance = Number(balance);
       const balanceChanged = !isNaN(newBalance) && newBalance !== account.balance;

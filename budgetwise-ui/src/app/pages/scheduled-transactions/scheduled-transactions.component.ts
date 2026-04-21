@@ -73,6 +73,11 @@ import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
   templateUrl: './scheduled-transactions.component.html',
   styleUrl: './scheduled-transactions.component.scss',
 })
+/**
+ * Scheduled transactions page — tabbed view split between EXPENSE and INCOME schedules.
+ * Each tab maintains independent client-side filter state (`expenseFilters` / `incomeFilters`).
+ * `processingIds` tracks which rows have an in-flight "generate now" request, preventing double-submits.
+ */
 export class ScheduledTransactionsComponent implements OnInit {
   private scheduledTransactionsService = inject(ScheduledTransactionsService);
   private accountsService = inject(AccountsService);

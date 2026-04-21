@@ -159,6 +159,7 @@ export class CategoriesComponent implements OnInit {
           },
           error: (err) => {
             const status = err.status;
+            // 409/400 means the category has linked transactions or budgets — show a user-friendly message.
             if (status === 409 || status === 400) {
               this.snackBar.open(
                 'Cannot delete: this category is used by existing transactions or budgets.',
