@@ -28,10 +28,12 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
+  // Required behind a reverse proxy (Render, Railway, etc.) so req.ip and rate-limiting see the real client IP.
   app.set('trust proxy', true);
 
   app.use(
     helmetFactory({
+      // CSP is managed by the Angular frontend; disabling here avoids conflicts with the API.
       contentSecurityPolicy: false,
     }),
   );
@@ -50,8 +52,8 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: true,           // Strip properties not declared in the DTO
+      forbidNonWhitelisted: true, // Reject requests with extra unknown fields
       transform: true,
       transformOptions: { enableImplicitConversion: true },
     }),
@@ -67,6 +69,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
 
+  // Swagger UI is only exposed in non-production environments.
   if (process.env.NODE_ENV !== 'production') {
     SwaggerModule.setup('api/docs', app, document);
   }

@@ -29,6 +29,10 @@ const isProduction = process.env.NODE_ENV === 'production';
 const defaultLogLevel = isProduction ? 'info' : 'debug';
 const runtimeRequire = createRequire(__filename);
 
+/**
+ * Optionally loads pino-pretty for human-readable dev logs.
+ * Returns undefined in production (standard JSON) or when pino-pretty is not installed.
+ */
 function resolveDevTransport() {
   if (isProduction) {
     return undefined;
@@ -63,6 +67,7 @@ function resolveDevTransport() {
       pinoHttp: {
         level: process.env.LOG_LEVEL ?? defaultLogLevel,
         transport: resolveDevTransport(),
+        // Pass through an existing X-Request-ID from the client/proxy, or generate a fresh UUID.
         genReqId: (request: IncomingMessage, response: ServerResponse) => {
           const headerValue = request.headers['x-request-id'];
           const requestId = Array.isArray(headerValue)
@@ -80,6 +85,7 @@ function resolveDevTransport() {
         },
       },
     }),
+    // SentryModule is conditionally included so the app boots cleanly without a DSN in dev.
     ...(process.env.SENTRY_DSN ? [SentryModule.forRoot()] : []),
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
@@ -102,6 +108,7 @@ function resolveDevTransport() {
     HealthModule,
   ],
   providers: [
+    // Guard order matters: ThrottlerGuard runs first (rate limit), then JwtAuthGuard (auth).
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],

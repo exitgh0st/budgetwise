@@ -9,9 +9,11 @@ import { PrismaService } from '../prisma/prisma.service';
 export class HealthController {
   constructor(private readonly prisma: PrismaService) {}
 
+  // @Public() — no auth required so load balancers and uptime monitors can probe without a JWT.
   @Public()
   @Get()
   @ApiOperation({ summary: 'Health check' })
+  // passthrough: true lets NestJS serialise the return value while still allowing manual status override on failure.
   async check(@Res({ passthrough: true }) response: Response) {
     const timestamp = new Date().toISOString();
 
