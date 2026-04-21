@@ -159,8 +159,43 @@ Manual changes outside the numbered ticket flow:
 ## Upcoming Tickets
 
 - No active implementation ticket is recorded in `PROJECT-STATUS.md` right now.
-- Open ticket files that are still not reflected as shipped here: `50-containerization.md`, `51-ci-cd-pipeline.md`, `53-database-backup-strategy.md`.
 - Upcoming or planned transactions are handled through scheduled transactions and upcoming views, not through a settlement flag on regular transactions.
+
+### SaaS Launch Readiness (suggested implementation order)
+
+| # | Ticket | Phase | Priority |
+|---|--------|-------|----------|
+| 70 | Pre-SaaS API Security & Config Hardening Sweep | Hardening | P0 |
+| 71 | Money-Path Atomicity & Race-Condition Fixes | Hardening | P0 |
+| 72 | Chat Cost & Safety Hardening | Hardening | P0 |
+| 73 | User Lifecycle Hardening | Hardening | P1 |
+| 50 | Containerization (Docker) | Ops | P1 |
+| 51 | CI/CD Pipeline (GitHub Actions) | Ops | P1 |
+| 53 | Database Backup Strategy | Ops | P1 |
+| 64 | Stripe Subscription Integration (Backend) | Monetization | P0 |
+| 65 | Tier-Aware Usage Limits | Monetization | P0 |
+| 66 | Subscription UI (Frontend) | Monetization | P0 |
+| 67 | Transactional Email Templates | Monetization | P1 |
+| 68 | Graceful Downgrade Handling | Monetization | P1 |
+| 69 | Admin Tooling | Monetization | P2 |
+
+### Upcoming / In Progress Tickets
+
+### Ticket 70 — Pre-SaaS API Security & Config Hardening Sweep
+**Status:** Pending
+**Description:** Removes JWT-payload console.log, adds Sentry `sendDefaultPii:false` + `beforeSend` redaction, adds pino redact config, makes CORS fail-closed in production, adds bootstrap-time env validation, adds `userId` to every update/delete where clause, and hardens the public unsubscribe endpoint (throttle + required secret + preference-state nonce). Also caps user-controlled string fields with `@MaxLength`.
+
+### Ticket 71 — Money-Path Atomicity & Race-Condition Fixes
+**Status:** Pending
+**Description:** Adds a partial unique index on `Transaction(scheduledTransactionId, date)` to block duplicate generation, moves per-resource usage-limit count checks inside their create `$transaction`, makes onboarding atomic via a Supabase `user_metadata.onboardedAt` idempotency key, and converts account balance adjustment to a relative `{ increment: diff }` write with a required `Idempotency-Key` header stored on the adjustment transaction.
+
+### Ticket 72 — Chat Cost & Safety Hardening
+**Status:** Pending
+**Description:** Comprehensive pre-launch hardening of the chat module. Adds `@MaxLength(4000)` + `@IsUUID` to `SendMessageDto`; hardens the OpenAI client (30s timeout, 1 retry, `AbortSignal`, `max_tokens: 2000`, `temperature: 0.3`); drops `CHAT_LIMITS.toolIterations` from 50 to 12 and adds a 45s wall-clock deadline, a per-tool call cap of 3, a per-turn token cap of 30k, a 16KB tool-result size cap, and an 8k-char assistant-content clamp; replaces the in-memory `PendingConfirmationService` with a Prisma-backed `PendingConfirmation` model scoped by `(userId, sessionId)` with hourly cron purge; adds zod schema validation and injection scanning to every tool call in `ToolExecutor`; removes PII from tool-executor logs (keys only, no values); caps `buildMessageArray` at the 60 most recent messages with tool-call pairing preserved; flips guardrails to fail-closed on classifier/parser errors and adds an injection regex pre-filter to the output scanner; introduces a per-user daily token budget (`dailyTokenCap: 200_000`) in Supabase `user_metadata` with a pre-flight estimator that hard-blocks over-budget turns without calling DeepSeek; and surfaces usage in `GET /api/user/usage` + a new row in the Settings usage card.
+
+### Ticket 73 — User Lifecycle Hardening
+**Status:** Pending
+**Description:** Rewrites `DELETE /api/user` to delete the Supabase auth user first and the Prisma data second with explicit error codes, adds a daily `UserReconciliationService` cron that detects and logs orphans on either side, and throttles `GET /api/user/export` to 1/hour per user while streaming the response with cursor-paginated chunks instead of buffering the whole payload in memory.
 
 ---
 
@@ -181,6 +216,7 @@ Manual changes outside the numbered ticket flow:
 - Preferred currency is a formatting preference only; no exchange-rate conversion is performed anywhere in the app
 - Budget spillover only chains across consecutive prior months that also have explicit `spillover=true` budget rows
 - `scheduledTransactionId` on `Transaction` links cron/manual-generated rows back to their source template
+- SaaS monetization uses Stripe with monthly-only pricing (~$5/mo), free+pro tiers, plan state in Supabase `user_metadata` (no new Prisma model), PH-first audience expanding globally
 
 ---
 
