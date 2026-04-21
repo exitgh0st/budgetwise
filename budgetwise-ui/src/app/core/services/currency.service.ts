@@ -89,6 +89,12 @@ const SUPPORTED_CURRENCIES: SupportedCurrency[] = [
   },
 ] as const;
 
+/**
+ * Manages the active currency code and formats monetary values.
+ * Currency is hydrated from user preferences after login via an `effect()`.
+ * `hydratedUserId` acts as an idempotency guard so the preferences fetch only
+ * fires once per user, not on every reactive re-evaluation.
+ */
 @Injectable({ providedIn: 'root' })
 export class CurrencyService {
   private readonly auth = inject(AuthService);
@@ -132,6 +138,11 @@ export class CurrencyService {
     this.currencyCode.set(this.normalizeCurrencyCode(code));
   }
 
+  /**
+   * Formats `value` as a currency string using the active currency's locale and symbol.
+   * Uses `formatToParts` to replace the ISO code text with the currency symbol
+   * (same technique as the backend `formatCurrencyAmount` utility).
+   */
   format(value: number | string | null | undefined): string {
     const amount = Number(value ?? 0);
     const { code, fractionDigits, locale, symbol } = this.selectedCurrency();

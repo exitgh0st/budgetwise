@@ -2,6 +2,11 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * Protects the verify-email page — only accessible when a session exists but email is unverified.
+ * No session → /login; already verified → /dashboard.
+ * Polls every 50ms while `isLoading` is true.
+ */
 export const verifyEmailGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

@@ -6,6 +6,11 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SupabaseService } from './supabase.service';
 
+/**
+ * Signal-based authentication service wrapping Supabase Auth.
+ * `isAuthenticated` = `hasSession() && isEmailVerified()`.
+ * `isLoading` is true until the initial session check resolves; guards poll on it.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private supabase = inject(SupabaseService);
@@ -34,6 +39,11 @@ export class AuthService {
     });
   }
 
+  /**
+   * Signs in and, if the email is verified, refreshes the session token and triggers
+   * server-side onboarding (creates default categories etc.). Returns a flag indicating
+   * whether email verification is still required.
+   */
   async signInWithEmail(email: string, password: string) {
     const { data, error } = await this.supabase.client.auth.signInWithPassword({
       email,
@@ -78,6 +88,10 @@ export class AuthService {
     await this.supabase.client.auth.signOut();
   }
 
+  /**
+   * Clears only the local session without calling the Supabase server-side sign-out endpoint.
+   * Used after account deletion so we don't try to invalidate a token that no longer exists.
+   */
   async clearSession() {
     const { error } = await this.supabase.client.auth.signOut({
       scope: 'local',
@@ -146,6 +160,7 @@ export class AuthService {
     this.currentUser.set(data.user ?? data.session?.user ?? this.currentUser());
   }
 
+  /** Checks `email_confirmed_at` rather than a boolean flag — Supabase only populates the field after confirmation. */
   isUserEmailVerified(user: User | null | undefined): boolean {
     if (!user) return false;
 

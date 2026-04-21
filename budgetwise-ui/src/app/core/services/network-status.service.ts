@@ -1,5 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
 
+/**
+ * Tracks browser online/offline state via `window` events.
+ * Guards against SSR by checking `typeof window` before registering listeners.
+ */
 @Injectable({ providedIn: 'root' })
 export class NetworkStatusService {
   private readonly onlineState = signal(this.getInitialOnlineState());

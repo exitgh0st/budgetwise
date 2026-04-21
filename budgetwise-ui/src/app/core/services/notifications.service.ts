@@ -4,6 +4,12 @@ import { Observable, Subscription, interval } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppNotification } from '../models/notification.model';
 
+/**
+ * Manages in-app notifications and unread count polling.
+ * Polling fetches the unread count every 60 seconds; `startPolling`/`stopPolling`
+ * are called by the shell component on login/logout. The guard on `startPolling`
+ * prevents duplicate subscriptions if called multiple times.
+ */
 @Injectable({ providedIn: 'root' })
 export class NotificationsService {
   private http = inject(HttpClient);

@@ -2,6 +2,11 @@ import { Injectable, signal } from '@angular/core';
 
 const STORAGE_KEY = 'budgetwise-theme';
 
+/**
+ * Manages dark/light theme preference. Persists to `localStorage` and falls back
+ * to the OS `prefers-color-scheme` media query when no stored preference exists.
+ * Applies the theme by toggling the `dark-theme` class on `<html>`.
+ */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly _isDark = signal(this.loadPreference());

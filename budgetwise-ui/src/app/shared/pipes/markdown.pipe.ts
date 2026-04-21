@@ -1,6 +1,12 @@
 import { Pipe, PipeTransform, SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
+/**
+ * Lightweight markdown renderer for AI chat messages.
+ * HTML is escaped first (via DOM textContent) before pattern substitutions are applied,
+ * preventing injection via markdown-like payloads. The result is passed through
+ * Angular's `DomSanitizer` before being bound with `[innerHTML]`.
+ */
 @Pipe({ name: 'markdown', standalone: true })
 export class MarkdownPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {}

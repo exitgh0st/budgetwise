@@ -2,6 +2,11 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * Protects guest-only routes (login, register).
+ * Redirects logged-in users to /dashboard (verified) or /verify-email (unverified).
+ * Polls every 50ms while `isLoading` is true.
+ */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

@@ -21,6 +21,7 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // eventCoalescing: true batches multiple change-detection triggers in one browser event into a single cycle.
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
@@ -32,6 +33,7 @@ export const appConfig: ApplicationConfig = {
         fontSet: 'material-symbols-outlined',
       },
     },
+    // Sentry error handler is only wired in when a DSN is present (skips dev/test).
     ...(environment.sentryDsn
       ? [
           {
@@ -42,6 +44,7 @@ export const appConfig: ApplicationConfig = {
           },
         ]
       : []),
+    // Service worker is disabled in dev; registers after 30s of idle time in production.
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

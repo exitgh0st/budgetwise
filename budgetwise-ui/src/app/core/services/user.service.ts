@@ -36,6 +36,11 @@ export class UserService {
     );
   }
 
+  /**
+   * Requests the full data export as a file download.
+   * `observe: 'response'` gives access to headers (for `Content-Disposition`);
+   * `responseType: 'blob'` streams the response body as binary data.
+   */
   exportData(): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.url}/export`, {
       observe: 'response',

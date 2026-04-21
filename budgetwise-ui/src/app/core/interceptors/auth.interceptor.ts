@@ -4,8 +4,19 @@ import { Router } from '@angular/router';
 import { catchError, from, switchMap, throwError } from 'rxjs';
 import { SupabaseService } from '../services/supabase.service';
 
+/**
+ * Marks a request as a post-refresh retry so the interceptor does not loop
+ * infinitely when the refreshed token still fails with EMAIL_NOT_VERIFIED.
+ */
 const SESSION_REFRESH_RETRY_HEADER = 'x-session-refresh-retry';
 
+/**
+ * HTTP interceptor that:
+ * 1. Attaches the Supabase Bearer token to every outbound request.
+ * 2. On 401 + EMAIL_NOT_VERIFIED: refreshes the session token and retries once.
+ *    If the retry also fails (or a refresh was already attempted), redirects to /verify-email.
+ * 3. On any other 401: signs out (token is invalid or expired globally).
+ */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const supabase = inject(SupabaseService);
   const router = inject(Router);
