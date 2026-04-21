@@ -8,6 +8,15 @@ import { AccountType } from '@prisma/client';
 export class AuthController {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Seeds starter data for a new user: three default accounts (Cash, Bank, E-Wallet)
+   * and personal copies of all global template categories.
+   *
+   * Idempotent — returns `already_onboarded` if the user already has at least one account,
+   * so it is safe to call multiple times without creating duplicates.
+   *
+   * @throws BadRequestException if the user already has accounts (handled by early return)
+   */
   @Post('onboard')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   async onboard(@CurrentUser() user: { userId: string }) {
@@ -19,6 +28,8 @@ export class AuthController {
       return { status: 'already_onboarded' };
     }
 
+    // Global template categories have userId = null and isSystem = false.
+    // Each user gets their own editable copies so they can rename/delete them freely.
     const templateCategories = await this.prisma.category.findMany({
       where: { userId: null, isSystem: false },
     });

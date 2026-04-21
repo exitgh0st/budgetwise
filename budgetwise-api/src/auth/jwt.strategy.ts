@@ -14,6 +14,11 @@ type SupabaseJwtPayload = {
   };
 };
 
+/**
+ * Validates Supabase-issued JWTs using the Supabase JWKS endpoint.
+ * Fetches public keys dynamically so key rotation is handled automatically.
+ * Tokens are signed with ES256 (ECDSA P-256).
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(config: ConfigService) {
@@ -32,9 +37,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
+  /**
+   * Called after signature verification. Rejects unverified emails so the
+   * rest of the app can assume `request.user.userId` is always a verified account.
+   *
+   * @returns The user object attached to `request.user` for every authenticated request
+   * @throws UnauthorizedException when the user has not verified their email
+   */
   validate(payload: SupabaseJwtPayload) {
-    console.log('Validating JWT payload:', payload);
-
     if (!payload.user_metadata?.email_verified) {
       throw new UnauthorizedException({
         statusCode: 401,

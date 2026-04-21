@@ -9,6 +9,13 @@ import {
 import * as Sentry from '@sentry/nestjs';
 import { Response } from 'express';
 
+/**
+ * Catches every unhandled exception across the application.
+ *
+ * - NestJS `HttpException` → pass the original status and body through as-is.
+ * - Unhandled errors → log, report to Sentry, and return 500.
+ *   In production the stack trace is stripped from the response to avoid leaking internals.
+ */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -29,6 +36,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         this.logger.warn(exception.stack);
       }
 
+      // Normalize string responses to the standard { statusCode, message } shape
       response.status(status).json(
         typeof body === 'string'
           ? {
@@ -50,6 +58,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     this.logger.error('Unhandled exception', errorStack ?? errorMessage);
 
+    // Hide stack trace and raw error message in production to avoid information leakage
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json(
       isProd
         ? {
