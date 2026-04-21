@@ -91,6 +91,7 @@ export function isSupportedCurrencyCode(
   return SUPPORTED_CURRENCY_CODES.includes(value as SupportedCurrencyCode);
 }
 
+/** Returns `value` as a `SupportedCurrencyCode` if valid, otherwise returns `fallback`. */
 export function normalizeCurrencyCode(
   value: unknown,
   fallback: SupportedCurrencyCode = DEFAULT_CURRENCY_CODE,
@@ -110,6 +111,11 @@ export function describeCurrency(code: unknown): string {
   return `${config.label} (${normalized})`;
 }
 
+/**
+ * Formats a monetary amount using the currency's locale and symbol.
+ * Uses `formatToParts` to substitute our custom symbol (e.g. "₱") in place of
+ * the ISO code text that `Intl.NumberFormat` would otherwise emit (e.g. "PHP").
+ */
 export function formatCurrencyAmount(amount: number, code: unknown): string {
   const normalized = normalizeCurrencyCode(code);
   const { fractionDigits, locale, symbol } = getCurrencyConfig(normalized);
@@ -120,6 +126,7 @@ export function formatCurrencyAmount(amount: number, code: unknown): string {
     maximumFractionDigits: fractionDigits,
   });
 
+  // Replace the 'currency' part (ISO code text) with our own symbol string.
   return formatter
     .formatToParts(Number(amount))
     .map((part) => (part.type === 'currency' ? symbol : part.value))

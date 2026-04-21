@@ -44,6 +44,12 @@ type ExportDataResponse = {
   chatMessages: unknown[];
 };
 
+/**
+ * Manages user preferences and account lifecycle.
+ * Preferences (currency, email notification settings) are stored in Supabase
+ * `user_metadata` rather than the Postgres DB, so all reads and writes go
+ * through the Supabase Admin REST API.
+ */
 @Injectable()
 export class UserService {
   constructor(
@@ -103,6 +109,10 @@ export class UserService {
     };
   }
 
+  /**
+   * Merges the provided fields with the user's current preferences and persists
+   * the result to Supabase `user_metadata`. Omitted fields retain their current values.
+   */
   async updatePreferences(
     userId: string,
     dto: UpdateUserPreferencesDto,
@@ -136,6 +146,10 @@ export class UserService {
     return nextPreferences;
   }
 
+  /**
+   * Returns the full notification context needed by the cron job to send email reminders:
+   * preferences, the user's verified email address, and the date of the last sent digest.
+   */
   async getEmailNotificationContext(
     userId: string,
     fallbackCurrency: string = DEFAULT_CURRENCY_CODE,
@@ -155,6 +169,7 @@ export class UserService {
     };
   }
 
+  /** Persists `emailDigestLastSentOn` to Supabase so the cron job does not re-send the digest on the same day. */
   async markDailyDigestSent(userId: string, date: string): Promise<void> {
     const authUser = await this.fetchSupabaseAuthUser(userId);
 
@@ -164,6 +179,7 @@ export class UserService {
     });
   }
 
+  /** Turns off email notifications for a user. Called by the one-click unsubscribe endpoint in emails. */
   async disableEmailNotifications(
     userId: string,
   ): Promise<UserPreferencesResponse> {
@@ -182,6 +198,11 @@ export class UserService {
     return nextPreferences;
   }
 
+  /**
+   * Exports all of the user's data across every table in a single DB transaction
+   * to guarantee a consistent snapshot. Decimal fields are recursively converted
+   * to plain numbers by `normalizeForExport` so the JSON is safely serialisable.
+   */
   async exportData(
     userId: string,
     fallbackCurrency: string = DEFAULT_CURRENCY_CODE,
@@ -265,6 +286,13 @@ export class UserService {
     }) as ExportDataResponse;
   }
 
+  /**
+   * Permanently deletes all of the user's data and their Supabase auth record.
+   * Prisma deletions are ordered to satisfy foreign-key constraints: child records
+   * (contributions, messages) are removed before parent records (goals, sessions, accounts).
+   * The Supabase deletion is intentionally done outside the Prisma transaction
+   * so it only runs after all DB rows are committed successfully.
+   */
   async deleteAccount(userId: string): Promise<void> {
     const { supabaseUrl, serviceRoleKey } = this.getSupabaseAdminConfig();
 
@@ -304,6 +332,11 @@ export class UserService {
     await this.deleteSupabaseAuthUser(userId, supabaseUrl, serviceRoleKey);
   }
 
+  /**
+   * Recursively walks any value returned by Prisma and converts `Decimal` instances
+   * to plain `number` so the exported JSON is safely serialisable. All other types
+   * (Date, null, primitives, arrays, plain objects) are passed through unchanged.
+   */
   private normalizeForExport(value: unknown): unknown {
     if (value instanceof Prisma.Decimal) {
       return Number(value);
@@ -465,6 +498,10 @@ export class UserService {
     }
   }
 
+  /**
+   * Calls the Supabase Admin API to delete the auth record for the user.
+   * A 404 is treated as success — it means the auth record was already removed.
+   */
   private async deleteSupabaseAuthUser(
     userId: string,
     supabaseUrl: string,

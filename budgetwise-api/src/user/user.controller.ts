@@ -48,6 +48,7 @@ export class UserController {
     return this.userService.updatePreferences(user.userId, dto);
   }
 
+  // @Public() — no auth required so one-click unsubscribe links in emails work without a login session.
   @Public()
   @Post('preferences/unsubscribe')
   @HttpCode(200)
@@ -61,6 +62,7 @@ export class UserController {
 
   @Get('export')
   @ApiOperation({ summary: 'Export all user data as JSON' })
+  // Uses raw @Res() to set Content-Disposition: attachment so the browser downloads a file.
   async exportData(
     @CurrentUser() user: { userId: string },
     @Res() res: Response,
@@ -74,6 +76,7 @@ export class UserController {
     res.status(200).send(JSON.stringify(data, null, 2));
   }
 
+  // Rate-limited to 3 requests per minute to slow down accidental or automated account deletions.
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Delete()
   @HttpCode(204)
