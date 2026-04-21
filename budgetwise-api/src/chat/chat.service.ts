@@ -61,6 +61,11 @@ IMPORTANT:
   describe what you are about to delete and tell the user you need their
   confirmation. The system will handle the confirmation flow for you.`;
 
+/**
+ * Drives the AI chat agent powered by DeepSeek V3 via the OpenAI-compatible SDK.
+ * Responsibilities: session management, message history, tool-call loop, guardrails,
+ * and the confirmation gate for destructive actions.
+ */
 @Injectable()
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
@@ -290,6 +295,12 @@ export class ChatService {
     };
   }
 
+  /**
+   * Reconstructs the full message array from persisted history for the next model call.
+   * Repairs incomplete tool-call sequences caused by interrupted sessions:
+   * if a saved assistant message has tool_calls with no corresponding tool responses,
+   * synthetic `missing_tool_response` messages are injected so the model accepts the history.
+   */
   private async buildMessageArray(
     sessionId: string,
     systemPrompt: string,
@@ -407,6 +418,10 @@ export class ChatService {
   // MAIN CHAT METHOD
   // ============================================
 
+  /**
+   * Main entry point for a user message turn.
+   * Flow: pending-confirmation check → input guardrails → build history → tool loop → output guardrail.
+   */
   async chat(
     userMessage: string,
     sessionId: string,
@@ -568,6 +583,12 @@ export class ChatService {
   // TOOL CALL LOOP
   // ============================================
 
+  /**
+   * Calls the model in a loop, executing any tool calls it requests until the model
+   * returns a plain text response. Destructive tools are intercepted before execution
+   * and replaced with a confirmation prompt that pauses the loop.
+   * `maxIterations` caps the loop to prevent infinite tool chains.
+   */
   private async processWithToolLoop(
     messages: ChatCompletionMessageParam[],
     sessionId: string,

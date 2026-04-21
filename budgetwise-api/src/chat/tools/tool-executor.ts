@@ -8,6 +8,12 @@ import { ScheduledTransactionsService } from '../../scheduled-transactions/sched
 import { GoalsService } from '../../goals/goals.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 
+/**
+ * Dispatches AI tool calls to the appropriate service method.
+ * Each entry in `handlers` maps a tool name (as defined in tool-definitions.ts)
+ * to the corresponding service call. Errors are caught and returned as
+ * `{ error: string }` so the model receives a structured failure it can relay to the user.
+ */
 @Injectable()
 export class ToolExecutor {
   private readonly logger = new Logger(ToolExecutor.name);
@@ -23,6 +29,11 @@ export class ToolExecutor {
     private notifications: NotificationsService,
   ) {}
 
+  /**
+   * Looks up and calls the handler for `toolName`, passing `userId` for ownership checks.
+   * `id` is destructured from `args` upfront so update handlers receive only the
+   * field-level `data` object and avoid passing `id` into the Prisma update payload.
+   */
   async execute(toolName: string, args: any, userId: string): Promise<any> {
     this.logger.log(
       `Executing tool: ${toolName} with args: ${JSON.stringify(args)}`,
@@ -50,6 +61,8 @@ export class ToolExecutor {
 
       // Transactions
       create_transaction: () => this.transactions.create(args, userId),
+      // record_transfer maps to transactions.create with a fixed TRANSFER type so the
+      // AI can use a dedicated tool name without a separate service method.
       record_transfer: () =>
         this.transactions.create(
           {

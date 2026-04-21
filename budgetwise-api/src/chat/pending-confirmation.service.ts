@@ -68,6 +68,11 @@ const PENDING_TTL_MS = 2 * 60 * 1000;
 // Service
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * In-memory store for destructive actions that require user confirmation before execution.
+ * Holds at most one pending action per user. Actions expire after `PENDING_TTL_MS`
+ * (2 minutes) to prevent stale confirmations from executing later.
+ */
 @Injectable()
 export class PendingConfirmationService {
   private readonly logger = new Logger(PendingConfirmationService.name);

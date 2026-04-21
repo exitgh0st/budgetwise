@@ -95,6 +95,14 @@ Respond with ONLY a JSON object — no markdown, no explanation:
 // Service
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Three-layer safety wrapper for the AI chat agent.
+ * Layer 1: regex prompt-injection detection (free, no LLM cost).
+ * Layer 2: LLM-based scope enforcement (blocks off-topic requests).
+ * Layer 3: LLM-based output scanner (catches hallucinated or inappropriate responses).
+ * Layers 2 and 3 fail open (allow) when the classifier call itself errors,
+ * to avoid blocking legitimate users due to transient API failures.
+ */
 @Injectable()
 export class GuardrailsService {
   private readonly logger = new Logger(GuardrailsService.name);
